@@ -12,6 +12,10 @@ requires-python = ">=3.10"
 dependencies = [
   "jsonschema>=4.18",
   "PyYAML>=6.0",
+  # スライド: .pptx の生成と p:timing の XML 編集、画像の大きさ・確認用の一覧画像
+  "python-pptx>=1.0,<2",
+  "lxml>=4.9",
+  "Pillow>=9",
 ]
 
 [project.optional-dependencies]
@@ -28,3 +32,6 @@ explainer_reel_kit = ["data/schema/*.json", "data/templates/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# importlib mode lets tests/conftest.py and tests/narration/conftest.py coexist without __init__.py.
+pythonpath = ["tests", "tests/deck", "tests/narration"]
+addopts = "--import-mode=importlib"

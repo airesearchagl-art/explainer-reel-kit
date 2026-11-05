@@ -1,0 +1,210 @@
+{
+  "reel": {
+    "id": "narration-terms",
+    "title": "読みの確認（建築用語を含む台本）",
+    "schema_version": "1.1.0",
+    "audience": "B",
+    "kind": "tool_intro",
+    "confidentiality": "general",
+    "aspect": "16:9",
+    "output_name": "narration_terms"
+  },
+  "intro": {
+    "summary": "互換を確かめるためのダミーの要約です。",
+    "prerequisites": [
+      "ダミーの前提",
+      "ダミーの前提"
+    ],
+    "duration_note": "未計測",
+    "narration": "建具の換気開口を、意匠境界の内側に収める手順を紹介します。\n躯体の天端と笠木の見付けも確かめます。"
+  },
+  "scenes": [
+    {
+      "id": "s01",
+      "heading": "手順 1 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s01.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "input_a",
+          "input_b"
+        ],
+        "zoom": true
+      },
+      "duration_sec": 9,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "まず建具の幅と高さを入力します。\n意匠境界のオフセットは、枠から内側の帯の幅です。"
+    },
+    {
+      "id": "s02",
+      "heading": "手順 2 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s02.png",
+        "label": "実キャプチャ"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "choice_a",
+          "choice_b"
+        ],
+        "zoom": "per_mark"
+      },
+      "duration_sec": 9,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "開口部の方式を、ガラリとアンダーカットから選びます。"
+    },
+    {
+      "id": "s03",
+      "heading": "手順 3 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s03.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": "main_view",
+        "zoom": true
+      },
+      "duration_sec": 10,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く"
+        ]
+      },
+      "narration": "立面図で、開口が等ピッチに並んでいるかを確かめます。"
+    },
+    {
+      "id": "s04",
+      "heading": "手順 4 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s04.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "arrow_move",
+      "recipe_params": {
+        "to": {
+          "mark": "meter"
+        },
+        "from_side": "left",
+        "zoom": true
+      },
+      "duration_sec": 10,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く"
+        ]
+      },
+      "narration": "通過風速が目安の範囲に入っているかを見ます。"
+    },
+    {
+      "id": "s05",
+      "heading": "手順 5 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s05.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "main_view",
+          "alert"
+        ],
+        "zoom": "per_mark"
+      },
+      "duration_sec": 11,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "範囲を超えたら、是正措置の表示に従います。"
+    },
+    {
+      "id": "s06",
+      "heading": "手順 6 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s06.png",
+        "label": "実キャプチャ"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "main_view",
+          "meter"
+        ],
+        "zoom": "per_mark"
+      },
+      "duration_sec": 10,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "条件を変えて、累積長と端点の位置を比べます。"
+    }
+  ],
+  "outro": {
+    "summary": "互換を確かめるためのダミーの要約です。",
+    "checks": [
+      "ダミーの確認",
+      "ダミーの確認",
+      "ダミーの確認"
+    ],
+    "next": "ダミーの次の行動",
+    "narration": "以上で、換気開口の確認は完了です。"
+  }
+}

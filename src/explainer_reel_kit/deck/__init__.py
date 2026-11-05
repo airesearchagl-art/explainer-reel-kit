@@ -1,4 +1,4 @@
-"""スライド: 台本からアニメーション付きの .pptx。
+"""スライド: 台本からアニメーション付きの .pptx を作る。"""
+from .builder import BuildError, BuildResult, build_deck
 
-後のパケットで実装する（いまは置き場所だけ）。
-"""
+__all__ = ["BuildError", "BuildResult", "build_deck"]
