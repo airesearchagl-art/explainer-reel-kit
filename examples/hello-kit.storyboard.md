@@ -13,7 +13,8 @@ output_name: hello_kit
 
 <!--
 キットの例の台本。`erkit check examples/hello-kit.storyboard.md` で検証できる。
-説明図（diagrams/*.html）と撮影は後のパケットで用意する（いまは検証だけ）。
+説明図: `erkit diagram examples/hello-kit.storyboard.md --out <出力先>`（diagrams/*.html を描く）。
+撮影: `erkit capture examples/hello-kit.storyboard.md --serve examples/hello-page --out <出力先>`（hello-kit.actions.yaml に従う）。
 -->
 
 ## intro

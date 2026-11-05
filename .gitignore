@@ -17,6 +17,8 @@ captures/
 output/
 **/assets/*.png
 **/assets/*.marks.json
+capture-web-result.json
+diagram-result.json
 
 # 声のモデル（同梱しない）
 *.aivm

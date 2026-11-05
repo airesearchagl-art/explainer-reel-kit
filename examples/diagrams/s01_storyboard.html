@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>s01 台本の構成</title>
+<link rel="stylesheet" href="../../samples/_shared/diagram.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div class="card" style="flex:1.25">
+      <div class="tag gray">台本（Markdown 1 枚）</div>
+      <div class="code">---
+id: hello-kit
+confidentiality: general
+---
+## intro …（何ができるか・誰向けか）</div>
+      <div class="code hl" data-mark="scene_block">## s01: 台本を書く
+image: 説明図 / 撮影
+recipe: highlight_box
+（ナレーション）</div>
+      <div class="code">## s02: …　## s03: …
+## outro …（まとめ）</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card">
+      <div class="t">1 シーンに書くこと</div>
+      <div class="s">① 見出し（行動で終える）<br>② 画像（説明図か撮影）<br>③ 画面に出す文字<br>④ ナレーション<br>⑤ 指したい部品の名前</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
