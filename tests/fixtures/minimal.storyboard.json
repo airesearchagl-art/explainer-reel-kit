@@ -1,0 +1,28 @@
+{
+  "reel": {
+    "id": "minimal",
+    "title": "最小の台本",
+    "schema_version": "1.0.0",
+    "audience": "C",
+    "kind": "work_manual",
+    "output_name": "minimal"
+  },
+  "intro": {
+    "summary": "テスト用の最小台本",
+    "narration": "テスト用の台本です。"
+  },
+  "scenes": [
+    {
+      "id": "s01",
+      "heading": "画像を確かめる",
+      "image": { "source": "manual", "ref": "placeholder.png", "label": "説明用再構成図" },
+      "narration": "仮の画像を表示します。",
+      "recipe": "fade_sequence",
+      "capture": { "instructions": "仮画像を置く" }
+    }
+  ],
+  "outro": {
+    "summary": "おわり",
+    "narration": "以上です。"
+  }
+}

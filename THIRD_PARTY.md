@@ -10,9 +10,9 @@
 |---|---|---|---|
 | jsonschema | 台本の検証 | MIT | いまから |
 | PyYAML | 台本・設定の読み込み | MIT | いまから |
-| python-pptx | .pptx の生成 | MIT | スライドの段から |
-| lxml | スライドのアニメーションの XML | BSD-3-Clause | スライドの段から |
-| Pillow | 画像の大きさ・確認用の画像 | MIT-CMU（HPND） | スライドの段から |
+| python-pptx | .pptx の生成 | MIT | いまから |
+| lxml | スライドのアニメーションの XML | BSD-3-Clause | いまから |
+| Pillow | 画像の大きさ・確認用の画像 | MIT-CMU（HPND） | いまから |
 | Playwright（Python） | Web 画面の撮影・説明図の描画 | Apache-2.0 | 撮影・説明図の段から（必須） |
 | pytest | テスト（開発用） | MIT | いまから（`.[dev]`） |
 
@@ -35,4 +35,4 @@ Playwright のブラウザは `python -m playwright install chromium`（Chromium
   - ACML-NC 1.0: 非営利の利用だけ
   - 独自の規約: その条件（クレジット必須のものもあります）
 - どのライセンスでも、声の本人・公式と誤認させる使い方などは禁止されています
-- クレジットが必要な声を使うときは、設定に声と文言を書くと、動画の最後のスライドに「ナレーション音声: <文言>」が出ます（ナレーションの段で実装）。動画の公開先の説明欄にも書いてください
+- クレジットが必要な声を使うときは、`config/kit.yaml` の `voice.credits` に声と文言を書き、`erkit deck --credit <文言>` で動画の最後のスライドに「ナレーション音声: <文言>」を出します（通し生成では自動にする予定）。動画の公開先の説明欄にも書いてください

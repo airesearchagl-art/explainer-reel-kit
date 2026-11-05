@@ -11,6 +11,8 @@ from typing import Sequence
 
 from . import __version__
 from . import storyboard as sb
+from .deck import cli as deck_cli
+from .narration import cli as narration_cli
 
 # 後のパケットで実装するサブコマンド（いまは案内を出して終了コード 2）
 PLANNED = {
@@ -19,7 +21,6 @@ PLANNED = {
     "diagram": "説明図（HTML）を PNG と注釈位置に描く",
     "capture": "Web 画面を撮影する",
     "record": "操作定義を人の操作で記録する",
-    "voice": "声の一覧・読みの確認",
     "make": "台本から MP4 までの通し生成",
     "draft": "手元の LLM で台本のたたき台を作る（社外秘の資料用）",
 }
@@ -39,6 +40,9 @@ def _build_parser() -> argparse.ArgumentParser:
     v.add_argument("storyboard", type=Path, metavar="台本.md")
     v.add_argument("-o", "--out", type=Path, help="出力先（既定: 同じ場所の .json）")
     v.add_argument("--stdout", action="store_true", help="ファイルに書かず標準出力へ")
+
+    deck_cli.register(sub)
+    narration_cli.register(sub)
 
     for name, desc in PLANNED.items():
         sp = sub.add_parser(name, help=f"{desc}（後のパケットで実装）", add_help=False)
@@ -108,5 +112,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _cmd_check(args)
     if args.cmd == "convert":
         return _cmd_convert(args)
+    if hasattr(args, "func"):
+        return args.func(args)
     print(f"erkit {args.cmd}: {PLANNED[args.cmd]} は、後のパケットで実装します（まだ使えません）", file=sys.stderr)
     return 2
