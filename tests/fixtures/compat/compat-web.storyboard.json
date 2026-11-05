@@ -1,0 +1,210 @@
+{
+  "reel": {
+    "id": "compat-web",
+    "title": "互換の確認（Web 撮影の台本、1.1.0）",
+    "schema_version": "1.1.0",
+    "audience": "B",
+    "kind": "tool_intro",
+    "confidentiality": "general",
+    "aspect": "16:9",
+    "output_name": "compat_web"
+  },
+  "intro": {
+    "summary": "互換を確かめるためのダミーの要約です。",
+    "prerequisites": [
+      "ダミーの前提",
+      "ダミーの前提"
+    ],
+    "duration_note": "未計測",
+    "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+  },
+  "scenes": [
+    {
+      "id": "s01",
+      "heading": "手順 1 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s01.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "input_a",
+          "input_b"
+        ],
+        "zoom": true
+      },
+      "duration_sec": 9,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s02",
+      "heading": "手順 2 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s02.png",
+        "label": "実キャプチャ"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "choice_a",
+          "choice_b"
+        ],
+        "zoom": "per_mark"
+      },
+      "duration_sec": 9,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s03",
+      "heading": "手順 3 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s03.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": "main_view",
+        "zoom": true
+      },
+      "duration_sec": 10,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く"
+        ]
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s04",
+      "heading": "手順 4 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s04.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "arrow_move",
+      "recipe_params": {
+        "to": {
+          "mark": "meter"
+        },
+        "from_side": "left",
+        "zoom": true
+      },
+      "duration_sec": 10,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く"
+        ]
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s05",
+      "heading": "手順 5 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s05.png",
+        "label": "実キャプチャ",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "main_view",
+          "alert"
+        ],
+        "zoom": "per_mark"
+      },
+      "duration_sec": 11,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s06",
+      "heading": "手順 6 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "web",
+        "ref": "captures/compat-web/s06.png",
+        "label": "実キャプチャ"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "mark": [
+          "main_view",
+          "meter"
+        ],
+        "zoom": "per_mark"
+      },
+      "duration_sec": 10,
+      "check": "確認すること",
+      "capture": {
+        "url": "http://127.0.0.1:8000/",
+        "steps": [
+          "ページを開く",
+          "ページを開く"
+        ]
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    }
+  ],
+  "outro": {
+    "summary": "互換を確かめるためのダミーの要約です。",
+    "checks": [
+      "ダミーの確認",
+      "ダミーの確認",
+      "ダミーの確認"
+    ],
+    "next": "ダミーの次の行動",
+    "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+  }
+}

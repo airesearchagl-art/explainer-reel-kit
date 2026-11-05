@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+
+# 生成物は commit しない（動画・音声・スライド・撮影画像・説明図の出力）
+*.mp4
+*.mov
+*.wav
+*.pptx
+captures/
+output/
+**/assets/*.png
+**/assets/*.marks.json
+
+# 声のモデル（同梱しない）
+*.aivm
+*.aivmx
+*.onnx
+
+# 公開前の点検で使う、持ち主だけの語（リポジトリに入れない）
+.kit-deny-words
+
+# 利用者の設定（ひな形は config/*.example.yaml）
+config/*.yaml
+!config/*.example.yaml

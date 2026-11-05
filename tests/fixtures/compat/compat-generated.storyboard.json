@@ -1,0 +1,197 @@
+{
+  "reel": {
+    "id": "compat-generated",
+    "title": "互換の確認（説明図の台本、1.1.0）",
+    "schema_version": "1.1.0",
+    "audience": "C",
+    "kind": "tool_intro",
+    "confidentiality": "general",
+    "aspect": "16:9",
+    "output_name": "compat_generated"
+  },
+  "intro": {
+    "summary": "互換を確かめるためのダミーの要約です。",
+    "prerequisites": [
+      "ダミーの前提",
+      "ダミーの前提",
+      "ダミーの前提"
+    ],
+    "duration_note": "未計測",
+    "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+  },
+  "scenes": [
+    {
+      "id": "s01",
+      "heading": "手順 1 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "generated",
+        "ref": "captures/compat-generated/s01.png",
+        "label": "説明用再構成図",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "box": {
+          "x": 0.035,
+          "y": 0.487,
+          "w": 0.473,
+          "h": 0.3
+        }
+      },
+      "duration_sec": 12,
+      "check": "確認すること",
+      "capture": {
+        "prompt": "ダミーの説明図"
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s02",
+      "heading": "手順 2 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "generated",
+        "ref": "captures/compat-generated/s02.png",
+        "label": "説明用再構成図",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "box": {
+          "x": 0.019,
+          "y": 0.623,
+          "w": 0.962,
+          "h": 0.176
+        }
+      },
+      "duration_sec": 12,
+      "check": "確認すること",
+      "capture": {
+        "prompt": "ダミーの説明図"
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s03",
+      "heading": "手順 3 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "generated",
+        "ref": "captures/compat-generated/s03.png",
+        "label": "説明用再構成図",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "box": {
+          "x": 0.037,
+          "y": 0.221,
+          "w": 0.926,
+          "h": 0.104
+        }
+      },
+      "duration_sec": 12,
+      "check": "確認すること",
+      "capture": {
+        "prompt": "ダミーの説明図"
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s04",
+      "heading": "手順 4 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "generated",
+        "ref": "captures/compat-generated/s04.png",
+        "label": "説明用再構成図",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "box": {
+          "x": 0.226,
+          "y": 0.62,
+          "w": 0.122,
+          "h": 0.101
+        },
+        "zoom": true
+      },
+      "duration_sec": 12,
+      "check": "確認すること",
+      "capture": {
+        "prompt": "ダミーの説明図"
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s05",
+      "heading": "手順 5 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "generated",
+        "ref": "captures/compat-generated/s05.png",
+        "label": "説明用再構成図",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "box": {
+          "x": 0.393,
+          "y": 0.252,
+          "w": 0.273,
+          "h": 0.241
+        }
+      },
+      "duration_sec": 12,
+      "check": "確認すること",
+      "capture": {
+        "prompt": "ダミーの説明図"
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    },
+    {
+      "id": "s06",
+      "heading": "手順 6 を確かめる",
+      "where": "ブラウザ",
+      "image": {
+        "source": "generated",
+        "ref": "captures/compat-generated/s06.png",
+        "label": "説明用再構成図",
+        "alt": "ダミーの画像の説明"
+      },
+      "on_screen_text": "画面の短文",
+      "recipe": "highlight_box",
+      "recipe_params": {
+        "box": {
+          "x": 0.019,
+          "y": 0.232,
+          "w": 0.656,
+          "h": 0.535
+        }
+      },
+      "duration_sec": 14,
+      "check": "確認すること",
+      "capture": {
+        "prompt": "ダミーの説明図"
+      },
+      "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+    }
+  ],
+  "outro": {
+    "summary": "互換を確かめるためのダミーの要約です。",
+    "checks": [
+      "ダミーの確認",
+      "ダミーの確認",
+      "ダミーの確認"
+    ],
+    "next": "ダミーの次の行動",
+    "narration": "互換を確かめるためのダミーのナレーションです。\n互換を確かめるためのダミーのナレーションです。"
+  }
+}

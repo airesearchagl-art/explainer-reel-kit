@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "explainer-reel-kit"
+version = "0.1.0"
+description = "台本からナレーション付きの説明動画（MP4）を作るキット"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "jsonschema>=4.18",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+erkit = "explainer_reel_kit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+explainer_reel_kit = ["data/schema/*.json", "data/templates/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
