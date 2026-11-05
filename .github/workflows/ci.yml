@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-public:
+    name: 公開してよいかの点検
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 履歴の名前・メールも検査する
+          # PR では GitHub が作る仮のマージ commit（アカウントの主アドレスで作られる）ではなく、PR の先頭そのものを検査する
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: check_public（追跡ファイルと履歴）
+        env:
+          # 持ち主だけが知っている語。リポジトリの Settings → Secrets and variables → Actions に置く
+          KIT_DENY_WORDS: ${{ secrets.KIT_DENY_WORDS }}
+        run: python tools/check_public.py --history --head-only
+
+  test:
+    name: テスト（${{ matrix.os }} / Python ${{ matrix.python }}）
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[dev]"
+      - run: erkit check examples/hello-kit.storyboard.md
+      - run: python -m pytest -q
