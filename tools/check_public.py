@@ -6,6 +6,7 @@
 
     python tools/check_public.py                  # 追跡ファイルを検査
     python tools/check_public.py --history        # あわせて commit の名前・メールを検査（noreply 以外は失敗）
+    python tools/check_public.py --history --head-only   # 履歴は HEAD から辿れるものだけ（CI 用）
     python tools/check_public.py --root DIR       # git を使わず DIR の下を全部検査（テスト・確認用）
 
 持ち主だけが知っている語（個人名・会社名・別のプロジェクト名など）は、このファイルにもリポジトリにも書かない。
@@ -148,9 +149,9 @@ def scan(root: Path, files: list[str], deny: re.Pattern[str] | None,
     return hits
 
 
-def scan_history(root: Path) -> list[Hit]:
-    """commit の作者・コミッター・Co-authored-by のメールが noreply だけか。"""
-    out = _run_git(root, "log", "--all", "--format=%H%x1f%ae%x1f%ce%x1f%(trailers:key=Co-authored-by,valueonly,separator=%x1e)")
+def scan_history(root: Path, rev: str = "--all") -> list[Hit]:
+    """commit の作者・コミッター・Co-authored-by のメールが noreply だけか（rev: --all か HEAD）。"""
+    out = _run_git(root, "log", rev, "--format=%H%x1f%ae%x1f%ce%x1f%(trailers:key=Co-authored-by,valueonly,separator=%x1e)")
     hits = []
     for row in out.splitlines():
         if not row.strip():
@@ -172,6 +173,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="公開してよいかの点検")
     ap.add_argument("--root", type=Path, help="git を使わず、このフォルダの下を全部検査する")
     ap.add_argument("--history", action="store_true", help="commit の名前・メールも検査する")
+    ap.add_argument("--head-only", action="store_true",
+                    help="履歴は HEAD から辿れる commit だけを見る（CI で、GitHub が作る仮のマージ commit を除くため）")
     ap.add_argument("--require-deny-words", action="store_true", help="持ち主の語が無ければ失敗にする")
     args = ap.parse_args(argv)
 
@@ -181,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
     files = list_files(root, use_git)
     hits = scan(root, files, deny, load_allow(root))
     if args.history:
-        hits += scan_history(root)
+        hits += scan_history(root, "HEAD" if args.head_only else "--all")
 
     for h in hits:
         print(h)

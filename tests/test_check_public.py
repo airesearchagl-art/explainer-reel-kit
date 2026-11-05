@@ -131,6 +131,10 @@ def test_history(tmp_path):
         "commit", "-q", "-m", "second\n\nCo-authored-by: P <person" + AT + "example.com>")
     hits = cp.scan_history(tmp_path)
     assert len(hits) == 1 and "person" not in hits[0].text
+    # HEAD から辿れない commit（別のブランチ）は --head-only では見ない
+    git("checkout", "-q", "-b", "side", "HEAD~1")
+    assert cp.scan_history(tmp_path, "HEAD") == []
+    assert len(cp.scan_history(tmp_path)) == 1
 
 
 def test_this_repository_is_clean():
