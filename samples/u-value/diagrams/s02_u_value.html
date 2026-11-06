@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>s02 U 値の意味と目安の範囲</title>
+<link rel="stylesheet" href="../../_shared/diagram.css">
+<style>
+  /* U 値の目安の範囲（W/(m²·K)、ガラス中央部）。根拠は ../SOURCES.md。横軸は 0〜6.5 */
+  .ranges { display: grid; gap: 22px; margin-top: 8px; }
+  .rg { display: grid; grid-template-columns: 560px 1fr 210px; align-items: center; gap: 24px; }
+  .rg .name { font-size: 40px; }
+  .rg .num { font-size: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+  .track { position: relative; height: 44px; background: #eef2f8; border-radius: 10px; }
+  .bar { position: absolute; top: 0; bottom: 0; background: var(--blue); border-radius: 10px; }
+  .axis { display: grid; grid-template-columns: 560px 1fr 210px; gap: 24px; font-size: 32px; color: var(--muted); }
+  .axis .ticks { position: relative; height: 40px; }
+  .axis .ticks span { position: absolute; transform: translateX(-50%); }
+  .formula { font-size: 56px; font-weight: 700; }
+  .formula .u { color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div class="card" style="flex:0.85" data-mark="u_formula">
+      <div class="tag blue">U 値（熱貫流率）</div>
+      <div class="formula"><span class="u">U</span> W/(m²·K)</div>
+      <div class="s">ガラス <span class="strong">1 m²</span>、室内外の温度差 <span class="strong">1℃</span> のときに流れる熱（W）</div>
+      <div class="s" style="margin-top:14px">小さいほど熱を通しにくい</div>
+    </div>
+    <div class="card" style="flex:1.6" data-mark="range_chart">
+      <div class="tag gray">ガラスの種類ごとの目安（範囲）</div>
+      <div class="ranges">
+        <div class="rg"><div class="name">単板ガラス</div>
+          <div class="track"><div class="bar" style="left:89.2%;width:3.1%"></div></div><div class="num">5.8〜6.0</div></div>
+        <div class="rg"><div class="name">複層ガラス（空気層）</div>
+          <div class="track"><div class="bar" style="left:41.5%;width:20%"></div></div><div class="num">2.7〜4.0</div></div>
+        <div class="rg"><div class="name">Low-E 複層（空気層）</div>
+          <div class="track"><div class="bar" style="left:24.6%;width:16.9%"></div></div><div class="num">1.6〜2.7</div></div>
+        <div class="rg"><div class="name">ガス入り Low-E 複層</div>
+          <div class="track"><div class="bar" style="left:16.9%;width:12.3%"></div></div><div class="num">1.1〜1.9</div></div>
+        <div class="axis"><div></div><div class="ticks"><span style="left:0%">0</span><span style="left:30.8%">2</span><span style="left:61.5%">4</span><span style="left:92.3%">6</span></div><div></div></div>
+      </div>
+      <div class="s sm" style="margin-top:12px">ガラス中央部の目安。製品・中空層の厚さ・ガスで変わる</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>窓ガラスの熱の損失（目安）— キットのサンプル</title>
+<!--
+キットのサンプル題材の計算ページ。素の HTML と JavaScript だけで、外の URL（ライブラリ・フォント・画像）を読まない。
+撮影: erkit capture samples/u-value/u-value.storyboard.md --serve samples/u-value/app
+U 値はガラス中央部の熱貫流率の一般的な目安（範囲）。根拠は samples/u-value/SOURCES.md。
+-->
+<style>
+  :root {
+    --bg: #f6f8fb; --ink: #1f2a44; --sub: #4b5670; --line: #c9d3e3; --muted: #7a8bab;
+    --blue: #1d5bb8; --blue-bg: #e3eefc; --teal: #127a5e; --teal-bg: #dff5ef; --amber-bg: #fff1d6;
+    --font: "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", "Meiryo", "Hiragino Sans", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); }
+  header { padding: 36px 64px 8px; }
+  h1 { margin: 0; font-size: 40px; }
+  header p { margin: 8px 0 0; font-size: 22px; color: var(--sub); }
+  main { display: grid; grid-template-columns: 560px 1fr; gap: 36px; padding: 28px 64px 48px; }
+  section { background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 28px 32px; }
+  h2 { margin: 0 0 16px; font-size: 28px; }
+  label { display: block; font-size: 22px; margin: 18px 0 8px; color: var(--sub); }
+  select, input { font: inherit; font-size: 26px; padding: 10px 14px; border: 2px solid var(--line); border-radius: 10px; width: 100%; background: #fff; color: var(--ink); }
+  .unit { display: flex; align-items: center; gap: 12px; }
+  .unit span { font-size: 24px; color: var(--sub); white-space: nowrap; }
+  .note { font-size: 18px; color: var(--muted); margin-top: 22px; line-height: 1.6; }
+  .right { display: grid; grid-template-rows: auto auto; gap: 28px; }
+  .result-value { font-size: 64px; font-weight: 700; color: var(--teal); line-height: 1.2; }
+  .result-sub { font-size: 22px; color: var(--sub); }
+  .bars { display: grid; gap: 14px; }
+  .bar-row { display: grid; grid-template-columns: 330px 1fr 190px; align-items: center; gap: 16px; font-size: 22px; padding: 6px 8px; border-radius: 10px; }
+  .bar-row.selected { background: var(--amber-bg); }
+  .track { position: relative; height: 30px; background: #eef2f8; border-radius: 8px; }
+  .range { position: absolute; top: 0; bottom: 0; background: var(--blue); border-radius: 8px; opacity: .85; }
+  .bar-row.selected .range { background: var(--teal); opacity: 1; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-size: 22px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--sub); font-weight: 600; }
+  td.num { text-align: right; }
+  tr.selected td { background: var(--amber-bg); font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>窓ガラスの熱の損失（目安）</h1>
+  <p>熱の損失 ＝ U 値 × 面積 × 室内外の温度差（ガラスだけ。枠・日射・すき間風は含めない）</p>
+</header>
+<main>
+  <section data-testid="input-panel">
+    <h2>条件</h2>
+    <label for="glass">ガラスの種類</label>
+    <select id="glass" data-testid="glass-select"></select>
+    <label for="area">窓（ガラス）の面積</label>
+    <div class="unit"><input id="area" data-testid="area-input" type="number" min="0.1" max="50" step="0.1" value="2.0"><span>m²</span></div>
+    <label for="dt">室内と室外の温度差</label>
+    <div class="unit"><input id="dt" data-testid="dt-input" type="number" min="0" max="60" step="1" value="15"><span>℃</span></div>
+    <p class="note">U 値は、ガラス中央部の熱貫流率の一般的な目安です。製品・中空層の厚さ・ガスの有無で変わるため、範囲で表示します。実際の値は製品の性能の表示で確かめてください。</p>
+  </section>
+
+  <div class="right">
+    <div class="grid2">
+      <section data-testid="result-selected">
+        <h2>選んだガラスの熱の損失</h2>
+        <div class="result-value" id="result" data-testid="result-value">—</div>
+        <div class="result-sub" id="result-sub"></div>
+      </section>
+      <section data-testid="u-table">
+        <h2>U 値の目安 W/(m²·K)</h2>
+        <table><thead><tr><th>ガラスの種類</th><th class="num">U 値</th></tr></thead><tbody id="u-rows"></tbody></table>
+      </section>
+    </div>
+    <section data-testid="compare-chart">
+      <h2>熱の損失の比較（W、範囲）</h2>
+      <div class="bars" id="bars"></div>
+    </section>
+  </div>
+</main>
+<script>
+  // ガラス中央部の熱貫流率 Ug の目安（W/(m²·K)）。根拠は SOURCES.md
+  var GLASS = [
+    {id: "single", name: "単板ガラス", lo: 5.8, hi: 6.0},
+    {id: "double", name: "複層ガラス（空気層）", lo: 2.7, hi: 4.0},
+    {id: "lowe", name: "Low-E 複層ガラス（空気層）", lo: 1.6, hi: 2.7},
+    {id: "gas", name: "ガス入り Low-E 複層ガラス", lo: 1.1, hi: 1.9}
+  ];
+  var MAX_U = 6.0;
+
+  function fmtU(v) { return v.toFixed(1); }
+  function fmtW(v) { return Math.round(v).toLocaleString("ja-JP"); }
+  function num(id, fallback) {
+    var v = parseFloat(document.getElementById(id).value);
+    return isFinite(v) && v >= 0 ? v : fallback;
+  }
+
+  var sel = document.getElementById("glass");
+  GLASS.forEach(function (g) {
+    var o = document.createElement("option");
+    o.value = g.id; o.textContent = g.name; sel.appendChild(o);
+  });
+
+  function render() {
+    var area = num("area", 0), dt = num("dt", 0), cur = sel.value;
+    var rows = document.getElementById("u-rows"), bars = document.getElementById("bars");
+    rows.innerHTML = ""; bars.innerHTML = "";
+    var maxW = MAX_U * area * dt || 1;
+    GLASS.forEach(function (g) {
+      var tr = document.createElement("tr");
+      tr.setAttribute("data-testid", "u-row-" + g.id);
+      if (g.id === cur) tr.className = "selected";
+      tr.innerHTML = "<td></td><td class='num'>" + fmtU(g.lo) + "〜" + fmtU(g.hi) + "</td>";
+      tr.firstChild.textContent = g.name;
+      rows.appendChild(tr);
+
+      var lo = g.lo * area * dt, hi = g.hi * area * dt;
+      var row = document.createElement("div");
+      row.className = "bar-row" + (g.id === cur ? " selected" : "");
+      row.setAttribute("data-testid", "bar-" + g.id);
+      row.innerHTML = "<div></div><div class='track'><div class='range'></div></div><div class='num'></div>";
+      row.children[0].textContent = g.name;
+      var r = row.querySelector(".range");
+      r.style.left = (lo / maxW * 100) + "%";
+      r.style.width = Math.max(1, (hi - lo) / maxW * 100) + "%";
+      row.children[2].textContent = fmtW(lo) + "〜" + fmtW(hi) + " W";
+      bars.appendChild(row);
+
+      if (g.id === cur) {
+        document.getElementById("result").textContent = fmtW(lo) + "〜" + fmtW(hi) + " W";
+        document.getElementById("result-sub").textContent =
+          "U 値 " + fmtU(g.lo) + "〜" + fmtU(g.hi) + " × " + area + " m² × " + dt + " ℃";
+      }
+    });
+  }
+  ["change", "input"].forEach(function (ev) {
+    sel.addEventListener(ev, render);
+    document.getElementById("area").addEventListener(ev, render);
+    document.getElementById("dt").addEventListener(ev, render);
+  });
+  render();
+</script>
+</body>
+</html>
