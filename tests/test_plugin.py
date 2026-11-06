@@ -217,3 +217,14 @@ def test_explainer_new_flow(tmp_path, capsys):
     assert "区分: general" in out
     assert "シーン数" in out
     assert main(["check", "--strict", str(sb)]) == 1  # ひな形のままでは警告（シーン数）が残る
+
+
+def test_reels_is_ignored():
+    """利用者の作業のフォルダ reels/ を git が無視する（社外秘の台本をうっかり commit しない）。"""
+    lines = [ln.strip() for ln in (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()]
+    assert "reels/" in lines
+    if shutil.which("git") and (ROOT / ".git").exists():
+        import subprocess
+        r = subprocess.run(["git", "check-ignore", "-q", "--no-index", "reels/glass-choice/x.storyboard.md"],
+                           cwd=ROOT, capture_output=True)
+        assert r.returncode == 0, "reels/ の中のファイルが無視されていない"
