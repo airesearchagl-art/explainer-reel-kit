@@ -1,7 +1,7 @@
 """文書の中の `erkit …` を抜き出して、erkit の引数の解析と照らし合わせる道具（test_guide・test_plugin が使う）。
 
 - コードブロックの行と、行内のコード（`erkit …`）を抜き出す
-- 後で実装するサブコマンド（new・draft）、PowerShell で記号になる `<` `>`、省略の `…` を禁止する
+- 後で実装するサブコマンド（new）、PowerShell で記号になる `<` `>`、省略の `…` を禁止する
 - サンプルのパス（samples/・examples/・src/ など）が実在するかを確かめる
 """
 from __future__ import annotations

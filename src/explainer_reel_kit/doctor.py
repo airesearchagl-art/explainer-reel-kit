@@ -33,6 +33,7 @@ HINTS = {
     "engine": "AivisSpeech（https://aivis-project.com/）を入れて起動する。起動していれば http://127.0.0.1:10101 で待ち受ける",
     "voice": "AivisSpeech の画面で既定の声（ほのか）を入れるか、erkit voice list の一覧から選んで config/kit.yaml の voice.speaker に書く",
     "output": "config/kit.yaml の output_root か環境変数 ERKIT_OUTPUT_ROOT で、書き込めるフォルダを指定する",
+    "llm": "erkit draft・erkit voice suggest を使うときだけ要る。LM Studio か Ollama のサーバーを起動し、erkit llm check で確かめる",
 }
 
 
@@ -172,6 +173,27 @@ def check_output_root(root: Path) -> CheckResult:
                        "動画 1 本の作業に 1〜2 GB ほど使う。空きを作るか出力先を変える" if status == WARN else "")
 
 
+def check_llm(llm_config: Path | None = None, timeout_sec: float = 3.0) -> CheckResult:
+    """手元の LLM（任意）。見つからなくても FAIL にしない（「そろっています」は変わらない）。
+
+    決まった問い合わせ（モデルの一覧）だけで、資料は送らない。"""
+    from .llm.client import LLMClient
+    from .llm.config import load_llm_config
+    from .llm.confidentiality import GENERAL
+    from .llm.errors import LLMToolError
+
+    name = "手元の LLM（任意）"
+    try:
+        config = load_llm_config(llm_config)
+        endpoint = config.endpoint().with_overrides(timeout_sec=timeout_sec)
+        models = LLMClient(endpoint, confidentiality=GENERAL).list_models()
+    except LLMToolError as e:
+        return CheckResult("llm", name, SKIP, f"使えない（{_first_line(str(e))}）", HINTS["llm"])
+    if not models:
+        return CheckResult("llm", name, SKIP, f"{endpoint.base_url}: モデルが読み込まれていない", HINTS["llm"])
+    return CheckResult("llm", name, OK, f"{endpoint.name} {endpoint.base_url}（モデル {len(models)} 個）")
+
+
 # ---------------------------------------------------------------- まとめ
 
 def run_checks(cfg: kit_config.KitConfig, *, engine_url: str | None = None, channel: str | None = None,
@@ -194,7 +216,7 @@ def print_results(results: list[CheckResult], cfg: kit_config.KitConfig, out=pri
     out(f"設定: {cfg.path or '（無し。既定値で確かめる）'}")
     for r in results:
         out(f"{MARK[r.status]} {r.name}: {r.detail}")
-        if r.status in (FAIL, WARN) and r.hint:
+        if (r.status in (FAIL, WARN) or (r.key == "llm" and r.status == SKIP)) and r.hint:
             out(f"      → {r.hint}")
     bad = [r for r in results if r.status == FAIL]
     out("そろっています" if not bad else f"足りないもの {len(bad)} 件（上の → の手順で入れてください。キットは自動では入れません）")
@@ -207,6 +229,8 @@ def configure(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--executable", help="ブラウザの実行ファイルのパス")
     p.add_argument("--output-root", type=Path, help="出力先のルート")
     p.add_argument("--skip-browser", action="store_true", help="ブラウザの起動を確かめない")
+    p.add_argument("--skip-llm", action="store_true", help="手元の LLM（任意）を確かめない")
+    p.add_argument("--llm-config", type=Path, help="LLM の設定（既定: config/llm.yaml を探す）")
     p.add_argument("--json", action="store_true", help="結果を JSON で出す")
     p.set_defaults(func=run)
     return p
@@ -214,7 +238,8 @@ def configure(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
 
 def register(sub) -> None:
     configure(sub.add_parser("doctor", help="動画を作るのに要るものがそろっているか確かめる",
-                             description="Python・ライブラリ・ブラウザ・ffmpeg・PowerPoint・AivisSpeech（既定の声）・出力先を確かめる"))
+                             description="Python・ライブラリ・ブラウザ・ffmpeg・PowerPoint・AivisSpeech（既定の声）・出力先と、"
+                                         "任意で手元の LLM を確かめる"))
 
 
 def run(args, *, transport=None, platform: str | None = None) -> int:
@@ -226,6 +251,8 @@ def run(args, *, transport=None, platform: str | None = None) -> int:
     results = run_checks(cfg, engine_url=args.engine_url, channel=args.channel, executable=args.executable,
                          output_root=args.output_root, platform=platform, transport=transport,
                          skip_browser=args.skip_browser)
+    if not args.skip_llm:  # 任意の行。run_checks（erkit make も使う）には入れない
+        results.append(check_llm(args.llm_config))
     if args.json:
         print(json.dumps({"config": str(cfg.path) if cfg.path else None,
                           "ok": all(r.ok for r in results), "checks": [asdict(r) for r in results]},
@@ -245,4 +272,4 @@ def main(argv: list[str] | None = None, **kw) -> int:
 
 
 __all__ = ["CheckResult", "run_checks", "check_engine", "check_ffmpeg", "check_powerpoint", "check_browser",
-           "check_packages", "check_python", "check_output_root", "main"]
+           "check_packages", "check_python", "check_output_root", "check_llm", "main"]

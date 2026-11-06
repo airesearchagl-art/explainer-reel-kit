@@ -1,0 +1,44 @@
+# 手元の LLM の設定のひな形。config/llm.yaml に写して使う（llm.yaml は commit しない）。
+# 探す順: --llm-config ＞ 環境変数 ERKIT_LLM_CONFIG ＞ 今のフォルダの config/llm.yaml ＞ キットのフォルダの config/llm.yaml
+# ＞ 組み込みの既定（このファイルと同じ）。使うのは erkit draft・erkit voice suggest・erkit llm check だけ（任意）。
+#
+# - 接続は OpenAI 互換の API（LM Studio・Ollama など）。route は local だけ
+# - 接続先は、この PC（127.0.0.1 / ::1 / localhost）か LAN の IP アドレスだけ。それ以外はコードで止める
+# - 社外秘の台本（区分が未記入も）は、この PC の LLM にだけ送る（LAN の PC にも送らない）。設定では変えられない
+# - クラウドの AI への接続と API キーはありません（route: cloud・api_key・api_key_env はエラー）
+# - 設計は docs/design/llm.md
+version: 1
+default_profile: lmstudio
+
+profiles:
+  lmstudio:
+    route: local
+    base_url: http://127.0.0.1:1234/v1     # LM Studio の Developer → Local Server の既定
+    model: ""                              # 空ならサーバーに読み込まれているモデル（1 つだけ読み込んでおく）
+    timeout_sec: 600
+  ollama:
+    route: local
+    base_url: http://127.0.0.1:11434/v1    # Ollama の OpenAI 互換の口
+    model: ""
+    timeout_sec: 600
+
+# 用途ごとの既定。model が空なら、profile の model、それも空ならサーバーに読み込まれているモデル。
+# --model の指定がいちばん優先。指定のモデルがサーバーに無ければ止める（別のモデルを勝手に使わない）。
+tasks:
+  draft:                       # 台本の下書き（erkit draft）
+    model: ""
+    # 動作を確かめた例: qwen/qwen3.8-27b（Context Length 8192）
+    thinking: "off"            # 思考なし（引用符なしの off も off として読む）
+    max_tokens: 4096           # 答えの長さの上限（実際はシーン数から決める）
+    expected_context: 8192     # サーバーで読み込むときの Context Length に合わせる
+  light:                       # 短く決まった形の仕事（読みの候補・長い資料の要点）
+    model: ""
+    # 動作を確かめた例: qwen/qwen3.5-9b（Context Length 8192）
+    thinking: "off"
+    max_tokens: 2048
+    expected_context: 8192
+
+# 動画で触れない語（話す・見せる文や撮影の手順に出たら、erkit draft が注意を出す）。既定は空
+avoid_words: []
+# avoid_words:
+#   - 社内の呼び名
