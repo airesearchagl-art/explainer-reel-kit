@@ -26,8 +26,8 @@ DOCS = sorted(
     + list((ROOT / "prompts").glob("*.md"))
 )
 GUIDE_FILES = ["00-setup", "01-intake", "02-audience", "03-outline", "04-storyboard", "05-visuals",
-               "06-review", "07-export", "confidentiality", "troubleshooting"]
-PROMPT_FILES = ["01-intake", "02-outline", "03-storyboard", "04-diagram-html"]
+               "06-review", "07-export", "confidentiality", "troubleshooting", "batch"]
+PROMPT_FILES = ["01-intake", "02-outline", "03-storyboard", "04-diagram-html", "05-batch"]
 
 ALL_COMMANDS = [(p, no, args) for p in DOCS for no, args in extract_commands(p)]
 

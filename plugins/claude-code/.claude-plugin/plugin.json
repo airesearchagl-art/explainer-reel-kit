@@ -1,7 +1,7 @@
 {
   "name": "explainer-reel-kit",
   "displayName": "Explainer Reel Kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "題材から AI と対話して台本を書き、erkit でナレーション付きの説明動画（MP4）にする。手順の正本はキットの docs/guide/",
   "author": {
     "name": "explainer-reel-kit"
