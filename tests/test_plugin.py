@@ -228,3 +228,27 @@ def test_reels_is_ignored():
         r = subprocess.run(["git", "check-ignore", "-q", "--no-index", "reels/glass-choice/x.storyboard.md"],
                            cwd=ROOT, capture_output=True)
         assert r.returncode == 0, "reels/ の中のファイルが無視されていない"
+
+
+SLASH_REF = re.compile(r"(?<![\w./@-])/explainer[\w:-]*")
+
+
+def test_slash_command_refs_use_plugin_prefix():
+    """文書の中の `/explainer…` は実際に打つ形（`/explainer-reel-kit:<コマンドかスキルの名前>`）で、実在するものを指す。
+    （プラグインのコマンド・スキルは名前の前にプラグインの名前が付く。Skills の文書の Command-name の表）"""
+    plugin = json.loads(MANIFEST.read_text(encoding="utf-8"))["name"]
+    names = set(COMMANDS) | set(SKILLS)
+    docs = sorted({ROOT / "AGENTS.md", ROOT / "README.md", *PLUGIN_DOCS,
+                   *(ROOT / "docs" / "guide").glob("*.md"), *(ROOT / "prompts").glob("*.md")})
+    seen = set()
+    for path in docs:
+        for no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            for ref in SLASH_REF.findall(line):
+                where = f"{path.relative_to(ROOT)}:{no}: {ref}"
+                if ref == f"/{plugin}":  # 「/explainer-reel-kit と打つと候補に出る」
+                    continue
+                assert ref.startswith(f"/{plugin}:"), f"プラグインの名前が付いていない: {where}"
+                name = ref.split(":", 1)[1]
+                assert name in names, f"無いコマンド・スキル: {where}"
+                seen.add(name)
+    assert set(COMMANDS) <= seen  # 3 つのコマンドがどれも正式な名前で案内されている

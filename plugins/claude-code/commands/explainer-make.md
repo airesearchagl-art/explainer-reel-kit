@@ -4,7 +4,7 @@ argument-hint: "[台本のパス] [撮るページのフォルダ（--serve に�
 disable-model-invocation: true
 ---
 
-# /explainer-make — MP4 まで作る
+# /explainer-reel-kit:explainer-make — MP4 まで作る
 
 引数: $ARGUMENTS
 
@@ -22,7 +22,7 @@ erkit check samples/u-value/u-value.storyboard.md
 erkit make samples/u-value/u-value.storyboard.md --serve samples/u-value/app --dry-run
 ```
 
-- `erkit check` が通らなければ、ここで止めて `/explainer-check` へ
+- `erkit check` が通らなければ、ここで止めて `/explainer-reel-kit:explainer-check` へ
 - `--dry-run` の表示（区分・出力先・声・段の順番）を人に見せる。社外秘の確かめで止まったら（終了コード 1）、表示の理由を伝える。区分を下げて回避しない
 - 画像がまだそろっていなければ、試作（`--allow-placeholders --label 試作`）にするか人に聞く
 

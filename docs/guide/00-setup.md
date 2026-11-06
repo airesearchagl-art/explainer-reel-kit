@@ -68,7 +68,7 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 
 ## Claude Code のプラグイン（任意）
 
-Claude Code を使うなら、プラグインを入れると、手順書の順に進めるスキルと `/explainer-new`・`/explainer-check`・`/explainer-make` が使えます。キットのフォルダで Claude Code を開き（`cd $env:USERPROFILE\explainer-reel-kit` の後に `claude`）、Claude Code の中で `/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit` と打ちます。詳しくは [プラグインの説明](../../plugins/claude-code/README.md)。
+Claude Code を使うなら、プラグインを入れると、手順書の順に進めるスキルと `/explainer-reel-kit:explainer-new`・`/explainer-reel-kit:explainer-check`・`/explainer-reel-kit:explainer-make` が使えます。キットのフォルダで Claude Code を開き（`cd $env:USERPROFILE\explainer-reel-kit` の後に `claude`）、Claude Code の中で `/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit` と打ちます。詳しくは [プラグインの説明](../../plugins/claude-code/README.md)。
 
 ## AI に任せること
 

@@ -12,7 +12,7 @@ description: 説明動画の台本（*.storyboard.md）を書く・直す。構�
 
 - 区分（`confidentiality`）が人と決まっていること。決まっていなければ、`make-explainer` スキルの「最初に区分を決める」から。`confidential` なら資料を受け取らずに止まる
 - 構成の表を人がよいと言っていること（`docs/guide/03-outline.md`）
-- 台本のフォルダが無ければ `/explainer-new` で作る
+- 台本のフォルダが無ければ `/explainer-reel-kit:explainer-new` で作る
 
 ## 書くときの要点
 

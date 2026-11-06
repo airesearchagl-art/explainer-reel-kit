@@ -11,7 +11,7 @@ description: 説明動画の説明図を HTML で書き、erkit diagram で PNG 
 ## 要点
 
 - 1 シーン 1 ファイル。台本の `capture.src` のパスに書く
-- 共通の CSS を HTML のファイルからの相対パスで読む（`reels/<id>/diagrams/` なら `../../_shared/diagram.css`。`/explainer-new` が `reels/_shared` を写してある）
+- 共通の CSS を HTML のファイルからの相対パスで読む（`reels/<id>/diagrams/` なら `../../_shared/diagram.css`。`/explainer-reel-kit:explainer-new` が `reels/_shared` を写してある）
 - 大きさは CSS が決める（2420×1000 px）。文字は 32px 未満にしない
 - 指したい要素に `data-mark="名前"`。台本の `recipe_params` の mark と同じ名前、1 つの図で 1 回だけ
 - **外の URL を読まない**（Web フォント・CDN・外の画像・fetch）。読むとそのシーンは失敗する

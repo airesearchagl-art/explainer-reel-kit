@@ -4,7 +4,7 @@ argument-hint: "[台本のパス（省くと環境の確認だけ）]"
 disable-model-invocation: true
 ---
 
-# /explainer-check — 環境と台本を確かめる
+# /explainer-reel-kit:explainer-check — 環境と台本を確かめる
 
 対象の台本: $ARGUMENTS
 

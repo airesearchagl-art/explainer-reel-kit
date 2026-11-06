@@ -32,11 +32,11 @@ claude
 | 入口 | すること |
 |---|---|
 | 「説明動画を作りたい」と頼む | スキル `make-explainer` が働き、手順書の順に進める（区分 → 聞き取り → 見る人 → 構成 → 台本 → 説明図・撮影 → 確認 → 書き出し） |
-| `/explainer-new` | 区分を確かめ、`reels/` に台本のフォルダとひな形を作る（例 `/explainer-new glass-choice`） |
-| `/explainer-check` | `erkit doctor` と `erkit check` を実行して読み、足りないものと台本の直す所を示す（例 `/explainer-check reels/glass-choice/glass-choice.storyboard.md`） |
-| `/explainer-make` | `--dry-run` で段の順番を見せ、人がよいと言ってから MP4 まで作る。止まったら続きから作るコマンドを示す |
+| `/explainer-reel-kit:explainer-new` | 区分を確かめ、`reels/` に台本のフォルダとひな形を作る（例 `/explainer-reel-kit:explainer-new glass-choice`） |
+| `/explainer-reel-kit:explainer-check` | `erkit doctor` と `erkit check` を実行して読み、足りないものと台本の直す所を示す（例 `/explainer-reel-kit:explainer-check reels/glass-choice/glass-choice.storyboard.md`） |
+| `/explainer-reel-kit:explainer-make` | `--dry-run` で段の順番を見せ、人がよいと言ってから MP4 まで作る。止まったら続きから作るコマンドを示す |
 
-コマンドは、入力欄で `/explainer` と打つと候補に出ます（正式な名前は `/explainer-reel-kit:explainer-new` のように、プラグインの名前が前に付きます）。
+コマンドもスキルも、名前の前にプラグインの名前 `explainer-reel-kit:` が付きます（例 `/explainer-reel-kit:explainer-new`）。入力欄で `/explainer-reel-kit` と打つと候補に出ます。スキル（`make-explainer` など）は、頼んだ内容に合わせて Claude Code が自分で使うので、名前を打たなくてかまいません。
 
 スキル:
 

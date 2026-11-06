@@ -28,14 +28,14 @@ description: 題材から説明動画（ナレーション付きの MP4）を作
 
 | 段 | 読む手順書 | すること | 使うスキル・コマンド |
 |---|---|---|---|
-| 0 準備 | `docs/guide/00-setup.md` | `erkit doctor` を読み、足りないものの入れ方を伝える（入れるのは人） | `/explainer-check` |
+| 0 準備 | `docs/guide/00-setup.md` | `erkit doctor` を読み、足りないものの入れ方を伝える（入れるのは人） | `/explainer-reel-kit:explainer-check` |
 | 1 聞き取り | `docs/guide/01-intake.md` | 1〜3 個ずつ聞き、まとめて確かめる | — |
 | 2 見る人 | `docs/guide/02-audience.md` | A・B・C を理由と一緒に提案 | — |
 | 3 構成 | `docs/guide/03-outline.md` | シーンの表を見せる。**台本を書く前に** | — |
-| 4 台本 | `docs/guide/04-storyboard.md` | 台本のフォルダを作り、台本を書き、`erkit check` を通す | `/explainer-new`、`storyboard` |
+| 4 台本 | `docs/guide/04-storyboard.md` | 台本のフォルダを作り、台本を書き、`erkit check` を通す | `/explainer-reel-kit:explainer-new`、`storyboard` |
 | 5 説明図・撮影 | `docs/guide/05-visuals.md` | 説明図の HTML、操作定義、確認画像 | `diagram`、`web-capture` |
-| 6 確認 | `docs/guide/06-review.md` | `--dry-run`、試作、読みの確認 | `/explainer-make` |
-| 7 書き出し | `docs/guide/07-export.md` | MP4。止まったら `--from` で続きから | `/explainer-make` |
+| 6 確認 | `docs/guide/06-review.md` | `--dry-run`、試作、読みの確認 | `/explainer-reel-kit:explainer-make` |
+| 7 書き出し | `docs/guide/07-export.md` | MP4。止まったら `--from` で続きから | `/explainer-reel-kit:explainer-make` |
 
 見本は `samples/u-value/`（台本・説明図・操作定義・撮るページがそろっている）。
 

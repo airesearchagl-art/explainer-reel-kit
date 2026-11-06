@@ -48,7 +48,7 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 | エージェント（Claude Code・Codex・Cursor・Copilot など） | このフォルダを開いて「`AGENTS.md` を読んで、説明動画を作りたい」と頼む |
 | チャットだけの AI・手元の LLM のチャット | [prompts/](prompts/README.md) の指示文を順に貼る。コマンドは人が打つ |
 
-Claude Code なら、プラグインを入れると `/explainer-new`・`/explainer-check`・`/explainer-make` が使えます。キットのフォルダで Claude Code を開き、`/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit`（[プラグインの説明](plugins/claude-code/README.md)）。
+Claude Code なら、プラグインを入れると `/explainer-reel-kit:explainer-new`・`/explainer-reel-kit:explainer-check`・`/explainer-reel-kit:explainer-make` が使えます。キットのフォルダで Claude Code を開き、`/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit`（[プラグインの説明](plugins/claude-code/README.md)）。
 
 手順の全体は [手順書](docs/guide/README.md)（聞き取り → 見る人 → 構成 → 台本 → 説明図・撮影 → 確認 → 書き出し）にあります。
 

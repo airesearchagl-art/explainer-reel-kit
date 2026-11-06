@@ -4,7 +4,7 @@ argument-hint: "[題材の id（英小文字・数字・-・_）]"
 disable-model-invocation: true
 ---
 
-# /explainer-new — 台本のフォルダを作る
+# /explainer-reel-kit:explainer-new — 台本のフォルダを作る
 
 題材の id: $ARGUMENTS
 
