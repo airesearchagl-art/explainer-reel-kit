@@ -4,6 +4,10 @@
 # 出力先のルート。空なら ユーザーのフォルダ\ExplainerReelKit\output（環境変数 ERKIT_OUTPUT_ROOT が優先）
 output_root: ""
 
+# 撮影素材のルート。空なら ユーザーのフォルダ\ExplainerReelKit\captures（環境変数 ERKIT_CAPTURES_ROOT が優先）。
+# Web の撮影は <captures_root>\web\<reel id>\ に置く（日付なし。撮り直すと上書き）
+captures_root: ""
+
 voice:
   engine: aivisspeech          # 音声合成エンジン（いまは aivisspeech）
   url: ""                      # 空ならエンジンの既定（AivisSpeech は http://127.0.0.1:10101）

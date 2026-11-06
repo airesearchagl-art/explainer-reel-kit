@@ -1,4 +1,4 @@
-"""通し生成: ナレーション・スライド・書き出し・音声の合成。
+"""通し生成: 台本から MP4 まで（erkit make）と、音声の合成（mux）。"""
+from .make import STAGES, Hooks, MakeError, MakeOptions, MakeResult, MakeStop, make
 
-後のパケットで実装する（いまは置き場所だけ）。
-"""
+__all__ = ["Hooks", "MakeError", "MakeOptions", "MakeResult", "MakeStop", "STAGES", "make"]

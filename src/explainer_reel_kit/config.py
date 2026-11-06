@@ -36,6 +36,7 @@ class VoiceCredit:
 class KitConfig:
     path: Path | None = None  # 読んだ設定ファイル（無ければ None）
     output_root: Path | None = None
+    captures_root: Path | None = None
     voice_engine: str = "aivisspeech"
     voice_url: str | None = None  # None ならエンジンの既定（AivisSpeech は http://127.0.0.1:10101）
     voice_speaker: int = DEFAULT_SPEAKER
@@ -83,11 +84,12 @@ def parse_config(data: Any, path: Path | None = None) -> KitConfig:
     if not isinstance(data, dict):
         raise ConfigError(f"{where}: key: value の形式で書いてください")
     cfg = KitConfig(path=path)
-    root = data.get("output_root")
-    if root not in (None, ""):
-        if not isinstance(root, str):
-            raise ConfigError(f"{where}: output_root はフォルダのパス（文字列）で書いてください")
-        cfg.output_root = Path(os.path.expandvars(os.path.expanduser(root)))
+    for key in ("output_root", "captures_root"):
+        root = data.get(key)
+        if root not in (None, ""):
+            if not isinstance(root, str):
+                raise ConfigError(f"{where}: {key} はフォルダのパス（文字列）で書いてください")
+            setattr(cfg, key, Path(os.path.expandvars(os.path.expanduser(root))))
     voice = data.get("voice") or {}
     if not isinstance(voice, dict):
         raise ConfigError(f"{where}: voice は key: value で書いてください")
@@ -138,3 +140,23 @@ def output_root(cfg: KitConfig, explicit: Path | str | None = None, env: Mapping
     if cfg.output_root is not None:
         return cfg.output_root
     return Path.home() / "ExplainerReelKit" / "output"
+
+
+def captures_root(cfg: KitConfig, explicit: Path | str | None = None, env: Mapping[str, str] | None = None) -> Path:
+    """撮影素材のルート: 引数 ＞ 環境変数 ERKIT_CAPTURES_ROOT ＞ 設定の captures_root ＞ ユーザーのフォルダ\\ExplainerReelKit\\captures。"""
+    env = os.environ if env is None else env
+    if explicit:
+        return Path(explicit)
+    if env.get("ERKIT_CAPTURES_ROOT"):
+        return Path(env["ERKIT_CAPTURES_ROOT"])
+    if cfg.captures_root is not None:
+        return cfg.captures_root
+    return Path.home() / "ExplainerReelKit" / "captures"
+
+
+def load_config_or_default(explicit: Path | str | None = None) -> KitConfig:
+    """設定を読む。読めなければ既定値（呼ぶ側が設定の誤りで止まる必要がないとき）。"""
+    try:
+        return load_config(explicit)
+    except ConfigError:
+        return KitConfig()

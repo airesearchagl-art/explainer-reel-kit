@@ -15,6 +15,7 @@ output_name: hello_kit
 キットの例の台本。`erkit check examples/hello-kit.storyboard.md` で検証できる。
 説明図: `erkit diagram examples/hello-kit.storyboard.md --out <出力先>`（diagrams/*.html を描く）。
 撮影: `erkit capture examples/hello-kit.storyboard.md --serve examples/hello-page --out <出力先>`（hello-kit.actions.yaml に従う）。
+通しで MP4 まで: `erkit make examples/hello-kit.storyboard.md --serve examples/hello-page`。
 -->
 
 ## intro
@@ -93,6 +94,8 @@ on_screen_text: 文章／声／秒数
 recipe_params:
   lines: [文章, 声, 秒数]
 capture:
+  tool: html
+  src: diagrams/s04_voice.html
   prompt: ナレーションの文章が声と秒数になる流れ
 ```
 ナレーションは、手元の音声合成エンジンで作ります。声の長さに合わせて、スライドの秒数が決まります。
@@ -104,8 +107,12 @@ image:
   source: generated
   ref: assets/s05_export.png
   label: 説明用再構成図
-recipe: fade_sequence
+recipe: highlight_box
+recipe_params:
+  mark: mp4
 capture:
+  tool: html
+  src: diagrams/s05_export.html
   prompt: スライドから MP4 ができる流れ
 ```
 最後に、アニメーション付きのスライドを PowerPoint で動画に書き出し、ナレーションを重ねて完成です。

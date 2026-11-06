@@ -153,7 +153,7 @@ def test_example_storyboard_with_cli_and_overlay(tmp_path, browser_opts, capsys)
     out = tmp_path / "out"
     assert main(["diagram", str(EXAMPLE), "--out", str(out), "--overlay", str(out / "check.png"), *ch]) == 0
     text = capsys.readouterr().out
-    assert "説明図 2 件 / 失敗 0 件" in text and (out / "check.png").is_file()
+    assert "説明図 4 件 / 失敗 0 件" in text and (out / "check.png").is_file()  # s01・s02・s04・s05
     doc = mk.load(out / "assets" / "s01_storyboard.marks.json")
     assert "scene_block" in doc["marks"]
 

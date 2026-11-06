@@ -35,4 +35,4 @@ Playwright のブラウザは `python -m playwright install chromium`（Chromium
   - ACML-NC 1.0: 非営利の利用だけ
   - 独自の規約: その条件（クレジット必須のものもあります）
 - どのライセンスでも、声の本人・公式と誤認させる使い方などは禁止されています
-- クレジットが必要な声を使うときは、`config/kit.yaml` の `voice.credits` に声と文言を書き、`erkit deck --credit <文言>` で動画の最後のスライドに「ナレーション音声: <文言>」を出します（通し生成では自動にする予定）。動画の公開先の説明欄にも書いてください
+- クレジットが必要な声を使うときは、`config/kit.yaml` の `voice.credits` に声と文言を書き、`erkit deck --credit <文言>` で動画の最後のスライドに「ナレーション音声: <文言>」を出します（`erkit make` では自動で入ります）。動画の公開先の説明欄にも書いてください

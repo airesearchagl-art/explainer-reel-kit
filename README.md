@@ -14,7 +14,7 @@
 
 ## 状態
 
-**開発中（0.1.0）**。いまできるのは、台本の検証・説明図・Web 画面の撮影・ナレーション・スライドまでです。動画の書き出しと導入の手順は後の版で入ります。
+**開発中（0.1.0）**。台本から MP4 まで通しで作れます（`erkit make`）。導入スクリプトと AI との対話の手順は後の版で入ります。
 
 | できること | 状態 |
 |---|---|
@@ -23,11 +23,26 @@
 | スライド `erkit deck`（[仕様](docs/design/recipes.md)） | できる |
 | 説明図 `erkit diagram`（HTML → PNG ＋ 注釈位置）| できる（[書き方](docs/design/diagram.md)） |
 | Web 画面の撮影 `erkit capture`・操作の記録 `erkit record` | できる（[書き方](docs/design/capture-web.md)） |
-| 書き出し・`erkit make` | これから |
-| 導入スクリプト・環境の確認 `erkit doctor` | これから |
+| 通し生成 `erkit make`（撮影 → 説明図 → ナレーション → スライド → 書き出し → 音声の合成）（[仕様](docs/design/make.md)） | できる（書き出しは Windows ＋ PowerPoint） |
+| 環境の確認 `erkit doctor` | できる |
+| 導入スクリプト | これから |
 | AI との対話の手順（`AGENTS.md`）・Claude Code のプラグイン | これから |
 
-## いま試す（開発者向け）
+## 動画を作る（Windows）
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+python -m playwright install chromium
+erkit doctor
+erkit make examples\hello-kit.storyboard.md --serve examples\hello-page
+```
+
+`erkit doctor` で足りないものがあれば、表示された手順で入れてください（ffmpeg・AivisSpeech・PowerPoint はキットが自動では入れません）。
+できた MP4 は `ユーザーのフォルダ\ExplainerReelKit\output\<日付>_hello-kit\` に入ります。
+
+## 段ごとに試す（開発者向け）
 
 ```bash
 python -m venv .venv
@@ -45,7 +60,7 @@ erkit voice synth examples/hello-kit.storyboard.md --out-dir out/voice
 erkit deck examples/hello-kit.storyboard.md --out out/hello_kit.pptx --durations out/voice/durations.json
 ```
 
-設定は `config/kit.example.yaml` を `config/kit.yaml` に写して書きます（出力先・声・読み辞書・声のクレジット）。
+設定は `config/kit.example.yaml` を `config/kit.yaml` に写して書きます（出力先・撮影素材の置き場所・声・読み辞書・声のクレジット）。
 
 台本の書き方: [テンプレート](src/explainer_reel_kit/data/templates/storyboard.md)・[台本の仕様](docs/design/storyboard.md)・[注釈位置の仕様](docs/design/marks.md)
 

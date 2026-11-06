@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>s04 ナレーションの文章が声と秒数になる流れ</title>
+<link rel="stylesheet" href="../../samples/_shared/diagram.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div class="card" data-mark="text">
+      <div class="tag blue">文章</div>
+      <div class="s">台本のナレーション<br>（段落ごと）</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card center" data-mark="engine">
+      <div class="tag gray">音声合成エンジン</div>
+      <div class="t sm">この PC の<br>AivisSpeech</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card" data-mark="seconds">
+      <div class="tag teal">声と秒数</div>
+      <div class="s">・シーンごとの WAV<br>・スライドの秒数<br>　（durations.json）</div>
+    </div>
+  </div>
+  <div class="card center"><div class="s">声の長さに合わせて <span class="strong">スライドの切り替え</span> が決まる</div></div>
+</div>
+</body>
+</html>
