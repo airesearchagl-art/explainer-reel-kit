@@ -14,14 +14,16 @@
 
 ## 状態
 
-**開発中（0.1.0）**。いまできるのは、台本の検証・ナレーション・スライドまでです。動画の書き出しと導入の手順は後の版で入ります。
+**開発中（0.1.0）**。いまできるのは、台本の検証・説明図・Web 画面の撮影・ナレーション・スライドまでです。動画の書き出しと導入の手順は後の版で入ります。
 
 | できること | 状態 |
 |---|---|
 | 台本の検証 `erkit check`・JSON への変換 `erkit convert` | できる |
 | ナレーション `erkit voice list / synth / kana`（[仕様](docs/design/narration.md)） | できる（AivisSpeech が要る） |
 | スライド `erkit deck`（[仕様](docs/design/recipes.md)） | できる |
-| 説明図・撮影・書き出し・`erkit make` | これから |
+| 説明図 `erkit diagram`（HTML → PNG ＋ 注釈位置）| できる（[書き方](docs/design/diagram.md)） |
+| Web 画面の撮影 `erkit capture`・操作の記録 `erkit record` | できる（[書き方](docs/design/capture-web.md)） |
+| 書き出し・`erkit make` | これから |
 | 導入スクリプト・環境の確認 `erkit doctor` | これから |
 | AI との対話の手順（`AGENTS.md`）・Claude Code のプラグイン | これから |
 
@@ -31,7 +33,10 @@
 python -m venv .venv
 # Windows: .venv\Scripts\activate   / それ以外: source .venv/bin/activate
 pip install -e ".[dev]"
+python -m playwright install chromium      # 説明図・撮影のブラウザ（Windows なら代わりに --channel msedge でも可）
 erkit check examples/hello-kit.storyboard.md
+erkit diagram examples/hello-kit.storyboard.md --out output --overlay output/check-diagram.png
+erkit capture examples/hello-kit.storyboard.md --serve examples/hello-page --out output --overlay output/check-capture.png
 pytest
 
 # AivisSpeech を起動しておく（既定 http://127.0.0.1:10101）
@@ -42,7 +47,7 @@ erkit deck examples/hello-kit.storyboard.md --out out/hello_kit.pptx --durations
 
 設定は `config/kit.example.yaml` を `config/kit.yaml` に写して書きます（出力先・声・読み辞書・声のクレジット）。
 
-台本の書き方: [テンプレート](src/explainer_reel_kit/data/templates/storyboard.md)・[台本の仕様](docs/design/storyboard.md)
+台本の書き方: [テンプレート](src/explainer_reel_kit/data/templates/storyboard.md)・[台本の仕様](docs/design/storyboard.md)・[注釈位置の仕様](docs/design/marks.md)
 
 ## 前提（完成時）
 

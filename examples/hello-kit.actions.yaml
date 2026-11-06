@@ -1,0 +1,20 @@
+# 例の台本（hello-kit.storyboard.md）の操作定義。
+#   erkit capture examples/hello-kit.storyboard.md --serve examples/hello-page --out <保存先>
+# 台本の capture.url（http://127.0.0.1:8000/）は、--serve のとき examples/hello-page の配信先に置き換わる
+schema: explainer-reel/web-actions@1
+reel_id: hello-kit
+defaults:
+  viewport: {width: 1920, height: 1080}
+  settle_ms: 300
+scenes:
+  s03:
+    reset: true
+    actions:
+      - op: wait_load
+      - op: click
+        selector: '[data-testid="calc"]'
+      - op: wait_for
+        selector: 'text=3.20 m²'
+    marks:
+      result_area: '[data-testid="result-area"]'
+      input_area: '[data-testid="input-area"]'

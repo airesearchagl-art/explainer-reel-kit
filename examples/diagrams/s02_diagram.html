@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>s02 説明図ができる流れ</title>
+<link rel="stylesheet" href="../../samples/_shared/diagram.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div class="card" data-mark="html_card">
+      <div class="tag blue">説明図の HTML</div>
+      <div class="code" style="font-size:38px">&lt;div data-mark="input"&gt;
+  …
+&lt;/div&gt;</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card center">
+      <div class="tag gray">erkit diagram</div>
+      <div class="t sm">ネットワークを<br>止めて描く</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="card" data-mark="outputs">
+      <div class="tag teal">できるもの</div>
+      <div class="s">・画像（PNG）<br>・部品の位置<br>　（marks.json）</div>
+    </div>
+  </div>
+  <div class="card center"><div class="s">台本は <span class="strong">mark: 名前</span> で指す → 座標を手で写さない</div></div>
+</div>
+</body>
+</html>

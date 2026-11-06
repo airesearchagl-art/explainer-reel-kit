@@ -13,7 +13,7 @@
 | python-pptx | .pptx の生成 | MIT | いまから |
 | lxml | スライドのアニメーションの XML | BSD-3-Clause | いまから |
 | Pillow | 画像の大きさ・確認用の画像 | MIT-CMU（HPND） | いまから |
-| Playwright（Python） | Web 画面の撮影・説明図の描画 | Apache-2.0 | 撮影・説明図の段から（必須） |
+| Playwright（Python） | Web 画面の撮影・説明図の描画 | Apache-2.0 | いまから（必須） |
 | pytest | テスト（開発用） | MIT | いまから（`.[dev]`） |
 
 Playwright のブラウザは `python -m playwright install chromium`（Chromium の各ライセンス）で入れるか、Windows の Microsoft Edge を使います。

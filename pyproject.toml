@@ -16,6 +16,8 @@ dependencies = [
   "python-pptx>=1.0,<2",
   "lxml>=4.9",
   "Pillow>=9",
+  # 撮影・説明図（ブラウザは python -m playwright install chromium、または Edge）
+  "playwright>=1.40",
 ]
 
 [project.optional-dependencies]
