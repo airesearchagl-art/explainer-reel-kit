@@ -12,14 +12,14 @@ from typing import Sequence
 
 from . import __version__
 from . import storyboard as sb
+from . import doctor
 from .deck import cli as deck_cli
 from .narration import cli as narration_cli
+from .reel import cli as make_cli
 
 # 後のパケットで実装するサブコマンド（いまは案内を出して終了コード 2）
 PLANNED = {
-    "doctor": "環境の確認（Python・ffmpeg・AivisSpeech・PowerPoint など）",
     "new": "台本のひな形を作る",
-    "make": "台本から MP4 までの通し生成",
     "draft": "手元の LLM で台本のたたき台を作る（社外秘の資料用）",
 }
 
@@ -41,6 +41,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     deck_cli.register(sub)
     narration_cli.register(sub)
+    make_cli.register(sub)
+    doctor.register(sub)
     _add_media_parsers(sub)
 
     for name, desc in PLANNED.items():

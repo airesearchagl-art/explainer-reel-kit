@@ -5,6 +5,7 @@
 | 項目 | 内容 |
 |---|---|
 | `output_root` | 出力先のルート（空ならユーザーのフォルダの `ExplainerReelKit\output`） |
+| `captures_root` | 撮影素材のルート（空ならユーザーのフォルダの `ExplainerReelKit\captures`） |
 | `voice.engine` / `voice.url` | 音声合成エンジン（既定 AivisSpeech、`http://127.0.0.1:10101`） |
 | `voice.speaker` | 既定の声（ほのか / ノーマル） |
 | `voice.dictionaries` | 読み辞書（既定は使わない） |

@@ -30,7 +30,7 @@ erkit = "explainer_reel_kit.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-explainer_reel_kit = ["data/schema/*.json", "data/templates/*.md"]
+explainer_reel_kit = ["data/schema/*.json", "data/templates/*.md", "export/*.ps1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

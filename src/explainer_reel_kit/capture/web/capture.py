@@ -83,9 +83,12 @@ def web_scenes(doc: dict[str, Any]) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------- 保存先
 
 def default_captures_root() -> Path:
-    """撮影素材のルート: 環境変数 ERKIT_CAPTURES_ROOT ＞ ホームの ExplainerReelKit/captures。"""
-    env = os.environ.get(ENV_CAPTURES_ROOT)
-    return Path(env) if env else Path.home() / "ExplainerReelKit" / "captures"
+    """撮影素材のルート: 環境変数 ERKIT_CAPTURES_ROOT ＞ config/kit.yaml の captures_root ＞ ホームの ExplainerReelKit/captures。"""
+    from ... import config as kit_config
+
+    if os.environ.get(ENV_CAPTURES_ROOT):
+        return Path(os.environ[ENV_CAPTURES_ROOT])
+    return kit_config.captures_root(kit_config.load_config_or_default())
 
 
 def folder_name(name: str) -> str:
