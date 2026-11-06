@@ -31,3 +31,6 @@ diagram-result.json
 # 利用者の設定（ひな形は config/*.example.yaml）
 config/*.yaml
 !config/*.example.yaml
+
+# 利用者の作業のフォルダ（台本・説明図・撮影。社外秘を含むことがある。/explainer-new が作る）
+reels/
