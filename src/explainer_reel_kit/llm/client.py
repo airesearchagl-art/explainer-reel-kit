@@ -253,7 +253,7 @@ class LLMClient:
         return LLMError(
             LLMErrorKind.TIMEOUT,
             f"{self.endpoint.name} が {self.endpoint.timeout_sec:g} 秒以内に応答しませんでした"
-            "（モデルの読み込み中なら、しばらく待つか --timeout を延ばす）。",
+            "（モデルの読み込み中なら、しばらく待つか --llm-timeout を延ばす）。",
             endpoint=path,
         )
 

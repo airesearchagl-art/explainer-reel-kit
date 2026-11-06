@@ -81,7 +81,7 @@ def test_connection_refused():
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-    c = LLMClient(Endpoint("down", f"http://127.0.0.1:{port}/v1", "", 2))
+    c = LLMClient(Endpoint("down", f"http://127.0.0.1:{port}/v1", "", 15))  # Windows は断られるまで約 2 秒
     with pytest.raises(LLMError) as info:
         c.list_models()
     assert info.value.kind is LLMErrorKind.CONNECTION_FAILED
