@@ -93,7 +93,7 @@ recipe_params:
   mark: input_panel
 capture:
   url: http://127.0.0.1:8000/index.html
-  viewport: {width: 1920, height: 1080}
+  viewport: {width: 1600, height: 660}
   steps:
     - 計算ページを開いて、読み込みが終わるのを待つ
     - 左の「条件」の欄が見える状態で撮影する
@@ -131,8 +131,8 @@ image:
   label: 実キャプチャ
 recipe: arrow_move
 recipe_params:
-  to: {mark: bar_lowe}
-  from_side: right
+  to: {mark: loss_lowe}           # Low-E 複層の行の「48〜81 W」
+  from_side: left                 # 棒の右の空いたところを通って数字を指す
 capture:
   url: http://127.0.0.1:8000/index.html
   steps:

@@ -32,7 +32,11 @@ ACTIONS_SCHEMA = "explainer-reel/web-actions@1"
 ACTIONS_SUFFIX = ".actions.yaml"
 ENV_CAPTURES_ROOT = "ERKIT_CAPTURES_ROOT"
 
-DEFAULT_VIEWPORT = {"width": 1920, "height": 1080}
+# 撮影の画面の既定: スライドの画像枠（12.333in × 5.1in ≒ 2.42:1）と同じ縦横比にして、左右の余白を出さない。
+# 幅 1600 は、動画（横 1920px）の画像枠（約 1776px）で 1 CSS px が約 1.1px になる大きさ（文字が縮まない）で、
+# 多くのページが狭い画面向けの並びに切り替わらない幅。1.5 倍で撮るので画像は 2400×990
+DEFAULT_VIEWPORT = {"width": 1600, "height": 660}
+DEFAULT_SCALE = 1.5
 DEFAULT_TIMEOUT_MS = 15000
 DEFAULT_SETTLE_MS = 400
 
@@ -530,7 +534,7 @@ def run_capture(
     d = actions.get("defaults", {}) or {}
     timeout = d.get("timeout_ms", DEFAULT_TIMEOUT_MS)
     settle = d.get("settle_ms", DEFAULT_SETTLE_MS)
-    scale = d.get("device_scale_factor", 1)
+    scale = d.get("device_scale_factor", DEFAULT_SCALE)
     out_root = Path(out_root)
     out_root.mkdir(parents=True, exist_ok=True)
 

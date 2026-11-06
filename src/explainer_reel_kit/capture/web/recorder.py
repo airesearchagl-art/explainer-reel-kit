@@ -1,7 +1,7 @@
 """記録モード: 人がブラウザを操作して、操作定義（explainer-reel/web-actions@1）を作る。AI は使わない。
 
     erkit record --url <URL> --reel <reel id> --out <新しい .actions.yaml>
-        [--start 1] [--viewport 1920x1080] [--serve <フォルダ>] [--channel msedge|chrome] [--no-verify]
+        [--start 1] [--viewport 1600x660] [--serve <フォルダ>] [--channel msedge|chrome] [--no-verify]
 
 ブラウザ（画面あり）が開くので、撮りたい画面まで操作する:
 - クリック・入力（Enter かフォーカスを外して確定）・選択（<select>）を記録する
@@ -28,7 +28,7 @@ import yaml
 
 from ... import browser as br
 from ... import marks as mk
-from .capture import ACTIONS_SCHEMA, DEFAULT_VIEWPORT, URL_SCHEMES, CaptureError, run_op, validate_actions
+from .capture import ACTIONS_SCHEMA, DEFAULT_SCALE, DEFAULT_VIEWPORT, URL_SCHEMES, CaptureError, run_op, validate_actions
 from .serve import rebase_local, serve_dir
 
 BINDING = "__erkitRecord"
@@ -268,7 +268,7 @@ def events_to_actions(events: list[dict[str, Any]], reel_id: str, *, start: int 
     if not scenes:
         raise CaptureError("シーンが 1 つも記録されていません（撮影したい画面で F8 を押してください）")
     data = {"schema": ACTIONS_SCHEMA, "reel_id": reel_id,
-            "defaults": {"viewport": dict(viewport or DEFAULT_VIEWPORT), "device_scale_factor": 1,
+            "defaults": {"viewport": dict(viewport or DEFAULT_VIEWPORT), "device_scale_factor": DEFAULT_SCALE,
                          "timeout_ms": 20000, "settle_ms": 500, "locale": "ja-JP"},
             "scenes": scenes}
     errs = validate_actions(data)
@@ -423,5 +423,5 @@ def parse_viewport(text: str | None) -> dict[str, int] | None:
         return None
     m = re.fullmatch(r"(\d+)\s*[xX×]\s*(\d+)", text.strip())
     if not m:
-        raise CaptureError("--viewport は 1920x1080 の形で書いてください")
+        raise CaptureError("--viewport は 1600x660 の形で書いてください")
     return {"width": int(m.group(1)), "height": int(m.group(2))}

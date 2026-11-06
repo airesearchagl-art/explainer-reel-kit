@@ -14,7 +14,7 @@
 |---|---|
 | `u-value.storyboard.md` | 台本（intro・5 シーン・outro）。先頭のコメントに数値の扱い |
 | `diagrams/s01_heat_paths.html`・`s02_u_value.html` | 説明図。共通の CSS（`../../_shared/diagram.css`）と `data-mark` |
-| `app/index.html` | 計算ページ（素の HTML と JavaScript だけ。外の URL を読まない）。撮るための `data-testid` |
+| `app/index.html` | 計算ページ（素の HTML と JavaScript だけ。外の URL を読まない）。撮影の既定の画面（1600×660）に 1 画面で収まる並び。撮るための `data-testid` |
 | `u-value.actions.yaml` | 操作定義（s03〜s05 の操作と注釈の部品） |
 | `SOURCES.md` | 使った数値と根拠 |
 
