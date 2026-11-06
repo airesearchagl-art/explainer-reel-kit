@@ -14,13 +14,13 @@ from . import __version__
 from . import storyboard as sb
 from . import doctor
 from .deck import cli as deck_cli
+from .llm import cli as llm_cli
 from .narration import cli as narration_cli
 from .reel import cli as make_cli
 
 # 後のパケットで実装するサブコマンド（いまは案内を出して終了コード 2）
 PLANNED = {
     "new": "台本のひな形を作る",
-    "draft": "手元の LLM で台本のたたき台を作る（社外秘の資料用）",
 }
 
 
@@ -43,6 +43,7 @@ def _build_parser() -> argparse.ArgumentParser:
     narration_cli.register(sub)
     make_cli.register(sub)
     doctor.register(sub)
+    llm_cli.register(sub)
     _add_media_parsers(sub)
 
     for name, desc in PLANNED.items():

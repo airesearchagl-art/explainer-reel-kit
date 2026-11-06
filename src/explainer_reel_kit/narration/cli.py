@@ -3,6 +3,7 @@
     erkit voice list                          エンジンへの接続と声の一覧（既定の声があるか）
     erkit voice synth <台本 | 入力.json>       シーンごとの WAV と durations.json
     erkit voice kana <台本> [<台本> …]         辞書の語・確認語をエンジンがどう読むか（合成しない）
+    erkit voice suggest <台本>                 手元の LLM に読みを聞き、辞書への追記案を表示する（辞書は書かない）
 
 終了コード: 0 成功 / 1 エンジンの失敗 / 2 入力・引数の誤り / 3 上書きを止めた / 4 書き込めない
 """
@@ -36,7 +37,7 @@ NARRATION_INPUT_FILENAME = "narration-input.json"
 
 
 def configure(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    sub = parser.add_subparsers(dest="voice_command", metavar="<list|synth|kana>")
+    sub = parser.add_subparsers(dest="voice_command", metavar="<list|synth|kana|suggest>")
     sub.required = True
 
     common = argparse.ArgumentParser(add_help=False)
@@ -72,6 +73,18 @@ def configure(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     k.add_argument("--all-terms", action="store_true", help="本文に出ない辞書の語も一覧に出す")
     k.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS, help=argparse.SUPPRESS)
     k.add_argument("--out", type=Path, help="結果を UTF-8 の Markdown ファイルにも書く")
+
+    from ..llm.cli import add_llm_arguments
+
+    g = sub.add_parser("suggest", parents=[common, dicts],
+                       help="手元の LLM に読みを聞き、読み辞書への追記案を表示する（辞書は書かない）",
+                       description="kana と同じくエンジンの読みを集め、手元の LLM の読みと違う語を、辞書への追記案として"
+                                   "表示する。辞書のファイルは書かない。採るかどうかは人が聞いて決める")
+    g.add_argument("source", type=Path, metavar="台本", help=".storyboard.md / .storyboard.json")
+    g.add_argument("--speaker", type=int, help="声（style id）。省略時は台本・設定の値")
+    g.add_argument("--all-terms", action="store_true", help="本文に出ない辞書の語も聞く")
+    g.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS, help=argparse.SUPPRESS)
+    add_llm_arguments(g)
     parser.set_defaults(func=run)
     return parser
 
@@ -269,6 +282,52 @@ def _cmd_kana(args, cfg: kit_config.KitConfig, transport: Transport | None) -> i
     return 0
 
 
+def _cmd_suggest(args, cfg: kit_config.KitConfig, transport: Transport | None) -> int:
+    """表示だけ。辞書のファイルは開いて読むだけで、書かない。"""
+    from ..llm.cli import config_from_args, endpoint_from_args
+    from ..llm.client import LLMClient
+    from ..llm.errors import LLMToolError
+    from ..llm.readings import reading_checks, render_section, suggest
+    from .kana import build_report_and_rows, load_storyboard_texts
+
+    path: Path = args.source
+    if not path.is_file():
+        raise InputError(f"ファイルがありません: {path}")
+    if not _is_storyboard(path):
+        raise InputError("voice suggest は台本（.storyboard.md / .json）だけを受け付けます（区分を読むため）")
+    doc = _load_storyboard(path)
+    level = sb.confidentiality(doc)  # 未記入・書き間違いは confidential
+    texts, speaker = load_storyboard_texts(path)
+    speaker = args.speaker if args.speaker is not None else (speaker if speaker is not None else cfg.voice_speaker)
+    engine = _engine(args.engine or cfg.voice_engine, args.engine_url or cfg.voice_url, args.timeout, transport)
+    _guard_confidential(doc, engine.url)
+    dictionary, _ = _dictionary(args, cfg)
+    try:
+        config = config_from_args(args)
+        client = LLMClient(endpoint_from_args(args, config), confidentiality=level)  # 社外秘ならこの PC だけ
+    except LLMToolError as error:
+        print(f"エラー: {error}", file=sys.stderr)
+        return error.exit_code
+    report, rows = build_report_and_rows(texts, dictionary, engine, speaker=speaker, include_absent=args.all_terms,
+                                         max_chars=args.max_chars, sources=[str(path)])
+    checks = reading_checks(rows, texts)
+    if not checks:
+        print(report, end="")
+        print("\n読みを聞く語がありません（辞書の語・確認語が本文に出ていません）")
+        return 0
+    try:
+        result = suggest(client, checks, model=args.model, config=config,
+                         log=lambda m: print(m, file=sys.stderr, flush=True))
+    except LLMToolError as error:
+        print(f"エラー: {error}", file=sys.stderr)
+        return error.exit_code
+    print(report, end="")
+    print()
+    print(render_section(result), end="")
+    print(f"区分: {level}（LLM: {client.endpoint.base_url}）。辞書のファイルは変えていません", file=sys.stderr)
+    return 0
+
+
 def run(args, *, transport: Transport | None = None) -> int:
     try:
         cfg = kit_config.load_config(args.config)
@@ -280,6 +339,8 @@ def run(args, *, transport: Transport | None = None) -> int:
             return _cmd_list(args, cfg, transport)
         if args.voice_command == "kana":
             return _cmd_kana(args, cfg, transport)
+        if args.voice_command == "suggest":
+            return _cmd_suggest(args, cfg, transport)
         return _cmd_synth(args, cfg, transport)
     except NarrationError as error:
         print(f"エラー: {error}", file=sys.stderr)
