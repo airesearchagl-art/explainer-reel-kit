@@ -1,0 +1,14 @@
+{
+  "name": "explainer-reel-kit",
+  "owner": {
+    "name": "explainer-reel-kit"
+  },
+  "description": "説明動画キット（explainer-reel-kit）の Claude Code のプラグイン",
+  "plugins": [
+    {
+      "name": "explainer-reel-kit",
+      "source": "./plugins/claude-code",
+      "description": "題材から AI と対話して台本を書き、erkit でナレーション付きの説明動画（MP4）にする"
+    }
+  ]
+}

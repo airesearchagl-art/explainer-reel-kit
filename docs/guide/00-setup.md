@@ -66,6 +66,10 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 3. 別の声を使うときは `erkit voice list` で style id を調べ、`config\kit.yaml` の `voice.speaker` を変えます
 4. クレジットの表記が要る声なら、`config\kit.yaml` の `voice.credits` に書きます。最後のスライドに「ナレーション音声: …」と出ます。動画を公開するなら、公開先の説明にも書きます
 
+## Claude Code のプラグイン（任意）
+
+Claude Code を使うなら、プラグインを入れると、手順書の順に進めるスキルと `/explainer-new`・`/explainer-check`・`/explainer-make` が使えます。キットのフォルダで Claude Code を開き（`cd $env:USERPROFILE\explainer-reel-kit` の後に `claude`）、Claude Code の中で `/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit` と打ちます。詳しくは [プラグインの説明](../../plugins/claude-code/README.md)。
+
 ## AI に任せること
 
 この段は人が行います。エージェントを使う場合は、`erkit doctor` を実行させて結果を読ませ、足りないものの入れ方を説明させるところまでにします（ソフトを入れるかは人が決めます）。

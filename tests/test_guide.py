@@ -15,8 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from explainer_reel_kit import cli
-from explainer_reel_kit.cli import PLANNED, main
+from explainer_reel_kit.cli import main
+
+from doc_commands import check_command, extract_commands
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = sorted(
@@ -28,50 +29,7 @@ GUIDE_FILES = ["00-setup", "01-intake", "02-audience", "03-outline", "04-storybo
                "06-review", "07-export", "confidentiality", "troubleshooting"]
 PROMPT_FILES = ["01-intake", "02-outline", "03-storyboard", "04-diagram-html"]
 
-FENCE = re.compile(r"^\s*```")
-INLINE = re.compile(r"`([^`\n]+)`")
-# erkit の前が語の一部（explainer-reel-kit・erkit.exe のパス）でないもの。} や | や # の手前まで
-CMD_IN_LINE = re.compile(r"(?<![\w./\\-])(?:\.\\erkit\.ps1|\./erkit\.ps1|erkit)\s+([^}|#`]*)")
-PATH_PREFIXES = ("samples/", "examples/", "src/", "dictionaries/", "config/")
-
-
-def _commands(path: Path) -> list[tuple[int, str]]:
-    """(行番号, erkit の後ろの引数の文字列)。"""
-    found: list[tuple[int, str]] = []
-    in_code = False
-    for no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if FENCE.match(line):
-            in_code = not in_code
-            continue
-        if in_code:
-            found += [(no, m.group(1).strip()) for m in CMD_IN_LINE.finditer(line)]
-        else:
-            for span in INLINE.findall(line):
-                m = re.match(r"^(?:\.\\erkit\.ps1|erkit)\s+(.+)$", span.strip())
-                if m:
-                    found.append((no, m.group(1).strip()))
-    return found
-
-
-def _choices(parser) -> dict:
-    for act in parser._actions:  # argparse のサブコマンドの一覧
-        if getattr(act, "choices", None) and isinstance(act.choices, dict):
-            return act.choices
-    return {}
-
-
-def _is_name_only(parser, tokens: list[str]) -> bool:
-    """引数の無いサブコマンドの名前だけ（例 `erkit check`・`erkit voice kana`）。名前は実在しなければならない。"""
-    top = _choices(parser)
-    if tokens[0] not in top or len(tokens) > 2:
-        return False
-    if len(tokens) == 1:
-        return True
-    sub = _choices(top[tokens[0]])
-    return bool(sub) and tokens[1] in sub
-
-
-ALL_COMMANDS = [(p, no, args) for p in DOCS for no, args in _commands(p)]
+ALL_COMMANDS = [(p, no, args) for p in DOCS for no, args in extract_commands(p)]
 
 
 def _id(item) -> str:
@@ -99,21 +57,8 @@ def test_commands_are_found():
 def test_command_parses(item):
     path, no, args = item
     where = f"{path.relative_to(ROOT)}:{no}: erkit {args}"
-    assert "<" not in args and ">" not in args, f"仮の文字（< >）が残っている: {where}"
-    assert "…" not in args, f"省略の記号が残っている: {where}"
-    tokens = shlex.split(args.replace("\\", "/"))
-    assert tokens, where
-    assert tokens[0] not in PLANNED, f"まだ使えないサブコマンド: {where}"
-    parser = cli._build_parser()
-    if _is_name_only(parser, tokens):
-        return  # 文の中でサブコマンドの名前を挙げただけ（`erkit check` が通るまで…）
-    try:
-        parser.parse_args(tokens)
-    except SystemExit as e:  # argparse の誤り
-        pytest.fail(f"引数が erkit と合わない（{e.code}）: {where}")
-    for tok in tokens:
-        if tok.startswith(PATH_PREFIXES):
-            assert (ROOT / tok).exists(), f"無いパス {tok}: {where}"
+    problems = check_command(args, where)
+    assert not problems, "\n".join(problems)
 
 
 LINK = re.compile(r"\]\(([^)\s]+)\)")

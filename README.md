@@ -48,6 +48,8 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 | エージェント（Claude Code・Codex・Cursor・Copilot など） | このフォルダを開いて「`AGENTS.md` を読んで、説明動画を作りたい」と頼む |
 | チャットだけの AI・手元の LLM のチャット | [prompts/](prompts/README.md) の指示文を順に貼る。コマンドは人が打つ |
 
+Claude Code なら、プラグインを入れると `/explainer-new`・`/explainer-check`・`/explainer-make` が使えます。キットのフォルダで Claude Code を開き、`/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit`（[プラグインの説明](plugins/claude-code/README.md)）。
+
 手順の全体は [手順書](docs/guide/README.md)（聞き取り → 見る人 → 構成 → 台本 → 説明図・撮影 → 確認 → 書き出し）にあります。
 
 **最初に区分を決めます。** 材料に社外秘（所属先の外に出せない情報）が含まれるか・分からないなら、台本の `confidentiality` は `confidential` です。
@@ -71,7 +73,6 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 - 動画の公開（動画サイトへのアップロード）や、外部のサービスとの連携
 - クラウドの AI の呼び出し（台本づくりの対話は、利用者の AI が受け持ちます。API キーは要りません）
 - ffmpeg・AivisSpeech・PowerPoint・声のモデルの同梱や自動の導入
-- Claude Code のプラグインは後の版で入ります（`plugins/claude-code/`）
 
 ## 段ごとに試す（開発者向け）
 
