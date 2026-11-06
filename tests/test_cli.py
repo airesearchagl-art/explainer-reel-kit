@@ -15,7 +15,7 @@ from conftest import COMPAT, EXAMPLE, TEMPLATE
 def test_version(capsys):
     assert main(["--version"]) == 0
     assert capsys.readouterr().out.strip() == f"erkit {__version__}"
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.1.1"
 
 
 def test_no_command_shows_help(capsys):

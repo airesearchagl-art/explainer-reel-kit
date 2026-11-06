@@ -11,7 +11,7 @@ description: 題材から説明動画（ナレーション付きの MP4）を作
 
 1. **キットのフォルダか確かめる**: 作業のフォルダに `AGENTS.md` と `pyproject.toml`（`name = "explainer-reel-kit"`）があること。無ければ、キットのフォルダで Claude Code を開き直すよう人に伝えて止まる（キットの入れ方は `docs/guide/00-setup.md`）
 2. **erkit の呼び方**: 仮想環境の中の erkit を使う。Windows は `.venv/Scripts/erkit`、それ以外は `.venv/bin/erkit`（以下の `erkit` はこれに読み替える）。無ければ `install.ps1` を案内して止まる
-3. **版を確かめる**: `erkit --version` を実行する。このプラグインの版は **0.1.0**。違えば「キットとプラグインの版が違う（キット X、プラグイン 0.1.0）。`git pull` と `/plugin marketplace update explainer-reel-kit` でそろえる」と知らせる（止まらなくてよい）
+3. **版を確かめる**: `erkit --version` を実行する。このプラグインの版は **0.1.1**。違えば「キットとプラグインの版が違う（キット X、プラグイン 0.1.1）。`git pull` と `/plugin marketplace update explainer-reel-kit` でそろえる」と知らせる（止まらなくてよい）
 4. **`AGENTS.md` を読む**。ここに書いた約束より、`AGENTS.md` と `docs/guide/` が正
 
 ## 最初に区分を決める（資料を読む前に）
@@ -21,6 +21,17 @@ description: 題材から説明動画（ナレーション付きの MP4）を作
 - `general`（公開済みの情報・一般的な知識だけ）→ 進める
 - `confidential`（含む・**分からない**）→ **資料を受け取らずに止まる**。Claude Code はクラウドの AI で動くため。この PC の中で動く AI（LM Studio・Ollama など）に `prompts/` を貼って進めるよう伝える（`docs/guide/confidentiality.md`）
 - 区分を `confidential` から `general` に変えるのは人だけ。こちらからは下げない・下げる提案をしない
+
+## 進め方を選ぶ（段ごと / まとめて）
+
+- **まとめて**: 人が「答えのひな形」（`docs/guide/batch.md`）を埋めて渡した、または「まとめて進めて」と頼んだとき。`docs/guide/batch.md` を Read で読み、その手順で進める
+  1. **区分の行を最初に読む**。書いていない・`confidential`・分からない、のどれかなら、ほかの欄も資料も読まずに**止まる**（上の「最初に区分を決める」と同じ。まとめて進めるときも変えない）
+  2. 進められない欄（何を説明するか・資料）が空なら、足りない欄だけをまとめて 1 回聞く。ほかの空欄は決めて報告に書く
+  3. 段 1〜3 の人への確認を省き、台本（`storyboard` スキル。出典の決まりを守る）・説明図（`diagram`）・撮影があれば操作定義（`web-capture`）を書く
+  4. `erkit check`（`--strict` 付き） → `erkit diagram`（`--overlay` 付き）→ 撮影があれば `erkit capture` の `--check` → `erkit make` の `--dry-run` まで通す。失敗したら直してもう一度
+  5. **そこで止まり**、`docs/guide/batch.md` の「報告の形」で返す（構成の表・決めたこと・根拠が弱い/未確認の数値と事実・確認画像・次に人が打つコマンド）
+  6. **MP4（`erkit make`）は実行しない**。人が報告と確認画像を見てよいと言ってから `/explainer-reel-kit:explainer-make` で（人の確認を省かない）
+- **段ごと**: それ以外。下の表の順に、段ごとに人に確かめる
 
 ## 段ごとの進め方
 
@@ -42,6 +53,6 @@ description: 題材から説明動画（ナレーション付きの MP4）を作
 ## 守ること
 
 - 画面を捏造しない（撮った画面は `実キャプチャ`、説明図は `説明用再構成図`）。赤枠・矢印は座標ではなく mark の名前で指す
-- 数値・事実は根拠付きで。分からないことは聞く
+- 数値・事実は根拠付きで。規格の番号・出典・数値は、そのセッションで確かめたものだけを書き、確かめていないものは「未確認」として報告に挙げる（記憶で書かない）。分からないことは聞く
 - キットの `src/` は変えない。MP4・WAV・.pptx・撮影画像を commit しない
 - 動画の公開（アップロード）はしない

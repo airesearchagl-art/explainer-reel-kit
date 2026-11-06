@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## 1. 始める前に
 
-`make-explainer` スキルの「始める前に」と同じ確かめをする（キットのフォルダか、erkit の呼び方、`erkit --version` がこのプラグインの版 **0.1.0** と同じか）。
+`make-explainer` スキルの「始める前に」と同じ確かめをする（キットのフォルダか、erkit の呼び方、`erkit --version` がこのプラグインの版 **0.1.1** と同じか）。
 手順の正本は `docs/guide/06-review.md` と `docs/guide/07-export.md`。Read で読む。
 
 ## 2. 検証と段の順番を見せる（何も作らない）
@@ -27,6 +27,9 @@ erkit make samples/u-value/u-value.storyboard.md --serve samples/u-value/app --d
 - 画像がまだそろっていなければ、試作（`--allow-placeholders --label 試作`）にするか人に聞く
 
 ## 3. 人に確かめる
+
+**まとめて進めてきたときも、この確かめは省かない**（報告を見せた後でも、ここでもう一度聞く）。
+
 
 「この内容で作ってよいですか。AivisSpeech を起動し、PowerPoint は閉じておいてください（書き出しの間、キットが PowerPoint を動かします）」。**よいと言われるまで実行しない。**
 

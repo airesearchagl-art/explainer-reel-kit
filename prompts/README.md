@@ -12,6 +12,8 @@
 | 3 | [03-storyboard.md](03-storyboard.md) | 指示文＋テンプレート＋見本の台本 | 台本（Markdown 1 枚） | ファイルに保存して `erkit check`。エラーが出たら表示を貼る |
 | 4 | [04-diagram-html.md](04-diagram-html.md) | 指示文＋共通の CSS のクラス表 | 説明図の HTML（シーンごと） | ファイルに保存して `erkit diagram`。確認画像を見る |
 
+**まとめて進める**（1〜4 の代わり）: [05-batch.md](05-batch.md) に、埋めた答えのひな形（[batch.md](../docs/guide/batch.md)）を続けて貼ると、1 回の返事で台本・説明図の HTML・報告（構成・決めたこと・未確認の数値と事実）が返ります。区分が general でなければ AI は止まります。MP4 は人が報告を見てから作ります。
+
 - 1 つの会話で 1 から順に貼ってください（前の答えを覚えているため）
 - AI が書いたものは、必ず人が読んで確かめます。数値・事実は根拠の資料と突き合わせます
 - **社外秘を含む・分からない材料は、クラウドの AI に貼らないでください**。この PC の中で動く AI（LM Studio・Ollama など）か、所属先が認めた AI だけに貼ります（[confidentiality.md](../docs/guide/confidentiality.md)）

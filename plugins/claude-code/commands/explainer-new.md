@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## 1. 始める前に
 
-`make-explainer` スキルの「始める前に」と同じ確かめをする: キットのフォルダか（`AGENTS.md` と `pyproject.toml` がある）、erkit の呼び方（`.venv/Scripts/erkit` か `.venv/bin/erkit`）、`erkit --version` がこのプラグインの版 **0.1.0** と同じか。
+`make-explainer` スキルの「始める前に」と同じ確かめをする: キットのフォルダか（`AGENTS.md` と `pyproject.toml` がある）、erkit の呼び方（`.venv/Scripts/erkit` か `.venv/bin/erkit`）、`erkit --version` がこのプラグインの版 **0.1.1** と同じか。
 
 ## 2. 区分を聞く（何よりも先に）
 
@@ -18,6 +18,7 @@ disable-model-invocation: true
 
 - `confidential`・分からない → **ここで止まる**。資料を受け取らない。「Claude Code はクラウドの AI で動くので、社外秘の材料はこの PC の中で動く AI（LM Studio・Ollama など）で進めてください。手順は `docs/guide/confidentiality.md`、貼る指示文は `prompts/`」と伝える
 - `general` → 次へ。区分を下げる提案はしない
+- 答えのひな形（`docs/guide/batch.md`）がこの会話に貼られていれば、その「区分」の行を答えとする（ほかの欄・資料より先に読む）。書いていない・`confidential`・分からないなら、上と同じくここで止まる
 
 ## 3. id と種別を決める
 
@@ -41,6 +42,10 @@ erkit check samples/u-value/u-value.storyboard.md
 ひな形のままなので「シーン数 2（推奨 5〜8）」の警告が出るのは正しい。`NG` なら書き換えを見直す。
 
 ## 5. 次へ
+
+**まとめて進めるとき**（人が答えのひな形を埋めて渡した・「まとめて」と頼んだ）: 区分は 2 で聞いたとおり（ひな形の区分の行が general でなければ止まる。2 と食い違えば、確かな方＝`confidential` として止まる）。id・種別はひな形の値を使い、3 で聞き直さない。フォルダを作ったら `make-explainer` スキルの「進め方を選ぶ」の**まとめて**の手順（`docs/guide/batch.md`）で、台本・説明図・`erkit check`（`--strict` 付き）・`erkit diagram`・`erkit make` の `--dry-run` まで進み、報告で止まる。MP4 は作らない。
+
+**段ごとのとき**:
 
 作ったファイルを人に伝え、`make-explainer` スキルの段 1（聞き取り、`docs/guide/01-intake.md`）から進める。台本の中身は構成の表を人が確かめてから `storyboard` スキルで書く。
 

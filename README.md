@@ -51,6 +51,7 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 Claude Code なら、プラグインを入れると `/explainer-reel-kit:explainer-new`・`/explainer-reel-kit:explainer-check`・`/explainer-reel-kit:explainer-make` が使えます。キットのフォルダで Claude Code を開き、`/plugin marketplace add airesearchagl-art/explainer-reel-kit` → `/plugin install explainer-reel-kit@explainer-reel-kit`（[プラグインの説明](plugins/claude-code/README.md)）。
 
 手順の全体は [手順書](docs/guide/README.md)（聞き取り → 見る人 → 構成 → 台本 → 説明図・撮影 → 確認 → 書き出し）にあります。
+聞き取りの答えをひな形に埋めて先に渡し、1 回で台本と説明図まで進めてもらう使い方もあります（[まとめて進める](docs/guide/batch.md)）。
 
 **最初に区分を決めます。** 材料に社外秘（所属先の外に出せない情報）が含まれるか・分からないなら、台本の `confidentiality` は `confidential` です。
 このときキットは撮影・音声合成をこの PC の中だけに限りますが、**対話に使う AI まではキットでは止められません**。
