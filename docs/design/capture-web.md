@@ -45,6 +45,36 @@ erkit capture examples/hello-kit.storyboard.md --serve examples/hello-page --out
 
 `ok` / `failed` の件数と、シーンごとの `status`（ok / failed / prepared＝`--only` で操作だけ再現）・`path`・`width`/`height`・`url`・`marks_path`・`marks`・`elapsed_sec`、失敗時は `error`。
 
+## 画面の大きさ — 動画で文字が読めるように
+
+スライドの画像枠は 12.333in × 5.1in（≒ 2.42:1）です。画像は縦横比を保って枠に収めるので、
+**撮影の画面を枠と同じ縦横比にする**と左右の余白が出ず、画面がいちばん大きく映ります。
+
+| 撮影の画面（CSS px） | 画像 | 動画（横 1920px）での画像の幅 | 1 CSS px の見え方 | 本文 22px の文字 |
+|---|---|---|---|---|
+| 1920×1080（16:9。以前の既定） | 1920×1080 | 約 1306px（左右に余白） | 約 0.68px | 約 15px（読めない） |
+| **1600×660（既定、≈2.42:1）×1.5 倍** | 2400×990 | 約 1776px（枠いっぱい） | 約 1.1px | 約 24px（読める） |
+
+- 既定は **1600×660、device_scale_factor 1.5**（画像 2400×990）。操作定義の `defaults` と台本の `capture.viewport` で変えられます。`erkit record` の `--viewport` の既定も同じ
+- 幅 1600 は、動画で文字が縮まない大きさ（1 CSS px ≒ 1.1px）で、多くのページが狭い画面向けの並びに切り替わらない幅です。1.5 倍で撮るので、縮んでもにじみません
+- 高さが 660 しかないので、**撮るページは 1 画面に収まる並びにする**（自分のツールなら、余白を詰め、文字は 18px 以上）。収まらないときは `scroll_to` で見せたい所まで動かすか、`shot: {type: element}` で部分を撮る
+- 1920×1080 などで撮った画面（以前の撮影・作り直せないページ）や、小さな部品を見せるときは、台本で **拡大（`zoom`）** を使います（次の節）
+
+### Web の画面は拡大して見せる（zoom）
+
+台本の `recipe_params` に `zoom: true`（注釈のまわりを拡大）か、`highlight_box` で枠が 2 つ以上なら `zoom: per_mark`（枠ごとに拡大して Morph でつなぐ）を書きます（[recipes.md](recipes.md#拡大zoom)）。
+
+```yaml
+recipe: arrow_move
+recipe_params:
+  to: {mark: result_area}
+  zoom: true
+```
+
+- 既定の 1600×660 で撮った画面は、そのままで読めます。拡大は、細かい部品に目を向けさせたいときに使う
+- 1920×1080 で撮った画面は、注釈のあるシーンに `zoom` を付けると読める大きさになります
+- 矢印は画像の外からは出ません（出発点は画像の端で止まる）。部品が画像の端にあるときは、`from_side` を部品の内側の向き（右端の部品なら `left`）にするか、`from: {x, y}` で出発点を書く
+
 ## 記録モード（erkit record）— 操作定義を人の操作で作る
 
 新しいツールの操作定義とセレクタを、AI に頼らず、画面をクリックして作る。記録はこの PC の中だけで行われる（AI には送らない）。
@@ -91,8 +121,8 @@ erkit record --url http://localhost:8000/ --serve examples/hello-page --reel hel
 schema: explainer-reel/web-actions@1
 reel_id: hello-kit               # 台本の reel.id
 defaults:                        # すべて任意
-  viewport: {width: 1920, height: 1080}
-  device_scale_factor: 1
+  viewport: {width: 1600, height: 660}   # 既定（画像枠と同じ ≈2.42:1）。上の「画面の大きさ」
+  device_scale_factor: 1.5               # 既定。画像は 2400×990
   timeout_ms: 20000
   settle_ms: 500                 # 撮影直前の待ち（CSS の transition 終了待ち）
   locale: ja-JP

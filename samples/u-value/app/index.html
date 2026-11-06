@@ -10,40 +10,41 @@
 U 値はガラス中央部の熱貫流率の一般的な目安（範囲）。根拠は samples/u-value/SOURCES.md。
 -->
 <style>
+  /* 撮影の画面（1600×660、画像枠と同じ ≈2.42:1）に 1 画面で収まる配置。文字は 18px 以上 */
   :root {
-    --bg: #f6f8fb; --ink: #1f2a44; --sub: #4b5670; --line: #c9d3e3; --muted: #7a8bab;
-    --blue: #1d5bb8; --blue-bg: #e3eefc; --teal: #127a5e; --teal-bg: #dff5ef; --amber-bg: #fff1d6;
+    --bg: #f6f8fb; --ink: #1f2a44; --sub: #4b5670; --line: #c9d3e3; --muted: #6b7c9c;
+    --blue: #1d5bb8; --teal: #127a5e; --amber-bg: #fff1d6;
     --font: "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", "Meiryo", "Hiragino Sans", sans-serif;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); }
-  header { padding: 36px 64px 8px; }
-  h1 { margin: 0; font-size: 40px; }
-  header p { margin: 8px 0 0; font-size: 22px; color: var(--sub); }
-  main { display: grid; grid-template-columns: 560px 1fr; gap: 36px; padding: 28px 64px 48px; }
-  section { background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 28px 32px; }
-  h2 { margin: 0 0 16px; font-size: 28px; }
-  label { display: block; font-size: 22px; margin: 18px 0 8px; color: var(--sub); }
-  select, input { font: inherit; font-size: 26px; padding: 10px 14px; border: 2px solid var(--line); border-radius: 10px; width: 100%; background: #fff; color: var(--ink); }
+  header { padding: 18px 40px 4px; display: flex; align-items: baseline; gap: 28px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 34px; }
+  header p { margin: 0; font-size: 20px; color: var(--sub); }
+  main { display: grid; grid-template-columns: 450px 1fr; gap: 22px; padding: 14px 40px 16px; }
+  section { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 18px 24px; }
+  h2 { margin: 0 0 10px; font-size: 24px; }
+  label { display: block; font-size: 20px; margin: 12px 0 6px; color: var(--sub); }
+  select, input { font: inherit; font-size: 24px; padding: 8px 12px; border: 2px solid var(--line); border-radius: 10px; width: 100%; background: #fff; color: var(--ink); }
   .unit { display: flex; align-items: center; gap: 12px; }
-  .unit span { font-size: 24px; color: var(--sub); white-space: nowrap; }
-  .note { font-size: 18px; color: var(--muted); margin-top: 22px; line-height: 1.6; }
-  .right { display: grid; grid-template-rows: auto auto; gap: 28px; }
-  .result-value { font-size: 64px; font-weight: 700; color: var(--teal); line-height: 1.2; }
-  .result-sub { font-size: 22px; color: var(--sub); }
-  .bars { display: grid; gap: 14px; }
-  .bar-row { display: grid; grid-template-columns: 330px 1fr 190px; align-items: center; gap: 16px; font-size: 22px; padding: 6px 8px; border-radius: 10px; }
-  .bar-row.selected { background: var(--amber-bg); }
-  .track { position: relative; height: 30px; background: #eef2f8; border-radius: 8px; }
-  .range { position: absolute; top: 0; bottom: 0; background: var(--blue); border-radius: 8px; opacity: .85; }
+  .unit span { font-size: 22px; color: var(--sub); white-space: nowrap; }
+  .note { font-size: 18px; color: var(--muted); margin: 16px 0 0; line-height: 1.55; }
+  .right { display: grid; grid-template-rows: auto auto; gap: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1.15fr; gap: 18px; }
+  .result-value { font-size: 58px; font-weight: 700; color: var(--teal); line-height: 1.2; }
+  .result-sub { font-size: 20px; color: var(--sub); margin-top: 6px; }
+  .bars { display: grid; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 300px 1fr 150px; align-items: center; gap: 14px; font-size: 20px; padding: 4px 8px; border-radius: 8px; }
+  .bar-row.selected { background: var(--amber-bg); font-weight: 700; }
+  .track { position: relative; height: 24px; background: #eef2f8; border-radius: 7px; }
+  .range { position: absolute; top: 0; bottom: 0; background: var(--blue); border-radius: 7px; opacity: .85; }
   .bar-row.selected .range { background: var(--teal); opacity: 1; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
-  table { width: 100%; border-collapse: collapse; font-size: 22px; }
-  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 20px; }
+  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--line); }
   th { color: var(--sub); font-weight: 600; }
-  td.num { text-align: right; }
+  td.num, th.num { text-align: right; }
   tr.selected td { background: var(--amber-bg); font-weight: 700; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
 </style>
 </head>
 <body>

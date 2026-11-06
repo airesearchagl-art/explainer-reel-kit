@@ -88,7 +88,7 @@ def _add_media_parsers(sub) -> None:
     r.add_argument("--reel", required=True, help="台本の reel.id（操作定義の reel_id）")
     r.add_argument("--out", required=True, type=Path, help="新しい操作定義のファイル（既存のファイルは上書きしない）")
     r.add_argument("--start", type=int, default=1, help="最初のシーン番号（既定 1 → s01）")
-    r.add_argument("--viewport", default="1920x1080", help="画面の大きさ（既定 1920x1080）")
+    r.add_argument("--viewport", default="1600x660", help="画面の大きさ（既定 1600x660 ＝ 画像枠の縦横比）")
     r.add_argument("--serve", type=Path, metavar="フォルダ", help="このフォルダをこの PC で配信して記録する")
     r.add_argument("--no-verify", action="store_true", help="記録後の再生による確かめを省く")
     _browser_args(r)

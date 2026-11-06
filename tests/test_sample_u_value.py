@@ -53,7 +53,7 @@ def test_sample_pipeline_has_no_unresolved_marks(tmp_path, browser_opts):
     assert res["failed"] == 0, [r.get("error") for r in res["scenes"]]
     # 計算ページの結果（面積 2.0 m²・温度差 15℃・Low-E 複層）の注釈の部品が撮れている
     m5 = mk.load(assets / "captures" / "u-value" / "s05_compare.marks.json")
-    assert {"bar_lowe", "compare_chart"} <= set(m5["marks"])
+    assert {"bar_lowe", "loss_lowe", "compare_chart"} <= set(m5["marks"])
     deck = build_deck(STORYBOARD, tmp_path / "u_value.pptx", assets_root=assets)
     assert deck.unresolved == [], deck.unresolved_text()
     assert {a.status for a in deck.annotations} == {"mark"}

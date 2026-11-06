@@ -4,7 +4,8 @@
 schema: explainer-reel/web-actions@1
 reel_id: u-value
 defaults:
-  viewport: {width: 1920, height: 1080}
+  viewport: {width: 1600, height: 660}   # 画像枠と同じ ≈2.42:1（キットの既定と同じ）
+  device_scale_factor: 1.5             # 画像は 2400×990
   settle_ms: 300
 scenes:
   s03:
@@ -39,4 +40,5 @@ scenes:
         selector: '[data-testid="result-value"]:has-text("48〜81 W")'
     marks:
       bar_lowe: '[data-testid="bar-lowe"]'
+      loss_lowe: '[data-testid="bar-lowe"] .num'
       compare_chart: '[data-testid="compare-chart"]'

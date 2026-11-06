@@ -25,7 +25,7 @@ def _quiet(*_):
 
 
 def _actions(reel_id="t", **scenes):
-    return {"schema": wc.ACTIONS_SCHEMA, "reel_id": reel_id, "defaults": {"settle_ms": 0, "timeout_ms": 3000},
+    return {"schema": wc.ACTIONS_SCHEMA, "reel_id": reel_id, "defaults": {"settle_ms": 0, "timeout_ms": 3000, "device_scale_factor": 1},
             "scenes": scenes}
 
 
@@ -316,3 +316,40 @@ def test_example_with_serve_cli(tmp_path, browser_opts, capsys):
 def test_serve_dir_missing(tmp_path):
     with pytest.raises(wc.CaptureError, match="--serve"):
         wc.run_capture(EXAMPLE, tmp_path / "o", serve=tmp_path / "none", log=_quiet)
+
+
+# ---------------------------------------------------------------- 画面の大きさ（画像枠の縦横比）
+
+def test_default_viewport_matches_image_frame():
+    vp = wc.DEFAULT_VIEWPORT
+    assert abs(vp["width"] / vp["height"] - 12.333 / 5.1) < 0.01   # スライドの画像枠 ≒ 2.42:1
+    assert (vp["width"] * wc.DEFAULT_SCALE, vp["height"] * wc.DEFAULT_SCALE) == (2400, 990)
+
+
+def test_capture_uses_default_viewport_and_scale(tmp_path, site, browser_opts):
+    sb = write_storyboard(tmp_path / "t.storyboard.json", [_web("s01", site + "marks.html")])  # viewport を書かない
+    acts = _actions(s01={"reset": True, "actions": [], "marks": {"a": "#a"}})
+    del acts["defaults"]["device_scale_factor"]   # 既定の 1.5 倍で撮る
+    (tmp_path / "t.actions.yaml").write_text(yaml.safe_dump(acts), encoding="utf-8")
+    res = wc.run_capture(sb, tmp_path / "out", log=_quiet, **browser_opts)
+    rec = res["scenes"][0]
+    assert (rec["width"], rec["height"]) == (2400, 990)
+    m = mk.load(tmp_path / "out" / "captures/t/s01.marks.json")
+    assert m["marks"]["a"]["px"] == {"x": 150, "y": 75, "w": 300, "h": 120}       # CSS px × 1.5
+    assert m["marks"]["a"]["box"] == {"x": 0.0625, "y": 0.0758, "w": 0.125, "h": 0.1212}
+
+
+@pytest.mark.parametrize("page", [ROOT / "samples" / "u-value" / "app" / "index.html", EXAMPLE_PAGE / "index.html"])
+def test_sample_pages_fit_one_screen(page, browser_opts):
+    """サンプルと例の撮るページは、既定の画面（1600×660）に 1 画面で収まる（はみ出した所は写らないため）。"""
+    from explainer_reel_kit import browser as br
+
+    with br.sync_playwright() as pw:
+        b = br.launch(pw, browser_opts["channel"])
+        try:
+            p = b.new_page(viewport=wc.DEFAULT_VIEWPORT)
+            p.goto(page.as_uri())
+            w, h = p.evaluate("[document.documentElement.scrollWidth, document.documentElement.scrollHeight]")
+        finally:
+            b.close()
+    assert w <= wc.DEFAULT_VIEWPORT["width"] and h <= wc.DEFAULT_VIEWPORT["height"], (w, h)

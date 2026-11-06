@@ -74,6 +74,7 @@ image:
 recipe: arrow_move
 recipe_params:
   to: {mark: result_area}
+  zoom: true                       # 部品の周りを拡大して見せる（小さな部品・1920×1080 で撮った画面に）
 capture:
   url: http://127.0.0.1:8000/
   steps:
