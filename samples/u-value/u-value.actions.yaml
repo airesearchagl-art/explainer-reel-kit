@@ -1,0 +1,42 @@
+# サンプル題材「窓の断熱性能（U 値）の見方」の操作定義。
+#   erkit capture samples/u-value/u-value.storyboard.md --serve samples/u-value/app --out <出力先>
+# 台本の capture.url（http://127.0.0.1:8000/index.html）は、--serve のとき app/ の配信先に置き換わる
+schema: explainer-reel/web-actions@1
+reel_id: u-value
+defaults:
+  viewport: {width: 1920, height: 1080}
+  settle_ms: 300
+scenes:
+  s03:
+    reset: true
+    actions:
+      - op: wait_load
+      - op: wait_for
+        selector: '[data-testid="bar-single"]'
+    marks:
+      input_panel: '[data-testid="input-panel"]'
+  s04:
+    actions:
+      - op: select
+        selector: '[data-testid="glass-select"]'
+        value: lowe
+      - op: wait_for
+        selector: '[data-testid="u-row-lowe"].selected'
+    marks:
+      glass_select: '[data-testid="glass-select"]'
+      u_row_lowe: '[data-testid="u-row-lowe"]'
+  s05:
+    actions:
+      - op: fill
+        selector: '[data-testid="area-input"]'
+        value: "2.0"
+        commit: blur
+      - op: fill
+        selector: '[data-testid="dt-input"]'
+        value: 15
+        commit: blur
+      - op: wait_for
+        selector: '[data-testid="result-value"]:has-text("48〜81 W")'
+    marks:
+      bar_lowe: '[data-testid="bar-lowe"]'
+      compare_chart: '[data-testid="compare-chart"]'

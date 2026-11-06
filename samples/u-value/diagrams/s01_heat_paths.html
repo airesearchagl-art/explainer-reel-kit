@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>s01 熱の逃げ方（伝導・対流・放射）</title>
+<link rel="stylesheet" href="../../_shared/diagram.css">
+<style>
+  /* 窓の断面の模式図（説明用。実際の寸法ではない） */
+  .pane { position: relative; height: 230px; margin: 10px 0 20px; }
+  .room { position: absolute; inset: 0 auto 0 0; width: 46%; background: #ffe9d6; border-radius: 14px; }
+  .out  { position: absolute; inset: 0 0 0 auto; width: 46%; background: #e3eefc; border-radius: 14px; }
+  .glass { position: absolute; left: 47%; width: 6%; top: 0; bottom: 0; background: #b9d3ee; border: 3px solid #7fa7d4; border-radius: 6px; }
+  .lbl { position: absolute; top: 12px; font-size: 32px; color: var(--ink-sub); }
+  .lbl.in { left: 18px; } .lbl.ex { right: 18px; }
+  .flow { position: absolute; font-size: 64px; line-height: 1; color: var(--amber); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div class="card" data-mark="conduction">
+      <div class="tag amber">伝導</div>
+      <div class="pane">
+        <div class="room"></div><div class="out"></div><div class="glass"></div>
+        <div class="lbl in">室内</div><div class="lbl ex">室外</div>
+        <div class="flow" style="left:34%;top:96px">→ → →</div>
+      </div>
+      <div class="t sm">ガラスや枠の中を伝わる</div>
+      <div class="s sm">材料そのものを、温度の高い側から低い側へ</div>
+    </div>
+    <div class="card" data-mark="convection">
+      <div class="tag blue">対流</div>
+      <div class="pane">
+        <div class="room"></div><div class="out"></div><div class="glass"></div>
+        <div class="lbl in">室内</div><div class="lbl ex">室外</div>
+        <div class="flow" style="left:36%;top:64px;color:var(--blue)">↓</div>
+        <div class="flow" style="left:18%;top:150px;color:var(--blue)">←</div>
+        <div class="flow" style="left:6%;top:76px;color:var(--blue)">↑</div>
+      </div>
+      <div class="t sm">冷えた空気が流れて運ぶ</div>
+      <div class="s sm">窓ぎわで冷やされた空気が下りて入れ替わる</div>
+    </div>
+    <div class="card" data-mark="radiation">
+      <div class="tag teal">放射</div>
+      <div class="pane">
+        <div class="room"></div><div class="out"></div><div class="glass"></div>
+        <div class="lbl in">室内</div><div class="lbl ex">室外</div>
+        <div class="flow" style="left:16%;top:96px;color:var(--teal)">〜〜→</div>
+      </div>
+      <div class="t sm">光のように飛んでいく</div>
+      <div class="s sm">暖かい面から冷たいガラスへ（Low-E 膜が抑える）</div>
+    </div>
+  </div>
+  <div class="card center"><div class="s">窓の断熱は、この 3 つの道を<span class="strong">まとめて</span>小さくすること</div></div>
+</div>
+</body>
+</html>

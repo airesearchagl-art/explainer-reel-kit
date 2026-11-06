@@ -64,6 +64,21 @@ erkit deck examples/hello-kit.storyboard.md --out out/hello_kit.pptx --durations
 
 台本の書き方: [テンプレート](src/explainer_reel_kit/data/templates/storyboard.md)・[台本の仕様](docs/design/storyboard.md)・[注釈位置の仕様](docs/design/marks.md)
 
+## サンプル題材
+
+[`samples/u-value/`](samples/u-value/) — **窓の断熱性能（U 値）の見方**（建築の一般的な知識、`confidentiality: general`）。
+説明図（熱の逃げ方・U 値の意味）と、キットの中の計算ページの撮影（ガラスの種類を選んで熱の損失を比べる）の両方を、1 本の台本で見せます。
+計算ページはこの PC だけで配信して撮るので、ネットワークなしで動きます。数値は一般的な目安を範囲で示し、根拠は [SOURCES.md](samples/u-value/SOURCES.md) にあります。
+
+作り方の順番（詳しくは [samples/u-value/README.md](samples/u-value/README.md)）:
+
+```bash
+erkit check   samples/u-value/u-value.storyboard.md
+erkit diagram samples/u-value/u-value.storyboard.md --out output/u-value
+erkit capture samples/u-value/u-value.storyboard.md --serve samples/u-value/app --out output/u-value
+erkit deck    samples/u-value/u-value.storyboard.md --assets-root output/u-value --out output/u-value/u_value.pptx
+```
+
 ## 前提（完成時）
 
 - Windows ＋ PowerPoint（デスクトップ版）
