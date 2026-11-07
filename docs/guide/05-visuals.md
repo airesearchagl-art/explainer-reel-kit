@@ -29,6 +29,26 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item output\u-value\check-diagram.png }
 確認画像で、赤枠が指したい部品に重なっているかを見ます。失敗したシーンは `output\u-value\diagram-result.json` に理由が出ます。
 Chromium を入れていなければ、`erkit diagram samples\u-value\u-value.storyboard.md --out output\u-value --channel msedge` のように `--channel msedge` を付けます。
 
+### 解説の部品の選び方（kind: explainer）
+
+解説の説明図は、共通の CSS の**部品 7 種**で描きます。見本（[samples/_parts/](../../samples/_parts/README.md)）を写して、文字と数値を書き換えます。クラスと決まりの正本は [diagram.md の「解説の部品」](../design/diagram.md#解説の部品kind-explainer)。
+
+| 話したいこと | 部品 | 見本 | 赤枠を付ける単位（見本の data-mark） | 気をつけること |
+|---|---|---|---|---|
+| 身近なものにたとえて問いを出す | たとえ | [analogy.html](../../samples/_parts/analogy.html) | 身近なもの・本題・対応表（`everyday` `topic` `mapping`） | たとえは本題と同じしくみのものを選ぶ |
+| 層の重なりで、どこが効くかを見せる | 断面図 | [section.html](../../samples/_parts/section.html) | 層（`layer_…`） | 模式で実寸ではないと図に書く |
+| 原因から結果までの順番 | フロー | [flow.html](../../samples/_parts/flow.html) | 段（`step_1`〜`step_4`） | 1 段に 1 文。3〜4 段 |
+| 2〜4 種類を観点で比べる | 比較表 | [compare.html](../../samples/_parts/compare.html) | 行（`row_…`） | おすすめの行は `class="best"`。評価の根拠は SOURCES.md に |
+| 数値の目安を範囲で見せる | 数値の範囲 | [range.html](../../samples/_parts/range.html) | 帯・目安の線（`band_…` `target`） | 出典のある値だけ。帯の位置は目盛りから計算する（値 ÷ 目盛りの最大 × 100 %） |
+| 条件で答えが分かれる | 条件の分岐 | [branch.html](../../samples/_parts/branch.html) | 問い・答え（`question` `leaf_…`） | 問い 1 つから 2〜3 本 |
+| 並べて見せる（減らし方・まとめ・条件） | カード | [cards.html](../../samples/_parts/cards.html) | カード（`card_1`〜） | 2〜4 枚。すぐできる順に |
+
+- 写す: `Copy-Item samples\_parts\cards.html reels\cold-draft\diagrams\s06_cards.html`（`reels\_shared` を写してあること。[04-storyboard.md](04-storyboard.md)）
+- 写したら、CSS の参照を `href="../_shared/diagram.css"` から `href="../../_shared/diagram.css"` に直す（ファイルの場所が 1 段深くなるため）
+- 色は意味で 4 色まで（`.c-blue` 断熱・冷たい、`.c-amber` 日射・暖かい・注意、`.c-teal` 結果・おすすめ、`.c-gray` その他）。1 本の動画の中で同じ意味には同じ色
+- 見本の値・評価は説明のための例です。必ず確かめた値に書き換えるか、値を消します
+- 全部品を 1 枚で見比べる: `erkit diagram samples/_parts/parts.storyboard.md --out output/parts --overlay output/parts/parts-overview.png`
+
 ## Web 画面の撮影
 
 台本の `capture.steps` は人が読む手順です。機械が実行する操作と、指したい部品（marks）は**操作定義**（`<id>.actions.yaml`）に書きます。手本は [samples/u-value/u-value.actions.yaml](../../samples/u-value/u-value.actions.yaml)。
@@ -64,6 +84,7 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item output\u-value\check-capture.png }
 ## AI に任せること
 
 - 説明図の HTML を書く（[prompts/04-diagram-html.md](../../prompts/04-diagram-html.md)）。`erkit diagram` が失敗したら理由を読んで直す
+- 種別が `explainer` なら、上の表で部品を選び、見本を写して書き換える（新しい形を一から描かない）
 - 操作定義を書く・直す（記録したものに `wait_for` を足すなど）。セレクタは `data-testid` を優先する
 - 確認画像は人に見せて、枠の位置がよいか確かめてもらう
 

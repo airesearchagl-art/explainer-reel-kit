@@ -2,14 +2,14 @@
 
 構成の表を確かめた後、同じ会話に下の枠の中を貼ります。枠の後ろに、次の 2 つのファイルの中身を続けて貼ってください。
 
-1. テンプレート: `src\explainer_reel_kit\data\templates\storyboard.md`
-2. 見本の台本: `samples\u-value\u-value.storyboard.md`（文脈が足りない AI では省く）
+1. テンプレート: `src\explainer_reel_kit\data\templates\storyboard.md`（種別が explainer なら `src\explainer_reel_kit\data\templates\explainer.storyboard.md`）
+2. 見本の台本: `samples\u-value\u-value.storyboard.md`（explainer なら `samples\window-condensation\window-condensation.storyboard.md`。文脈が足りない AI では省く）
 
 ```text
 構成の表を、説明動画の台本（Markdown 1 枚）にしてください。この後にテンプレートと見本を貼ります。テンプレートの形を正確に守ってください。
 
 全体の形:
-  - 先頭の --- と --- の間（reel）: id, title, schema_version: kit-1.0.0, audience, kind, confidentiality, aspect: "16:9", output_name
+  - 先頭の --- と --- の間（reel）: id, title, schema_version: kit-1.0.0（explainer は kit-1.1.0）, audience, kind, confidentiality, aspect: "16:9", output_name
     - id は英小文字・数字・- ・_ だけ。output_name はファイル名（英小文字・数字・_）
     - confidentiality は聞き取りで私が決めた値をそのまま書く。変えない
     - aspect は必ず引用符で囲む
@@ -40,6 +40,11 @@
   - 画面に出す文字（on_screen_text）とナレーションを同じにしない
   - 根拠の無い数値を書かない。製品で変わる値は「目安」「およそ」と言い、範囲で示す
   - 数値の根拠は、先頭近くの <!-- --> のコメントに書く（コメントの中は読み上げられない）
+
+種別が explainer（一般の解説）のとき:
+  - 解説のひな形の形を守る: schema_version: kit-1.1.0、kind: explainer。シーンの順番（問い → しくみ → 比べる・条件 → 選び方・減らし方）は入れ替えない。本編 5〜7 シーン
+  - 全シーン説明図。各シーンのコメントの「部品」と、見本の data-mark の名前（everyday・step_1・row_…・card_1 など）を使う。使わないシーンは消してよい
+  - 台本の後ろに、出典の一覧 SOURCES.md（ひな形の最後のコメントの形: 使った数値・使った事実・資料（確かめた日）・未確認）を別のコードブロックで出す
 
 出典の決まり（必ず守る）:
   - 規格の番号・出典・数値は、この会話で貼られた資料で確かめたものだけを書く。あなたの記憶で書かない（正しく見えても記憶のものは「未確認」）

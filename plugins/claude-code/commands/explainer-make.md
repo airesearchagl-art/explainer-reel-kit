@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## 1. 始める前に
 
-`make-explainer` スキルの「始める前に」と同じ確かめをする（キットのフォルダか、erkit の呼び方、`erkit --version` がこのプラグインの版 **0.2.0** と同じか）。
+`make-explainer` スキルの「始める前に」と同じ確かめをする（キットのフォルダか、erkit の呼び方、`erkit --version` がこのプラグインの版 **0.2.1** と同じか）。
 手順の正本は `docs/guide/06-review.md` と `docs/guide/07-export.md`。Read で読む。
 
 ## 2. 検証と段の順番を見せる（何も作らない）
