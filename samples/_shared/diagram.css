@@ -159,14 +159,17 @@ table.compare .good { color: var(--teal); font-weight: 700; }
 table.compare .weak { color: var(--muted); }
 
 /* ---- 3. 数値の範囲（.range）: 目盛りの上に帯（.band）と目安の線（.target）を置く -------------------
- * 位置は 0〜100 の % で: <div class="band c-blue" style="left:10%;width:25%">…</div>
+ * 範囲は目盛りの 0〜100 % の始まり（--l）と幅（--w）で: <div class="band c-blue" style="--l:10%;--w:25%">…</div>
+ * 帯の幅は最小 --band-min（図の幅 2420px の 3% ≒ 73px）。範囲がそれより狭いときは、帯の中心を範囲の中心に置く
  */
-.range { position: relative; padding: 0 40px; }
-.range .lane { position: relative; height: 110px; margin: 18px 0; }
+.range { position: relative; padding: 0 40px; --band-min: 73px; }
+.range .lane { position: relative; z-index: 1; height: 110px; margin: 18px 0; }  /* 目安の線は帯の後ろ */
 .range .lane-label { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 520px;
                      font-size: 42px; font-weight: 700; }
 .range .track { position: absolute; left: 560px; right: 0; top: 0; bottom: 0; }
 .range .band { position: absolute; top: 14px; bottom: 14px; border: 3px solid; border-radius: 999px;
+               --l: 0%; --w: 0%;
+               left: calc(var(--l) + var(--w) / 2); width: max(var(--w), var(--band-min)); transform: translateX(-50%);
                display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700;
                white-space: nowrap; }
 /* 狭い帯は文字を帯の左に出す: <div class="band narrow" …><em>5.8〜6.0</em></div> */

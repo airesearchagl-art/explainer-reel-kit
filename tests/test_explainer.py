@@ -7,7 +7,7 @@ import re
 
 import pytest
 
-from conftest import ROOT
+from conftest import ROOT, write_storyboard
 from explainer_reel_kit import diagram as dg
 from explainer_reel_kit import storyboard as sb
 from explainer_reel_kit.cli import main as erkit
@@ -191,3 +191,59 @@ def test_parts_overview_from_the_cli(tmp_path, browser_opts):
         args += ["--channel", browser_opts["channel"]]
     assert erkit(args) == 0
     assert (tmp_path / "o" / "all.png").is_file()
+
+
+RANGE_HTML = """<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="diagram.css">
+</head><body><div class="wrap"><div class="range">
+<div class="lane"><div class="lane-label">狭い</div><div class="track" data-mark="track_a">
+  <div class="band c-gray" style="--l:50%;--w:1%" data-mark="narrow"></div></div></div>
+<div class="lane"><div class="lane-label">点</div><div class="track" data-mark="track_b">
+  <div class="band c-amber" style="--l:99%;--w:0%" data-mark="point"></div></div></div>
+<div class="lane"><div class="lane-label">広い</div><div class="track" data-mark="track_c">
+  <div class="band c-blue" style="--l:10%;--w:40%" data-mark="wide"></div></div></div>
+<div class="axis"><div class="tick" style="left:0%">0</div><div class="tick" style="left:100%">10</div></div>
+</div></div></body></html>"""
+
+
+def test_range_band_has_a_minimum_width_centered_on_the_range(tmp_path, browser_opts):
+    """狭い範囲でも帯は最小幅（73px）以上で、帯の中心は範囲の中心。mark の枠は帯と一致する。"""
+    (tmp_path / "diagrams").mkdir()
+    (tmp_path / "diagrams" / "diagram.css").write_text(CSS.read_text(encoding="utf-8"), encoding="utf-8")
+    (tmp_path / "diagrams" / "s01.html").write_text(RANGE_HTML, encoding="utf-8")
+    path = write_storyboard(tmp_path / "t.storyboard.json", [{
+        "id": "s01", "image": {"source": "generated", "ref": "assets/s01.png", "label": "説明用再構成図"},
+        "capture": {"tool": "html", "src": "diagrams/s01.html", "prompt": "範囲の帯"}}])
+    res = dg.run_diagram(path, log=lambda *_: None, **browser_opts)
+    assert res["failed"] == 0
+    marks = json.loads((tmp_path / "assets" / "s01.marks.json").read_text(encoding="utf-8"))["marks"]
+    px = {name: m["px"] for name, m in marks.items()}
+    minimum = 73
+
+    def center(box):
+        return box["x"] + box["w"] / 2
+
+    for band, track, lo, width in (("narrow", "track_a", 0.50, 0.01), ("point", "track_b", 0.99, 0.0),
+                                   ("wide", "track_c", 0.10, 0.40)):
+        b, t = px[band], px[track]
+        want_center = t["x"] + (lo + width / 2) * t["w"]
+        want_width = max(width * t["w"], minimum)
+        assert abs(center(b) - want_center) <= 1.5, (band, b, t)
+        assert abs(b["w"] - want_width) <= 1.5, (band, b, t)
+    assert abs(px["narrow"]["w"] - minimum) <= 1 and abs(px["point"]["w"] - minimum) <= 1
+    # 広い帯は範囲そのまま（始まりと終わりが目盛りと一致）
+    assert abs(px["wide"]["x"] - (px["track_c"]["x"] + 0.10 * px["track_c"]["w"])) <= 1.5
+
+
+def test_range_sample_narrow_band_is_markable(tmp_path, browser_opts):
+    res = dg.run_diagram(PARTS_STORYBOARD, tmp_path, only=["s03"], log=lambda *_: None, **browser_opts)
+    assert res["failed"] == 0
+    marks = json.loads((tmp_path / "assets" / "range.marks.json").read_text(encoding="utf-8"))["marks"]
+    assert marks["band_single"]["px"]["w"] >= 73 and marks["band_single"]["px"]["h"] >= 8
+
+
+def test_range_docs_describe_the_minimum_width():
+    css = CSS.read_text(encoding="utf-8")
+    assert "--band-min: 73px" in css and "max(var(--w), var(--band-min))" in css
+    design = (ROOT / "docs" / "design" / "diagram.md").read_text(encoding="utf-8")
+    assert "最小の幅" in design and "帯の中心を範囲の中心" in design
+    assert 'style="--l:' in (PARTS / "range.html").read_text(encoding="utf-8")

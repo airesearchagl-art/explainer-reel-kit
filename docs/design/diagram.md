@@ -117,7 +117,7 @@ capture:
 |---|---|---|---|---|---|
 | 断面図（層の重なり） | `section.html` | `.section` | `.side.in` / `.side.out`（室内・室外）、`.layer`（層。幅は `style="flex:…"`、`.thin` は薄い層）、`.section-caption` | `layer_glass_in` `layer_air` `layer_coat` | しくみ |
 | 比較表 | `compare.html` | `table.compare` | `thead th`（観点）、`tbody th`（比べるもの）、`tr.best` / `td.best`（おすすめ）、`.good` / `.weak` | `row_single` `row_double` `row_coated`（行に付ける） | 比べる |
-| 数値の範囲（帯と目安） | `range.html` | `.range` | `.lane`（1 行）＞ `.lane-label` と `.track` ＞ `.band`（`style="left:…%;width:…%"`、狭い帯は `.narrow` と `<em>`）、`.axis` ＞ `.tick`・`.unit`・`.target`（目安の線） | `band_single` `band_double` `band_coated` `target` | 条件 |
+| 数値の範囲（帯と目安） | `range.html` | `.range` | `.lane`（1 行）＞ `.lane-label` と `.track` ＞ `.band`（`style="--l:…%;--w:…%"`＝範囲の始まりと幅、狭い帯は `.narrow` と `<em>`）、`.axis` ＞ `.tick`・`.unit`・`.target`（目安の線） | `band_single` `band_double` `band_coated` `target` | 条件 |
 | フロー（矢印の流れ） | `flow.html` | `.flow` | `.step`（`.num`・`b`・`span`）、`.to`（矢印） | `step_1`〜`step_4` | しくみ |
 | カード（2〜4 枚） | `cards.html` | `.cards` | `.card` に `.badge`（番号）、`.tag`・`.t.sm`・`.s.sm` | `card_1`〜`card_3` | 減らし方・まとめ |
 | 条件の分岐 | `branch.html` | `.branch` | `.q`（問い）、`.stem`、`.paths` ＞ `.path` ＞ `.cond`（条件）と `.leaf`（答え） | `question` `leaf_cold` `leaf_sun` `leaf_both` | 選び方 |
@@ -129,6 +129,7 @@ capture:
   1 本の動画の中で同じ意味には同じ色を使う。赤は注釈の赤枠とぶつかるので使わない
 - 文字は 32px 未満にしない（部品の既定は 34〜58px）。図の題は `.part-title`（54px）、注記は `.part-note`（36px）
 - 数値の範囲の帯の位置は、目盛りに合わせて計算する（値 ÷ 目盛りの最大 × 100 %）。目で合わせない
+- 数値の範囲の帯は**最小の幅**（`--band-min`、既定 73px＝図の幅の 3%）を持つ。範囲がそれより狭いときは、帯の中心を範囲の中心に置く（mark の枠はこの帯の大きさ）。目安の線（`.target`）は帯の後ろに描く
 - 図の中の数値は、出典のあるものだけ（[台本の出典の決まり](storyboard.md)）。見本の値は説明のための例で、出典のある値ではない
 - 断面図は模式で、実寸ではないと図の中に書く（`.part-title` か `.section-caption`）
 - 指したい部品（赤枠）は、層・行・帯・段・カード・答えの単位で `data-mark` を付ける（8px 以上。線は `.target` のように幅のある箱で包む）
