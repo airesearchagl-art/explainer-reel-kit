@@ -101,3 +101,132 @@ body {
 .term .ok { color: #6fd3a8; }
 .term .dim { color: #8fa0c4; }
 .term .cmd { color: #ffd479; }
+
+/* ======================================================================
+ * 解説の部品（kind: explainer）。見本は samples/_parts/<部品>.html、一覧は samples/_parts/README.md
+ *
+ * 色は意味で 4 色まで（赤は注釈の赤枠とぶつかるので使わない）:
+ *   青 .c-blue  = 断熱・冷たい・入力       黄 .c-amber = 遮熱・日射・暖かい・注意
+ *   緑 .c-teal  = 結果・おすすめ・安全     灰 .c-gray  = その他・比べる相手
+ * 文字は 32px 未満にしない（動画では横 1920px 前後に縮む）
+ * ==================================================================== */
+
+:root { --teal-line: #3fae8f; --blue-line: #7fa7d4; }
+
+/* 色（背景・文字・枠をまとめて付ける） */
+.c-blue  { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-line); }
+.c-amber { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-line); }
+.c-teal  { background: var(--teal-bg);  color: var(--teal);  border-color: var(--teal-line); }
+.c-gray  { background: var(--gray-bg);  color: var(--gray);  border-color: var(--line); }
+
+/* 図の上の短い題（どの部品でも使う） */
+.part-title { font-size: 54px; font-weight: 700; line-height: 1.3; }
+.part-note  { font-size: 36px; color: var(--muted); line-height: 1.4; }
+
+/* ---- 1. 断面図（.section）: 層を左（室内）から右（室外）へ重ねる ------------------------------
+ * <div class="section"><div class="side">室内</div>
+ *   <div class="layer c-blue" style="flex:1"><b>ガラス</b><span>3 mm</span></div> … <div class="side">室外</div></div>
+ * 層の幅は style="flex:…" の比。厚さは模式（実寸ではない）と図の中に書く
+ */
+.section { display: flex; align-items: stretch; height: 520px; gap: 0; }
+.section .side {
+  width: 260px; display: flex; align-items: center; justify-content: center;
+  font-size: 46px; font-weight: 700; border-radius: 22px;
+}
+.section .side.in  { background: #ffe9d6; color: #8a4b12; margin-right: 18px; }
+.section .side.out { background: var(--blue-bg); color: var(--blue); margin-left: 18px; }
+.section .layer {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  border: 3px solid; border-left-width: 0; text-align: center; padding: 20px 12px;
+  writing-mode: horizontal-tb;
+}
+.section .layer:first-of-type, .section .side + .layer { border-left-width: 3px; }
+.section .layer b { font-size: 44px; line-height: 1.25; white-space: nowrap; }
+.section .layer span { font-size: 34px; color: var(--ink-sub); }
+.section .layer.thin { flex: 0 0 190px; }
+.section-caption { display: flex; justify-content: space-between; font-size: 36px; color: var(--ink-sub); }
+
+/* ---- 2. 比較表（table.compare）: 行＝比べるもの、列＝観点。.best でおすすめの行・セル ------------ */
+table.compare { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 44px; line-height: 1.35;
+                background: #fff; border: 3px solid var(--line); border-radius: 22px; overflow: hidden; }
+table.compare th, table.compare td { padding: 34px 30px; text-align: center; border-bottom: 3px solid var(--line); }
+table.compare tr:last-child th, table.compare tr:last-child td { border-bottom: 0; }
+table.compare thead th { background: var(--gray-bg); color: var(--ink); font-size: 42px; }
+table.compare tbody th { text-align: left; font-size: 46px; white-space: nowrap; }
+table.compare tr.best th, table.compare tr.best td, table.compare td.best { background: var(--teal-bg); }
+table.compare tr.best th { color: var(--teal); }
+table.compare .good { color: var(--teal); font-weight: 700; }
+table.compare .weak { color: var(--muted); }
+
+/* ---- 3. 数値の範囲（.range）: 目盛りの上に帯（.band）と目安の線（.target）を置く -------------------
+ * 位置は 0〜100 の % で: <div class="band c-blue" style="left:10%;width:25%">…</div>
+ */
+.range { position: relative; padding: 0 40px; }
+.range .lane { position: relative; height: 110px; margin: 18px 0; }
+.range .lane-label { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 520px;
+                     font-size: 42px; font-weight: 700; }
+.range .track { position: absolute; left: 560px; right: 0; top: 0; bottom: 0; }
+.range .band { position: absolute; top: 14px; bottom: 14px; border: 3px solid; border-radius: 999px;
+               display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700;
+               white-space: nowrap; }
+/* 狭い帯は文字を帯の左に出す: <div class="band narrow" …><em>5.8〜6.0</em></div> */
+.range .band.narrow em { position: absolute; right: 100%; margin-right: 16px; font-style: normal; color: var(--ink-sub); }
+.range .axis { position: relative; margin-left: 560px; height: 90px; border-top: 4px solid var(--ink-sub); }
+.range .tick { position: absolute; top: 0; transform: translateX(-50%); font-size: 36px; color: var(--ink-sub);
+               padding-top: 14px; }
+.range .tick::before { content: ""; position: absolute; left: 50%; top: -4px; width: 4px; height: 22px;
+                       background: var(--ink-sub); transform: translateX(-50%); }
+.range .unit { position: absolute; right: 0; top: 56px; font-size: 34px; color: var(--muted); }
+/* 目安の線: 指せるように幅 60px の箱の中央に点線を引く。高さは style="height:…" で帯の上まで */
+.range .target { position: absolute; bottom: 90px; width: 60px; transform: translateX(-50%); }
+.range .target::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+                         border-left: 5px dashed var(--teal); transform: translateX(-50%); }
+.range .target b { position: absolute; top: -56px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+                   font-size: 36px; color: var(--teal); background: var(--bg); padding: 0 10px; }
+
+/* ---- 4. フロー（.flow）: 番号つきの段（.step）を矢印でつなぐ ----------------------------------------- */
+.flow { display: flex; align-items: stretch; gap: 22px; }
+.flow .step { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+              text-align: center; background: #fff; border: 3px solid var(--line); border-radius: 22px;
+              padding: 34px 24px; gap: 14px; }
+.flow .step .num { width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center;
+                   justify-content: center; font-size: 46px; font-weight: 700; border: 3px solid; }
+.flow .step b { font-size: 50px; line-height: 1.3; }
+.flow .step span { font-size: 38px; color: var(--ink-sub); line-height: 1.4; }
+.flow .to { align-self: center; font-size: 72px; color: var(--muted); line-height: 1; }
+
+/* ---- 5. カード（.cards）: 2〜4 枚を並べる。既存の .card に番号（.badge）を付ける ---------------------- */
+.cards { display: flex; gap: 36px; align-items: stretch; }
+.cards .card { position: relative; padding-top: 70px; }
+.cards .badge { position: absolute; top: -34px; left: 36px; min-width: 72px; height: 72px; padding: 0 18px;
+                border-radius: 999px; display: flex; align-items: center; justify-content: center;
+                font-size: 40px; font-weight: 700; border: 3px solid; }
+
+/* ---- 6. 条件の分岐（.branch）: 問い（.q）から 2〜3 本に分かれ、それぞれの答え（.leaf）へ --------------- */
+.branch { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.branch .q { background: #fff; border: 4px solid var(--ink-sub); border-radius: 22px; padding: 26px 50px;
+             font-size: 52px; font-weight: 700; text-align: center; }
+.branch .stem { width: 4px; height: 50px; background: var(--ink-sub); }
+.branch .paths { display: flex; gap: 40px; width: 100%; border-top: 4px solid var(--ink-sub); }
+.branch .path { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.branch .path::before { content: ""; width: 4px; height: 46px; background: var(--ink-sub); }
+.branch .cond { font-size: 40px; font-weight: 700; padding: 6px 24px; border-radius: 999px; border: 3px solid;
+                margin-bottom: 18px; }
+.branch .leaf { width: 100%; flex: 1; background: #fff; border: 3px solid var(--line); border-radius: 22px;
+                padding: 26px 30px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.branch .leaf b { font-size: 50px; line-height: 1.3; }
+.branch .leaf span { font-size: 38px; color: var(--ink-sub); line-height: 1.4; }
+.branch .paths.edge { border-top: 0; }
+
+/* ---- 7. たとえ（.analogy）: 身近なもの（左）と本題（右）を「≒」で並べ、対応（.map）を下に ------------ */
+.analogy { display: flex; align-items: stretch; gap: 30px; }
+.analogy .side { flex: 1; background: #fff; border: 3px solid var(--line); border-radius: 22px; padding: 30px 40px;
+                 display: flex; flex-direction: column; gap: 14px; }
+.analogy .side .tag { margin-bottom: 4px; }
+.analogy .side b { font-size: 58px; line-height: 1.3; }
+.analogy .side span { font-size: 40px; color: var(--ink-sub); line-height: 1.45; }
+.analogy .eq { align-self: center; font-size: 96px; color: var(--muted); font-weight: 700; line-height: 1; }
+.map { display: grid; grid-template-columns: 1fr 120px 1fr; gap: 16px 0; align-items: center; }
+.map .l, .map .r { background: #fff; border: 3px solid var(--line); border-radius: 18px; padding: 16px 30px;
+                   font-size: 42px; text-align: center; }
+.map .mid { text-align: center; font-size: 56px; color: var(--muted); }

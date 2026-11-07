@@ -170,14 +170,19 @@ def _cmd_check(args) -> int:
             continue
         rep = sb.validate_file(path)
         level = "-"
+        kind = None
         try:
-            level = sb.confidentiality(sb.load_storyboard(path))
+            doc = sb.load_storyboard(path)
+            level = sb.confidentiality(doc)
+            kind = (doc.get("reel") or {}).get("kind")
         except Exception:  # 読めない台本は validate_file がエラーとして報告している
             pass
         bad = bool(rep.errors) or (args.strict and bool(rep.warnings))
         head = "NG" if bad else "OK"
         print(f"{head} {path}（区分: {level}、エラー {len(rep.errors)}、警告 {len(rep.warnings)}）")
         if not (args.quiet and not bad):
+            if kind in sb.KIND_LABELS:
+                print(f"  種別: {kind}（{sb.KIND_LABELS[kind]}）")
             for e in rep.errors:
                 print(f"  エラー: {e}")
             for w in rep.warnings:

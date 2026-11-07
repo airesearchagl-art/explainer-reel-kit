@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/airesearchagl-art/explainer-reel-kit/blob/main/src/explainer_reel_kit/data/schema/storyboard.schema.json",
   "title": "explainer-reel-kit Storyboard",
-  "description": "台本（ストーリーボード）スキーマ kit-1.0.0。全工程（説明図・撮影・ナレーション・スライド・書き出し）が共有する唯一の約束事。intro / outro は固定テンプレートのスロット、scenes は 1 シーン＝1 スライド＝主画像 1 枚。1.0.0 / 1.1.0 の台本（web / manual / generated の画像だけを使うもの）もそのまま読める（docs/design/storyboard.md）。",
+  "description": "台本（ストーリーボード）スキーマ kit-1.1.0。全工程（説明図・撮影・ナレーション・スライド・書き出し）が共有する唯一の約束事。intro / outro は固定テンプレートのスロット、scenes は 1 シーン＝1 スライド＝主画像 1 枚。1.0.0 / 1.1.0 の台本（web / manual / generated の画像だけを使うもの）もそのまま読める（docs/design/storyboard.md）。",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -57,7 +57,8 @@
           "schema_version": {
             "enum": [
               "1.1.0",
-              "kit-1.0.0"
+              "kit-1.0.0",
+              "kit-1.1.0"
             ]
           }
         }
@@ -77,9 +78,10 @@
           "enum": [
             "1.0.0",
             "1.1.0",
-            "kit-1.0.0"
+            "kit-1.0.0",
+            "kit-1.1.0"
           ],
-          "description": "新しく書く台本は kit-1.0.0。1.0.0 / 1.1.0 の台本もそのまま読める（1.0.0 には confidentiality を書けない）"
+          "description": "新しく書く台本は kit-1.1.0。1.0.0 / 1.1.0 / kit-1.0.0 の台本もそのまま読める（1.0.0 には confidentiality を書けない。kind: explainer は kit-1.1.0 から）"
         },
         "audience": {
           "enum": [
@@ -92,9 +94,10 @@
         "kind": {
           "enum": [
             "tool_intro",
-            "work_manual"
+            "work_manual",
+            "explainer"
           ],
-          "description": "tool_intro: ツールの紹介 / work_manual: 作業の手順"
+          "description": "tool_intro: ツールの紹介 / work_manual: 作業の手順 / explainer: 一般の解説（問い → しくみ → 比べる → 選び方 → まとめ。kit-1.1.0 から）"
         },
         "confidentiality": {
           "enum": [

@@ -67,8 +67,8 @@ def register(sub) -> None:
     d.add_argument("--title", default=None, help="動画の題名（省略時は LLM の案）")
     d.add_argument("--audience", choices=["A", "B", "C"], default="A",
                    help="見る人: A 初めての人（既定） / B よく使う人・詳しい人 / C 専門家・作る人")
-    d.add_argument("--kind", choices=["tool_intro", "work_manual"], default="tool_intro",
-                   help="tool_intro ツールの紹介（既定） / work_manual 作業の手順")
+    d.add_argument("--kind", choices=list(sb.KINDS), default="tool_intro",
+                   help="tool_intro ツールの紹介（既定） / work_manual 作業の手順 / explainer 一般の解説（--scenes は 5〜7）")
     d.add_argument("--capture", choices=["diagram", "web", "manual"], default="diagram",
                    help="画像の作り方（全シーン）: diagram 説明図（既定） / web Web 画面の撮影（--url が要る） / manual 人が用意する")
     d.add_argument("--url", default=None, help="--capture web のときの URL")
