@@ -7,16 +7,18 @@
 |---|---|---|---|
 | s01 身近な場面で考える | 問い | たとえ（`analogy.html`） | 身近なもの → 本題 |
 | s02 水滴ができる順にたどる | しくみ | フロー（`flow.html`） | 4 段を順に |
-| s03 結露の二つの条件を知る | 条件 | カード（`cards.html`） | 3 枚を順に |
-| s04 暖房の種類を比べる | 比べる | 比較表（`compare.html`） | 2 行を順に |
-| s05 結露を減らす | 減らし方 | カード（`cards.html`） | 3 枚を順に |
+| s03 結露の二つの条件を知る | 条件 | カード（`cards.html`） | ① 温度差・② 湿度 |
+| s04 湿度を上げるものを知る | 条件（② の中身） | カード（`cards.html`） | 3 枚を順に |
+| s05 条件ごとに結露を減らす | 減らし方 | カード（`cards.html`） | ① 温度差には・② 湿度には（s03 と同じ番号・色） |
+
+条件（s03）と減らし方（s05）は**対**です。同じ番号・同じ順・同じ色で並べ、減らし方の側でも条件の番号で言います（[03-outline.md](../../docs/guide/03-outline.md) の「対になるものの決まり」）。
 
 ## ファイル
 
 | ファイル | 内容 |
 |---|---|
 | `window-condensation.storyboard.md` | 台本（intro・5 シーン・outro）。解説のひな形から作った |
-| `diagrams/s01_question.html` 〜 `s05_reduce.html` | 説明図。[部品の見本](../_parts/README.md)を写して書き換え、共通の CSS（`../../_shared/diagram.css`）を読む |
+| `diagrams/s01_question.html`・`s02_flow.html`・`s03_conditions.html`・`s04_moisture.html`・`s05_reduce.html` | 説明図。[部品の見本](../_parts/README.md)を写して書き換え、共通の CSS（`../../_shared/diagram.css`）を読む |
 | `SOURCES.md` | 使った数値・事実と根拠（資料名・URL・確かめた日）。確かめた資料に無い数値（ガラスの種類ごとの性能など）は使っていない |
 
 ## 作り方の順番

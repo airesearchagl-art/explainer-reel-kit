@@ -248,3 +248,55 @@ def test_sample_diagram_renders(tmp_path, browser_opts):
     assert main(["diagram", str(SAMPLE_SB), "--out", str(out), "--overlay", str(out / "check.png"), *ch]) == 0
     for sid, data in _scenes(SAMPLE_SB):
         assert (out / data["image"]["ref"]).is_file(), sid
+
+
+# ---- 対になるものの決まり（原因と対策をそろえる）と、サンプルの出典
+
+PAIR_RULE_FILES = [GUIDE / "03-outline.md", GUIDE / "04-storyboard.md",
+                   PROMPTS / "02-outline.md", PROMPTS / "03-storyboard.md", PROMPTS / "05-batch.md",
+                   PLUGIN / "skills" / "storyboard" / "SKILL.md", SKILL]
+
+
+@pytest.mark.parametrize("path", PAIR_RULE_FILES, ids=lambda p: f"{p.parent.name}/{p.name}")
+def test_pair_rule_is_written(path):
+    text = _read(path)
+    assert "同じ番号・同じ順" in text, path
+    assert "原因の番号で言う" in text, path
+    assert "片方にしかないものを作らない" in text, path
+    assert re.search(r"図の番号(（`\.badge`）)?と?・?色", text), path
+
+
+def _cards(html: str) -> list[tuple[str, str, str]]:
+    """(バッジの番号, バッジの色, タグの先頭の丸数字) をカードの順に。"""
+    found = []
+    for m in re.finditer(r'<div class="card" data-mark="card_\d+">(.*?)</div>\s*</div>|'
+                         r'<div class="card" data-mark="card_\d+">(.*?)(?=<div class="card"|</div>\s*</div>\s*<div class="part-note")',
+                         html, re.S):
+        body = m.group(1) or m.group(2) or ""
+        badge = re.search(r'class="badge (c-\w+)">([^<]+)<', body)
+        tag = re.search(r'class="tag \w+">([①-⑨])', body)
+        found.append((badge.group(2) if badge else "", badge.group(1) if badge else "", tag.group(1) if tag else ""))
+    return found
+
+
+def test_sample_conditions_and_reductions_are_paired():
+    """条件（s03）と減らし方（s05）が同じ番号・同じ順・同じ色で、片方だけの項目が無い。"""
+    cond = _cards(_read(SAMPLE / "diagrams" / "s03_conditions.html"))
+    red = _cards(_read(SAMPLE / "diagrams" / "s05_reduce.html"))
+    assert cond and len(cond) == len(red)
+    assert cond == red  # 番号・色・丸数字がそろう
+    assert [c[2] for c in cond] == ["①", "②"]
+    # ナレーションでも、減らし方の側で条件の番号で言う
+    text = _read(SAMPLE_SB)
+    s05 = text[text.index("## s05:"):text.index("## outro")]
+    paras = [p for p in s05.split("```")[-1].strip().split("\n\n") if p.strip()]
+    assert paras[0].startswith("一つめの温度差には") and paras[1].startswith("二つめの湿度には")
+
+
+def test_sample_uses_only_checked_sources():
+    """確かめを人が再現しにくいメーカーの製品ページを根拠にしない。s04 は [1] の「水蒸気を出さない」側だけで言う。"""
+    sources = _read(SAMPLE / "SOURCES.md")
+    assert "mitsubishielectric" not in sources
+    for path in [SAMPLE_SB, *(SAMPLE / "diagrams").glob("*.html")]:
+        assert "開放型" not in _read(path), path.name
+    assert "エアコン・電気ストーブ・密閉型の暖房機は部屋に水蒸気を出さない" in _read(SAMPLE / "diagrams" / "s04_moisture.html")
