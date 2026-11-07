@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## 1. 始める前に
 
-`make-explainer` スキルの「始める前に」と同じ確かめをする: キットのフォルダか（`AGENTS.md` と `pyproject.toml` がある）、erkit の呼び方（`.venv/Scripts/erkit` か `.venv/bin/erkit`）、`erkit --version` がこのプラグインの版 **0.1.1** と同じか。
+`make-explainer` スキルの「始める前に」と同じ確かめをする: キットのフォルダか（`AGENTS.md` と `pyproject.toml` がある）、erkit の呼び方（`.venv/Scripts/erkit` か `.venv/bin/erkit`）、`erkit --version` がこのプラグインの版 **0.2.0** と同じか。
 
 ## 2. 区分を聞く（何よりも先に）
 

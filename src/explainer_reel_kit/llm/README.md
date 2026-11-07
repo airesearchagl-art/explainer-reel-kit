@@ -14,7 +14,7 @@
 | `thinking.py` | 思考の切り替え（auto / off / on）の送り方と、断られたときの代わり |
 | `budget.py` | 文脈長の予算（多めの見積もりと、サーバーでの実測） |
 | `condense.py` | 長い資料を task `light` で要点に縮める（小片 → もう一度 → 行を落とす） |
-| `draft.py` | `erkit draft`: 中間の JSON → コードで台本（kit-1.0.0）を組み立て → 検証 |
+| `draft.py` | `erkit draft`: 中間の JSON → コードで台本（kit-1.1.0）を組み立て → 検証 |
 | `marks.py` | `erkit draft --update-marks`: 操作定義の `marks` と説明図の `data-mark` から名前を入れる |
 | `readings.py` | `erkit voice suggest`: エンジンの読みと LLM の候補を比べ、辞書への追記案を表示する |
 | `cli.py` | `erkit draft` と `erkit llm check`、共通の引数（`--llm-config` など） |

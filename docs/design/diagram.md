@@ -92,6 +92,50 @@ capture:
 - 色は意味で使う（青＝操作・入力、緑＝結果・安全、黄＝注意・止める、灰＝その他）。赤は注釈（赤枠）とぶつかるので使わない
 - 指したいもの（赤枠の対象）は、カード 1 枚か、`.hl` を付けた 1 かたまりにする（文字 1 つを指すと枠が小さすぎる）
 
+## 共通の CSS の参照の仕方
+
+共通の CSS の正本は **`samples/_shared/diagram.css`** の 1 つです（パッケージには入れません。キットのフォルダで使います）。
+説明図の HTML から、**その HTML のある場所からの相対パス**で読みます（`erkit diagram` は `file://` を読めます）。
+
+| HTML の置き場所 | `<link rel="stylesheet" href="…">` |
+|---|---|
+| `samples/<題材>/diagrams/` | `../../_shared/diagram.css` |
+| `samples/_parts/`（部品の見本） | `../_shared/diagram.css` |
+| `reels/<台本の id>/diagrams/`（`erkit draft` の出力の隣） | `../../../samples/_shared/diagram.css` |
+| `examples/` の下 | `../../samples/_shared/diagram.css` |
+
+- キットの外に台本を置くときは、`diagram.css` を台本のフォルダに写して `diagrams/` から `../diagram.css` で読む（写した CSS はキットを更新しても変わらない）
+- 図だけの調整は、HTML の `<style>` に書く（共通の CSS は変えない）
+
+## 解説の部品（kind: explainer）
+
+一般の解説（[台本の kind: explainer](storyboard.md)）でよく使う図を、共通の CSS の部品にしました。
+見本の HTML は [`samples/_parts/`](../../samples/_parts/README.md) に 1 部品 1 ファイルで置いてあり、**写して文字と数値を書き換えれば**使えます。
+解説のひな形（`src/explainer_reel_kit/data/templates/explainer.storyboard.md`）の各シーンは、どの部品を使うかと、見本の mark の名前を書いてあります。
+
+| 部品 | 見本 | 外側のクラス | 中の要素 | 見本の data-mark | 使うシーン |
+|---|---|---|---|---|---|
+| 断面図（層の重なり） | `section.html` | `.section` | `.side.in` / `.side.out`（室内・室外）、`.layer`（層。幅は `style="flex:…"`、`.thin` は薄い層）、`.section-caption` | `layer_glass_in` `layer_air` `layer_coat` | しくみ |
+| 比較表 | `compare.html` | `table.compare` | `thead th`（観点）、`tbody th`（比べるもの）、`tr.best` / `td.best`（おすすめ）、`.good` / `.weak` | `row_single` `row_double` `row_coated`（行に付ける） | 比べる |
+| 数値の範囲（帯と目安） | `range.html` | `.range` | `.lane`（1 行）＞ `.lane-label` と `.track` ＞ `.band`（`style="--l:…%;--w:…%"`＝範囲の始まりと幅、狭い帯は `.narrow` と `<em>`）、`.axis` ＞ `.tick`・`.unit`・`.target`（目安の線） | `band_single` `band_double` `band_coated` `target` | 条件 |
+| フロー（矢印の流れ） | `flow.html` | `.flow` | `.step`（`.num`・`b`・`span`）、`.to`（矢印） | `step_1`〜`step_4` | しくみ |
+| カード（2〜4 枚） | `cards.html` | `.cards` | `.card` に `.badge`（番号）、`.tag`・`.t.sm`・`.s.sm` | `card_1`〜`card_3` | 減らし方・まとめ |
+| 条件の分岐 | `branch.html` | `.branch` | `.q`（問い）、`.stem`、`.paths` ＞ `.path` ＞ `.cond`（条件）と `.leaf`（答え） | `question` `leaf_cold` `leaf_sun` `leaf_both` | 選び方 |
+| たとえ（身近なもの） | `analogy.html` | `.analogy` と `.map` | `.side`（身近なもの・本題）、`.eq`（≒）、`.map` の `.l`・`.mid`・`.r`（対応） | `everyday` `topic` `mapping` | 問い |
+
+決まり:
+
+- **色は意味で 4 色まで**: `.c-blue`（断熱・冷たい・入力）、`.c-amber`（遮熱・日射・暖かい・注意）、`.c-teal`（結果・おすすめ・安全）、`.c-gray`（その他・比べる相手）。
+  1 本の動画の中で同じ意味には同じ色を使う。赤は注釈の赤枠とぶつかるので使わない
+- 文字は 32px 未満にしない（部品の既定は 34〜58px）。図の題は `.part-title`（54px）、注記は `.part-note`（36px）
+- 数値の範囲の帯の位置は、目盛りに合わせて計算する（値 ÷ 目盛りの最大 × 100 %）。目で合わせない
+- 数値の範囲の帯は**最小の幅**（`--band-min`、既定 73px＝図の幅の 3%）を持つ。範囲がそれより狭いときは、帯の中心を範囲の中心に置く（mark の枠はこの帯の大きさ）。目安の線（`.target`）は帯の後ろに描く
+- 図の中の数値は、出典のあるものだけ（[台本の出典の決まり](storyboard.md)）。見本の値は説明のための例で、出典のある値ではない
+- 断面図は模式で、実寸ではないと図の中に書く（`.part-title` か `.section-caption`）
+- 指したい部品（赤枠）は、層・行・帯・段・カード・答えの単位で `data-mark` を付ける（8px 以上。線は `.target` のように幅のある箱で包む）
+
+全部品の一覧（確認画像）を作るコマンドは [`samples/_parts/README.md`](../../samples/_parts/README.md) にあります。
+
 ## コマンド
 
 ```bash

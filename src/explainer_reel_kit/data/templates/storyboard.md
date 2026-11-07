@@ -2,9 +2,9 @@
 # ===== reel（動画全体の情報）=====
 id: my-tool-intro              # 英小文字・数字・- ・_
 title: ○○ツールの紹介          # intro スライドの大見出しにもなる
-schema_version: kit-1.0.0
+schema_version: kit-1.1.0
 audience: B                    # A: 初めての人 / B: よく使う人・詳しい人 / C: 専門家・作る人
-kind: tool_intro               # tool_intro（ツールの紹介）/ work_manual（作業の手順）
+kind: tool_intro               # tool_intro（ツールの紹介）/ work_manual（作業の手順）。一般の解説は explainer.storyboard.md
 confidentiality: confidential  # 社外秘の区分。分からなければ confidential のまま。公開済みの情報・一般的な知識だけなら general
 aspect: "16:9"                 # 必ず引用符で囲む（いまは 16:9 のみ）
 output_name: my_tool_intro     # .pptx / .mp4 のファイル名（拡張子なし）

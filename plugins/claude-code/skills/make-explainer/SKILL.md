@@ -11,7 +11,7 @@ description: 題材から説明動画（ナレーション付きの MP4）を作
 
 1. **キットのフォルダか確かめる**: 作業のフォルダに `AGENTS.md` と `pyproject.toml`（`name = "explainer-reel-kit"`）があること。無ければ、キットのフォルダで Claude Code を開き直すよう人に伝えて止まる（キットの入れ方は `docs/guide/00-setup.md`）
 2. **erkit の呼び方**: 仮想環境の中の erkit を使う。Windows は `.venv/Scripts/erkit`、それ以外は `.venv/bin/erkit`（以下の `erkit` はこれに読み替える）。無ければ `install.ps1` を案内して止まる
-3. **版を確かめる**: `erkit --version` を実行する。このプラグインの版は **0.1.1**。違えば「キットとプラグインの版が違う（キット X、プラグイン 0.1.1）。`git pull` と `/plugin marketplace update explainer-reel-kit` でそろえる」と知らせる（止まらなくてよい）
+3. **版を確かめる**: `erkit --version` を実行する。このプラグインの版は **0.2.0**。違えば「キットとプラグインの版が違う（キット X、プラグイン 0.2.0）。`git pull` と `/plugin marketplace update explainer-reel-kit` でそろえる」と知らせる（止まらなくてよい）
 4. **`AGENTS.md` を読む**。ここに書いた約束より、`AGENTS.md` と `docs/guide/` が正
 
 ## 最初に区分を決める（資料を読む前に）

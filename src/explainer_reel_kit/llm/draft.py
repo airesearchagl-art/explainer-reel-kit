@@ -5,7 +5,7 @@
 1. 渡された資料（README・説明のテキストなど。手元のファイルだけ。何も取りに行かない）を読む
 2. task ``draft`` のモデルに、**小さな中間の JSON**（題名・要約・前提・冒頭・シーン・まとめ）を
    ``structured.generate`` で書かせる（LLM に Markdown は書かせない）
-3. **コード**が中間の JSON から台本（Markdown、スキーマ kit-1.0.0）を組み立て、``storyboard`` で検証する。
+3. **コード**が中間の JSON から台本（Markdown、スキーマ kit-1.1.0）を組み立て、``storyboard`` で検証する。
    検証の不合格・シーン数の違い・Markdown の記号は、書き直しの依頼として LLM に返す
 4. 柔らかい確かめ（資料にない数値・長さ・セレクタらしい書き方・動画で触れない語）は警告にする
 
@@ -60,7 +60,9 @@ AUDIENCES = {
 }
 #: 画像の作り方（全シーン共通）。diagram は説明図（generated）、web は Web 画面の撮影、manual は人が用意する画像
 CAPTURES = ("diagram", "web", "manual")
-KINDS = ("tool_intro", "work_manual")
+KINDS = sb.KINDS  # tool_intro / work_manual / explainer
+#: 種別ごとの、指示の文での呼び方
+KIND_PROMPTS = {"tool_intro": "ツールの紹介動画", "work_manual": "作業の手順の動画", "explainer": "一般の解説動画"}
 
 _SLUG = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 _SHOT = re.compile(r"^[a-z0-9_]{1,24}$")
@@ -156,7 +158,7 @@ class DraftRequest:
         if self.confidentiality not in CONFIDENTIALITY_VALUES:
             raise ConfigError(f"--confidentiality は {' / '.join(CONFIDENTIALITY_VALUES)} のどちらかです: {self.confidentiality}")
         if self.kind not in KINDS:
-            raise ConfigError(f"--kind は {' / '.join(KINDS)} のどちらかです: {self.kind}")
+            raise ConfigError(f"--kind は {' / '.join(KINDS)} のどれかです: {self.kind}")
         if self.title is not None and not 1 <= len(self.title) <= 80:
             raise ConfigError("--title は 1〜80 字にしてください")
 
@@ -220,7 +222,7 @@ _CAPTURE_NOTE = {
 def build_prompt(req: DraftRequest, sources: list[SourceText]) -> str:
     scenes = req.scene_count()
     title_rule = f"- title は「{req.title}」とする" if req.title else "- title は動画の題名（40 字程度まで）"
-    kind = "ツールの紹介動画" if req.kind == "tool_intro" else "作業の手順の動画"
+    kind = KIND_PROMPTS[req.kind]
     lines = [
         f"次の資料から、{kind}の台本の下書きを、JSON だけで出力してください。説明文やコードブロックは付けません。",
         "",
@@ -229,9 +231,11 @@ def build_prompt(req: DraftRequest, sources: list[SourceText]) -> str:
         f"- 画像: {_CAPTURE_NOTE[req.capture].format(url=req.url)}",
         f"- 本編のシーンは {scenes} つ。冒頭（intro）とまとめ（outro）は別に書く",
         title_rule,
+        *(["- 構成の決まり: 問い（身近な場面）→ しくみ → 比べる・条件 → 選び方・減らし方 → まとめ（確認すること）。"
+            "この順でシーンを並べる"] if req.kind == "explainer" else []),
         "- summary: この動画で分かること（画面に出す 1〜2 文、120 字以内）",
         "- intro_narration: 冒頭のナレーション（2〜3 文、話し言葉）",
-        "- scenes[].heading: 行動の見出し。20 字以内で、動詞で終える（例: 条件を入力する、結果を確かめる）",
+        "- scenes[].heading: 行動の見出し。20 字以内で、動詞で終える（例: 条件を入力する、結果を確かめる、しくみをつかむ）",
         "- scenes[].where: 画面・図のどこか（例: ブラウザ（左の入力欄）、説明図）",
         "- scenes[].on_screen_text: 画面に出す短文（60 字以内、任意）",
         "- scenes[].narration: そのシーンのナレーション（2〜3 文、話し言葉）",

@@ -1,7 +1,8 @@
 """台本（storyboard）の読み込み・Markdown → JSON の変換・検証・区分。
 
-- スキーマ: パッケージのデータ ``data/schema/storyboard.schema.json``（kit-1.0.0）
-- 読める版: 1.0.0 / 1.1.0 / kit-1.0.0（1.0.0 / 1.1.0 は web / manual / generated の画像だけを使う台本）
+- スキーマ: パッケージのデータ ``data/schema/storyboard.schema.json``（kit-1.1.0）
+- 読める版: 1.0.0 / 1.1.0 / kit-1.0.0 / kit-1.1.0（1.0.0 / 1.1.0 は web / manual / generated の画像だけを使う台本。
+  ``kind: explainer`` は kit-1.1.0 から）
 - 社外秘の区分を読むのは :func:`confidentiality` だけ。ほかのモジュールはここで区分を読む
 """
 from __future__ import annotations
@@ -17,8 +18,11 @@ from typing import Any, Iterator
 import yaml
 from jsonschema import Draft202012Validator
 
-SCHEMA_VERSION = "kit-1.0.0"  # 新しく書く台本の版
-SCHEMA_VERSIONS = ("1.0.0", "1.1.0", "kit-1.0.0")  # 読める版
+SCHEMA_VERSION = "kit-1.1.0"  # 新しく書く台本の版
+SCHEMA_VERSIONS = ("1.0.0", "1.1.0", "kit-1.0.0", "kit-1.1.0")  # 読める版
+KINDS = ("tool_intro", "work_manual", "explainer")  # 台本の種別（reel.kind）
+#: 版ごとに足した種別（それより前の版の台本では使えない）
+KIND_SINCE = {"explainer": "kit-1.1.0"}
 
 # 社外秘の区分（reel.confidentiality）
 CONFIDENTIAL = "confidential"
@@ -27,6 +31,9 @@ CONFIDENTIALITY_VALUES = (CONFIDENTIAL, GENERAL)
 
 RESERVED_SECTIONS = ("intro", "outro")
 RECOMMENDED_SCENES = (5, 8)
+EXPLAINER_SCENES = (5, 7)  # kind: explainer の推奨
+#: 種別の短い説明（erkit check の表示）
+KIND_LABELS = {"tool_intro": "ツールの紹介", "work_manual": "作業の手順", "explainer": "一般の解説"}
 
 # キットでは使えない値（本体の元になった仕組みにだけあるもの）
 UNSUPPORTED_SOURCES = {"sketchup": "SketchUp の撮影はキットに含まれません"}
@@ -301,11 +308,17 @@ def validate_storyboard(doc: Any, base_dir: Path | None = None) -> Report:
         for where in _kit_only_features(doc):
             rep.errors.append(f"[version] {where} は kit-1.0.0 の項目です。schema_version を kit-1.0.0 にしてください")
 
-    if version in ("1.1.0", "kit-1.0.0") and "confidentiality" not in reel:
+    since = KIND_SINCE.get(kind) if isinstance(kind, str) else None
+    if since and version in SCHEMA_VERSIONS and SCHEMA_VERSIONS.index(version) < SCHEMA_VERSIONS.index(since):
+        rep.errors.append(f"[version] reel.kind '{kind}' は {since} の種別です。schema_version を {since} にしてください")
+
+    if version in ("1.1.0", "kit-1.0.0", "kit-1.1.0") and "confidentiality" not in reel:
         rep.warnings.append("[confidentiality] reel.confidentiality が未記入です。未記入は confidential として扱います"
                             "（公開済みの情報・一般的な知識だけなら general と書く）")
 
     lo, hi = RECOMMENDED_SCENES
+    if kind == "explainer":  # 解説の構成の決まり: 5〜7 シーン（docs/design/storyboard.md）
+        lo, hi = EXPLAINER_SCENES
     if isinstance(scenes, list) and scenes and not (lo <= len(scenes) <= hi):
         rep.warnings.append(f"[scenes] シーン数 {len(scenes)}（推奨 {lo}〜{hi}）")
 

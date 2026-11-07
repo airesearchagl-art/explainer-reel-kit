@@ -47,20 +47,21 @@
 ## erkit draft
 
 ```text
-erkit draft <台本の id> --source <資料> [--source <資料> …] [--audience A|B|C] [--kind tool_intro|work_manual]
+erkit draft <台本の id> --source <資料> [--source <資料> …] [--audience A|B|C] [--kind tool_intro|work_manual|explainer]
             [--capture diagram|web|manual] [--url URL] [--scenes N] [--title 題名]
             [--confidentiality confidential|general] [--offline] [--out フォルダ] [--retries N]
 ```
 
 1. 資料（手元の UTF-8 のテキスト。何も取りに行かない）を読む
 2. task `draft` のモデルに **小さな中間の JSON**（題名・要約・前提・冒頭・シーン・まとめ）を書かせる。LLM に Markdown は書かせない
-3. **コード**が台本（Markdown、スキーマ kit-1.0.0）を組み立て、`storyboard.validate_storyboard` で検証する。
+3. **コード**が台本（Markdown、スキーマ kit-1.1.0）を組み立て、`storyboard.validate_storyboard` で検証する。
    スキーマ違反・シーン数の違い・Markdown の記号・検証の不合格は、**具体的な直し方を付けて**書き直しを頼む（既定 2 回）
 4. 柔らかい確かめは注意として表示する: 資料にない単位つきの数値（作り話の疑い）・見出しの長さ・ナレーションの文の数・セレクタらしい書き方・**動画で触れない語**
 5. `reels/<台本の id>/<台本の id>.storyboard.md` と記録 `draft.json` を書き、`erkit check` と同じ結果を表示する
 
 - 出力は**上書きしない**（台本が既にあれば止める）。失敗したときは `draft.json` だけ（最後の答え・各回の問題を残す）
 - 区分は既定で `confidential`。`general` にしてよいのは、資料が公開済みの情報だけだと**人が**確かめたとき
+- 種別（`--kind`）: `explainer` のときは、構成の決まり（問い → しくみ → 比べる・条件 → 選び方・減らし方 → まとめ）を指示に足す
 - 見る人（`--audience`）: `A` 初めての人（既定） / `B` よく使う人・詳しい人 / `C` 専門家・作る人。指示の文はこの言い方だけを使う
 - 画像（`--capture`、全シーン共通）:
 
