@@ -1,12 +1,13 @@
 ---
 name: storyboard
-description: 説明動画の台本（*.storyboard.md）を書く・直す。構成の表から、キットの台本の仕様に合わせて reel・intro・シーン・outro を書き、erkit check が通るまで直す。台本・ナレーション原稿・erkit check のエラーを扱うときに使う。
+description: 説明動画の台本（*.storyboard.md）を書く・直す。構成の表から、キットの台本の仕様に合わせて reel・intro・シーン・outro を書き、erkit check が通るまで直す。一般の解説（kind explainer）は解説のひな形と出典の一覧（SOURCES.md）で書く。台本・ナレーション原稿・erkit check のエラーを扱うときに使う。
 ---
 
 # 台本を書く・直す
 
 手順の正本は `docs/guide/04-storyboard.md`、仕様は `docs/design/storyboard.md`（レシピは `docs/design/recipes.md`、ナレーションは `docs/design/narration.md`）。書く前に Read で読む。
 見本は `samples/u-value/u-value.storyboard.md`、ひな形は `src/explainer_reel_kit/data/templates/storyboard.md`。
+種別が `explainer`（一般の解説）なら、ひな形は `src/explainer_reel_kit/data/templates/explainer.storyboard.md`、見本は `samples/window-condensation/window-condensation.storyboard.md` と `samples/window-condensation/SOURCES.md`。
 
 ## 前に確かめること
 
@@ -21,7 +22,15 @@ description: 説明動画の台本（*.storyboard.md）を書く・直す。構�
 - `image.source` と `image.label` と `capture` の組み合わせを仕様どおりに（説明図は `generated`＋`説明用再構成図`＋`tool: html`）
 - 赤枠・矢印は `recipe_params` に mark の名前で。mark を並べた数とナレーションの段落の数をそろえる
 - 読み間違いやすい英字・数字・単位・記号は読みで書く
+- **対になるものの決まり**（`docs/guide/03-outline.md`）: 原因と対策、条件と減らし方、問題と解決のように対になるものは、同じ番号・同じ順で並べ、対策の側でも原因の番号で言う（「① の窓が冷えるには…」）。片方にしかないものを作らない。図の番号・色も対でそろえる
 - 数値の根拠は HTML コメントか別のファイルに
+
+### 解説（kind: explainer）のとき
+
+- 解説のひな形の形のまま書く: `schema_version: kit-1.1.0`、`kind: explainer`。シーンの順番（問い → しくみ → 比べる・条件 → 選び方・減らし方）は入れ替えない。本編 5〜7 シーン。使わないシーンは消してよい
+- 全シーン説明図。各シーンのコメントの「部品」と、見本の mark の名前（`everyday`・`step_1`・`row_…`・`card_1` など）を `recipe_params` に使う。部品の選び方は `docs/guide/05-visuals.md`
+- 台本の隣に `SOURCES.md`（使った数値・使った事実・資料と確かめた日・未確認）を書き、台本と一緒に直す。形はひな形の最後のコメントと `docs/guide/04-storyboard.md` の「出典の一覧」
+- 確かめた資料に無い数値は使わない構成にする（数値の範囲の部品をやめて比較表で比べる など）
 
 ## 出典の決まり
 

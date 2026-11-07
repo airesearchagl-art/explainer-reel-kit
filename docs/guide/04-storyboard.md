@@ -19,6 +19,51 @@ Rename-Item reels\glass-choice\u-value.actions.yaml glass-choice.actions.yaml
 - 台本の `id` と操作定義の `reel_id` を、新しい id（`glass-choice`）に書き換えます。操作定義のファイル名は `<id>.actions.yaml` です
 - `reels\` は自分の作業のフォルダです。社外秘の台本を含むことがあるので、キットのリポジトリに commit しないでください
 
+## 解説（explainer）のとき
+
+種別が `explainer` なら、サンプルを写す代わりに**解説のひな形**から始めます。ひな形にはシーンの並び（構成の決まり）・各シーンで話すこと・使う部品と mark の名前・出典の一覧の置き場が書いてあります。
+書いた例は [samples/window-condensation/](../../samples/window-condensation/README.md)。
+
+人が打つコマンド（例: 題材の id を `cold-draft` にする）:
+
+```powershell
+New-Item -ItemType Directory reels -Force | Out-Null
+if (-not (Test-Path reels\_shared)) { Copy-Item samples\_shared reels\_shared -Recurse }
+New-Item -ItemType Directory reels\cold-draft\diagrams -Force | Out-Null
+Copy-Item src\explainer_reel_kit\data\templates\explainer.storyboard.md reels\cold-draft\cold-draft.storyboard.md
+Copy-Item samples\_parts\flow.html reels\cold-draft\diagrams\s03_flow.html
+```
+
+- 台本の先頭の `id`・`output_name`・`title` を書き換える（`schema_version: kit-1.1.0` と `kind: explainer` はそのまま）
+- 説明図は、シーンのコメントにある部品の見本（`samples\_parts\…html`）を `diagrams\` に写して書き換える（上の最後の行がその例）。写したら CSS の参照を `../_shared/diagram.css` から **`../../_shared/diagram.css`** に直す（[05-visuals.md](05-visuals.md)）
+- 使わないシーンは消してよい（5 シーン以上は残す。順番は入れ替えない）
+
+### 出典の一覧（SOURCES.md）
+
+解説では、台本の隣に `SOURCES.md` を置き、台本と一緒に直します。形はひな形の最後のコメントにあります（例 [samples/window-condensation/SOURCES.md](../../samples/window-condensation/SOURCES.md)）。
+
+```markdown
+# 数値・事実の根拠（題名）
+
+## 使った数値
+| 値 | 使った場所 | 根拠 |
+|---|---|---|
+| 20℃・湿度 60% の空気の露点は約 12℃ | s02 の説明図・ナレーション | [1] の「結露が発生する温度と湿度の関係」 |
+
+## 使った事実
+| 事実 | 使った場所 | 根拠 |
+|---|---|---|
+
+## 資料
+1. 発行者「資料名」（版・年）頁・節 — URL（確かめた日 YYYY-MM-DD）
+
+## 未確認
+- （確かめられなかった数値・規格の番号。台本ではまだ言わない）
+```
+
+- 「確かめた日」は、そのセッションで資料を開いて読んだ日（下の「出典の決まり」）
+- 確かめた資料に無い数値は使わない。言いたいときは「未確認」に書き、人に確かめてもらう
+
 ## 台本の形
 
 ```markdown
@@ -64,6 +109,14 @@ output_name: u_value
 - 分野の用語の読みは、読み辞書でもそろえられます（[06-review.md](06-review.md)）
 - 数値は根拠のあるものだけ。製品で変わる値は「目安」「およそ」と言い、範囲で示します
 
+## 対になるもの（原因と対策など）
+
+構成で決めた対（[03-outline.md の「対になるものの決まり」](03-outline.md)）を、台本でも崩しません。
+
+- 原因と対策は**同じ番号・同じ順**。対策のナレーションでも**原因の番号で言う**（「一つめの温度差には…」）
+- **片方にしかないものを作らない**。書いているうちに対策が無い原因や、原因の無い対策ができたら、構成に戻って直す
+- 説明図の番号（`.badge`）と色（`.c-blue` など）も、原因と対策でそろえる
+
 ## 出典の決まり
 
 **規格の番号・出典・数値は、そのセッションで確かめたものだけを書きます。記憶で書きません。**
@@ -94,6 +147,8 @@ erkit check --strict samples\u-value\u-value.storyboard.md
 
 - 構成の表から台本を書く。区分は聞き取りで人が決めた値をそのまま書く（変えない）
 - 出典の決まり（上）を守る。未確認の数値・事実は一覧にして人に渡す
+- 種別が `explainer` なら解説のひな形から書き、`SOURCES.md` も一緒に書く
+- 対になるもの（原因と対策など）は同じ番号・同じ順で、片方にしかないものを作らない
 - 説明図のシーンは `capture.tool: html` と `capture.src`（次の段で書く HTML）まで書く
 - チャットだけの AI: [prompts/03-storyboard.md](../../prompts/03-storyboard.md) を貼る
 

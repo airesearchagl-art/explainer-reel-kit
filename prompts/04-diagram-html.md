@@ -2,6 +2,7 @@
 
 台本が `erkit check` を通った後、同じ会話に下の枠の中を貼ります。1 回に 1 シーンずつ頼むと、直しやすくなります。
 見本として `samples\u-value\diagrams\s01_heat_paths.html` の中身を後ろに貼ると、形がそろいます。
+**種別が explainer（一般の解説）なら**、そのシーンの部品の見本（`samples\_parts\` の `analogy.html`・`section.html`・`flow.html`・`compare.html`・`range.html`・`cards.html`・`branch.html` のどれか）を貼ってください。部品の見本を書き換えてもらう方が、形がそろいます。
 
 ```text
 台本の説明図のシーン（image.source: generated、capture.tool: html）の 1 つを、HTML で描いてください。
@@ -18,6 +19,14 @@
   - 色は意味で使う: blue＝操作・入力、teal＝結果、amber＝注意、gray＝その他。赤は使わない（注釈の赤枠とぶつかる）
   - 実際の画面のふりをしない（これは説明用に描き直した図）
   - JavaScript は使ってよいが、図を組み立てる程度に。アニメーションは使わない
+
+種別が explainer（一般の解説）のとき:
+  - 貼った部品の見本を写して、文字と数値だけを書き換える（新しい形を一から描かない）
+  - CSS の参照は ../../_shared/diagram.css にする（見本の ../_shared/diagram.css から直す）
+  - data-mark は台本の recipe_params の名前に合わせる（見本の名前のままでよい）
+  - 色は意味で 4 色まで: c-blue（断熱・冷たい）、c-amber（日射・暖かい・注意）、c-teal（結果・おすすめ）、c-gray（その他）
+  - 図の中の数値は、出典のある値だけ。見本の値・評価は例なので、そのまま残さない
+  - 断面図は「模式。実寸ではない」と図の題に書く。数値の範囲の帯の位置は、値 ÷ 目盛りの最大 × 100 % で計算する
 
 共通の CSS のクラス:
   .wrap            全体の枠（縦に並べて中央に寄せる）

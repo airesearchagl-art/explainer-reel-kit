@@ -1,5 +1,5 @@
 ---
-description: 説明動画の台本のフォルダを作る（区分を確かめてから、reels/ に台本のひな形を置く）
+description: 説明動画の台本のフォルダを作る（区分を確かめてから、種別に合ったひな形を reels/ に置く。解説なら解説のひな形）
 argument-hint: "[題材の id（英小文字・数字・-・_）]"
 disable-model-invocation: true
 ---
@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## 1. 始める前に
 
-`make-explainer` スキルの「始める前に」と同じ確かめをする: キットのフォルダか（`AGENTS.md` と `pyproject.toml` がある）、erkit の呼び方（`.venv/Scripts/erkit` か `.venv/bin/erkit`）、`erkit --version` がこのプラグインの版 **0.2.0** と同じか。
+`make-explainer` スキルの「始める前に」と同じ確かめをする: キットのフォルダか（`AGENTS.md` と `pyproject.toml` がある）、erkit の呼び方（`.venv/Scripts/erkit` か `.venv/bin/erkit`）、`erkit --version` がこのプラグインの版 **0.2.1** と同じか。
 
 ## 2. 区分を聞く（何よりも先に）
 
@@ -23,7 +23,7 @@ disable-model-invocation: true
 ## 3. id と種別を決める
 
 - id が空なら聞く。英小文字・数字・`-`・`_` だけ（例 `glass-choice`）。`reels/` に同じ名前のフォルダがあれば、上書きせずに別の id を聞く
-- 種別を聞く: `tool_intro`（ツールや考え方の紹介）か `work_manual`（作業の手順）
+- 種別を聞く（`docs/guide/01-intake.md` の「種別の見分け方」で見分けて確かめる）: `tool_intro`（ツールや考え方の紹介）/ `work_manual`（作業の手順）/ `explainer`（一般の解説。身近なことの「なぜ」と「どう選ぶ・減らす」。ツールの操作は出てこない）
 
 ## 4. フォルダとひな形を作る
 
@@ -31,15 +31,19 @@ disable-model-invocation: true
 
 1. `reels/_shared/` が無ければ `samples/_shared/` を写す（説明図の共通の CSS）
 2. `reels/` の下に題材の id のフォルダと、その中の `diagrams/` を作る
-3. ひな形 `src/explainer_reel_kit/data/templates/storyboard.md` を、そのフォルダの「id ＋ `.storyboard.md`」に写す
-4. 写した台本の先頭（reel）を書き換える: `id` ＝ 題材の id、`output_name` ＝ id の `-` を `_` にしたもの、`kind` ＝ 決めた種別、`confidentiality: general`（人が決めた値）、`title` は仮のままでよい
+3. 種別に合ったひな形を、そのフォルダの「id ＋ `.storyboard.md`」に写す
+   - `tool_intro`・`work_manual` → `src/explainer_reel_kit/data/templates/storyboard.md`
+   - `explainer` → `src/explainer_reel_kit/data/templates/explainer.storyboard.md`（シーンの並び・部品・出典の一覧の置き場が書いてある）
+4. 写した台本の先頭（reel）を書き換える: `id` ＝ 題材の id、`output_name` ＝ id の `-` を `_` にしたもの、`confidentiality: general`（人が決めた値）、`title` は仮のままでよい。`tool_intro`・`work_manual` なら `kind` ＝ 決めた種別。`explainer` のひな形は `kind: explainer`・`schema_version: kit-1.1.0` のまま変えない
 5. 検証する（パスは作った台本に変える）:
 
 ```bash
 erkit check samples/u-value/u-value.storyboard.md
 ```
 
-ひな形のままなので「シーン数 2（推奨 5〜8）」の警告が出るのは正しい。`NG` なら書き換えを見直す。
+`tool_intro`・`work_manual` のひな形のままなら「シーン数 2（推奨 5〜8）」の警告が出るのは正しい。`explainer` のひな形は 7 シーンあるので警告は出ない（中身はまだ仮）。`NG` なら書き換えを見直す。
+
+`explainer` なら、説明図は台本のシーンのコメントにある部品の見本（`samples/_parts/`）をシーンの段で写す（`diagram` スキル。CSS の参照を `../../_shared/diagram.css` に直す）。出典の一覧 `SOURCES.md` も台本の隣に置く（`storyboard` スキル）。
 
 ## 5. 次へ
 
