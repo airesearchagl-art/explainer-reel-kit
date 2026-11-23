@@ -215,5 +215,12 @@ def test_copilot_guide_covers_the_steps():
                    "git fetch upstream", "install.ps1 -SkipBrowser", "段 1", "段 2", "Agent", "approved_ai.yaml",
                    "何が PC の外に出るか", "ffmpeg", "AivisSpeech", "PowerPoint", "ライセンス"):
         assert phrase in text, phrase
+    # 外に出るのは「Copilot が読んだもの」（自分で開いたファイル・ターミナルの出力も）。資料は確かめるまでワークスペースに置かない
+    assert "人が Copilot に見せたものだけ" not in text
+    for phrase in ("Copilot が読んだもの", "Copilot が自分で開いたファイル", "ターミナルの出力",
+                   "ワークスペースの中に置きません"):
+        assert phrase in text, phrase
+    rules = (ROOT / ".github" / "copilot-instructions.md").read_text(encoding="utf-8")
+    assert "ワークスペースの中にあるファイルでも" in rules and "許可リストを確かめるまで開かない" in rules
     readme = (ROOT / "docs" / "guide" / "README.md").read_text(encoding="utf-8")
     assert "[copilot.md](copilot.md)" in readme
