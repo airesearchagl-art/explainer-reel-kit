@@ -56,7 +56,8 @@ Claude Code なら、プラグインを入れると `/explainer-reel-kit:explain
 
 **最初に区分を決めます。** 材料に社外秘（所属先の外に出せない情報）が含まれるか・分からないなら、台本の `confidentiality` は `confidential` です。
 このときキットは撮影・音声合成をこの PC の中だけに限りますが、**対話に使う AI まではキットでは止められません**。
-この PC の中で動く AI か、所属先が認めた AI だけを使ってください（[区分の考え方](docs/guide/confidentiality.md)）。
+この PC の中で動く AI か、所属先が認めた AI（`config/approved_ai.yaml` の許可リストに人が書く）だけを使ってください（[区分の考え方](docs/guide/confidentiality.md)）。
+会社の PC で VS Code の GitHub Copilot と使うときは、会社のアカウントの非公開リポジトリに取り込んで使います（[会社の PC で GitHub Copilot と使う](docs/guide/copilot.md)）。
 
 ## 何ができて、何をしないか
 
@@ -68,7 +69,7 @@ Claude Code なら、プラグインを入れると `/explainer-reel-kit:explain
 | ナレーション（AivisSpeech） | `erkit voice list`・`erkit voice synth`・`erkit voice kana`（[仕様](docs/design/narration.md)） |
 | スライド（アニメーション付きの .pptx） | `erkit deck`（[仕様](docs/design/recipes.md)） |
 | 通し生成（撮影 → 説明図 → ナレーション → スライド → 書き出し → 音声の合成） | `erkit make`（[仕様](docs/design/make.md)。書き出しは Windows ＋ PowerPoint） |
-| 環境の確認 | `erkit doctor` |
+| 環境の確認・社内で認められた AI の許可リストの確認 | `erkit doctor` |
 
 しないこと:
 

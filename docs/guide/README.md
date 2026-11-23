@@ -13,7 +13,8 @@
 | 6 | [06-review.md](06-review.md) | 試作・スライドの確認・読みの確認 |
 | 7 | [07-export.md](07-export.md) | MP4 に書き出す・続きから作り直す |
 | — | [batch.md](batch.md) | **まとめて進める**: 答えのひな形を先に渡し、1 回で台本と説明図まで（報告で確かめる） |
-| — | [confidentiality.md](confidentiality.md) | 社外秘の区分と、AI の使い分け |
+| — | [confidentiality.md](confidentiality.md) | 社外秘の区分と、AI の使い分け（社内で認められた AI の許可リスト） |
+| — | [copilot.md](copilot.md) | **会社の PC で GitHub Copilot と使う**（非公開リポジトリへの取り込み、許可リスト、段 1・段 2） |
 | — | [troubleshooting.md](troubleshooting.md) | よくある失敗 |
 | — | [../../prompts/](../../prompts/README.md) | チャットだけの AI に貼る指示文 |
 
@@ -22,6 +23,7 @@
 | 使う AI | 進め方 |
 |---|---|
 | ファイルを読み書きでき、コマンドを実行できるエージェント（Claude Code・Codex・Cursor など） | リポジトリを開いて「`AGENTS.md` を読んで、説明動画を作りたい」と頼みます。エージェントが手順書を読み、台本を書き、`erkit` を呼びます |
+| 会社の PC の GitHub Copilot（エージェント） | [copilot.md](copilot.md) の手順で、会社の非公開リポジトリに取り込んで使います。入口の決まりは `.github/copilot-instructions.md` |
 | チャットだけの AI（ブラウザのチャット・手元の LLM のチャット画面） | [prompts/](../../prompts/README.md) の指示文を順に貼ります。AI が書いた台本・HTML を人がファイルに保存し、`erkit` も人が打ちます。エラーが出たら、その表示を AI に貼って直してもらいます |
 
 各手順書は「**AI に任せること**」と「**人が打つコマンド**」を分けて書いています。

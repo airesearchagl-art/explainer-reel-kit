@@ -1,0 +1,41 @@
+# 社内で認められた AI の許可リストのひな形。install.ps1 が config/approved_ai.yaml に写す（approved_ai.yaml は commit しない）。
+#
+# 区分の 3 つ目の段: 台本が confidential（社外秘を含む・分からない）でも、所属先が社外秘の扱いを認めた AI なら、
+# 台本・説明図づくりに使ってよい。このリストに載っているのが「認められた AI」。載っていない AI は認められていない。
+#
+# - **書くのは人だけ**。所属先の規程・申請の結果を確かめてから書く。エージェント（GitHub Copilot・Claude Code など）は書き換えない
+# - リストが空（または無い）ときは、今までと同じ決まり: クラウドで動くエージェントは、confidential の資料を受け取らずに止まる
+# - kind agent で allows に confidential がある AI は、confidential の台本・資料を扱ってよい（AGENTS.md の 2 節）
+# - キットが自分でする区分の確かめ（撮影・説明図・ナレーション・通し生成は、confidential ならこの PC の中だけ）は、
+#   このリストに何が載っていても変わらない
+# - erkit doctor が読み込んで、載っている AI の名前と、形の誤りを表示する（誤りは不合格）
+# - 考え方は docs/guide/confidentiality.md、会社の PC での使い方は docs/guide/copilot.md
+#
+# 項目:
+#   id           英小文字・数字・-（エージェントが自分の名前として探す）
+#   name         表示名
+#   kind         chat（人が指示文と資料を渡して台本を書かせる）／agent（リポジトリを開いて台本・説明図を書く）
+#   approved_on  認めた日（YYYY-MM-DD）
+#   basis        根拠（所属先の規程や申請の名前）
+#   allows       扱ってよい区分（[confidential]）
+#   notes        メモ（任意）
+#
+# 例（コメントのまま。規程・申請を確かめてから、approved: [] を消し、行頭の # を外して自分の内容に書き直す）:
+#
+# approved:
+#   - id: github-copilot
+#     name: GitHub Copilot（エージェント）
+#     kind: agent
+#     approved_on: 2026-01-15
+#     basis: 生成 AI 利用規程（例）・GitHub Copilot 利用申請（例）
+#     allows: [confidential]
+#     notes: 決まりは .github/copilot-instructions.md
+#   - id: m365-copilot
+#     name: Microsoft 365 Copilot（チャット）
+#     kind: chat
+#     approved_on: 2026-01-15
+#     basis: 生成 AI 利用規程（例）
+#     allows: [confidential]
+#     notes: 指示文は prompts/。できた台本は人がファイルに保存して erkit check
+version: 1
+approved: []

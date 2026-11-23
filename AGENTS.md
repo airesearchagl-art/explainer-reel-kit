@@ -27,9 +27,14 @@
 守ること:
 
 - 区分が決まるまで、資料を読まない・開かない・どこにも送らない
-- `confidential` のとき、**あなたがクラウドで動いているなら、資料を受け取らずに止まります**。手元で動く AI（LM Studio・Ollama など）で進めるよう人に伝えてください（[confidentiality.md](docs/guide/confidentiality.md)）
+- `confidential` のとき、**あなたがクラウドで動いているなら、`config/approved_ai.yaml`（社内で認められた AI の許可リスト）を読みます**
+  - **自分が載っていない**（ファイルが無い・空・自分の id が無い・`kind` が `agent` でない・`allows` に `confidential` が無い）なら、**資料を受け取らずに止まります**。手元で動く AI（LM Studio・Ollama など）か、所属先が認めた AI で進めるよう人に伝えてください（[confidentiality.md](docs/guide/confidentiality.md)）
+  - **自分が載っている**（`kind: agent`、`allows` に `confidential`）なら、進めてかまいません。最初に「許可リストの ○○（id、認めた日、根拠）として進めます」と人に伝えます
+  - 自分の id は、自分の入口の決まりに書いてあります（GitHub Copilot は [`.github/copilot-instructions.md`](.github/copilot-instructions.md) の `github-copilot`）。分からなければ載っていないものとして止まります
+- 許可リストは**人だけが書きます**。あなたは書き換えません（足す・直す・消す・コメントを外す、のどれもしない）。載っているかは自分で読んで確かめ、結果を人にも伝えます
+- 許可リストに載っていても、キットの区分の確かめ（撮影・説明図・ナレーション・通し生成は、`confidential` ならこの PC の中だけ）は変わりません。緩める変更をしません
 - 区分を `confidential` から `general` に変えるのは**人だけ**です。あなたは下げません（`general` から `confidential` に上げるのはかまいません）
-- どの AI を使ってよいかは、所属先のルールに従います。キットは、対話に使う AI までは止められません
+- どの AI を使ってよいかは、所属先のルールに従います。キットは、対話に使う AI までは止められません（許可リストは、人とエージェントが守る約束です）
 
 ## 3. 進め方
 
@@ -53,6 +58,7 @@
 - 赤枠・矢印の位置は**座標を書かず**、mark の名前で指します（説明図は `data-mark`、撮影は操作定義の `marks`）
 - 数値・事実には根拠を付けます（台本のコメントか、別のファイル）。分からないことは人に聞き、作らない
 - MP4・WAV・.pptx・撮影画像・説明図の PNG を commit しません。秘密情報（パスワード・トークン・個人の情報）を書きません
+- `confidential` の台本・資料を、公開のリポジトリ（このキットの公開元）へ push しません。`reels/` は `.gitignore` で外してあります
 - キットの本体（`src/`）は変えません。直したい所があれば人に伝えます
 
 ## 5. コマンド
@@ -61,7 +67,7 @@
 
 | コマンド | すること |
 |---|---|
-| `erkit doctor` | 要るものがそろっているか |
+| `erkit doctor` | 要るものがそろっているか（社内で認められた AI の許可リストの中身と形も表示） |
 | `erkit check samples/u-value/u-value.storyboard.md` | 台本の検証と区分の表示（`--strict` で警告も不合格） |
 | `erkit diagram samples/u-value/u-value.storyboard.md --out output/u-value --overlay output/u-value/check-diagram.png` | 説明図の HTML を PNG と注釈位置に |
 | `erkit capture samples/u-value/u-value.storyboard.md --check` | 操作定義と台本の突き合わせだけ（ブラウザ不要） |

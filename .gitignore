@@ -32,5 +32,7 @@ diagram-result.json
 config/*.yaml
 !config/*.example.yaml
 
-# 利用者の作業のフォルダ（台本・説明図・撮影。社外秘を含むことがある。/explainer-new が作る）
+# 利用者の作業のフォルダ（台本・説明図・撮影。社外秘を含むことがある。erkit draft・/explainer-new が作る）
+# 公開のキットに台本を入れないために外している。会社の非公開リポジトリで台本を残したいときは、
+# そのリポジトリの決まりで、この行を消すか、そのリポジトリだけの .gitignore で外す（docs/guide/copilot.md）
 reels/

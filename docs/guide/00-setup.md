@@ -27,7 +27,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 1. Python 3.10 以上を探す（`py -3`・`python`）。無ければ入れ方を表示して止まる
 2. `.venv`（仮想環境）を作り、キットとライブラリを入れる
 3. 撮影・説明図のブラウザ（Chromium）を入れる。失敗しても、Windows 標準の Edge を使う方法を表示して続ける
-4. `config\*.example.yaml` を `config\*.yaml` に写す（もうあれば上書きしない）
+4. `config\*.example.yaml` を `config\*.yaml` に写す（もうあれば上書きしない。社内で認められた AI の許可リスト `config\approved_ai.yaml` もここで写す。中身は人だけが書く）
 5. `erkit doctor` を実行して、足りないものを表示する
 
 オプション: `-SkipBrowser`（ブラウザを入れない）、`-SkipDoctor`（最後の確認をしない）、`-Python`（使う python.exe のパスを続けて書く）。
@@ -65,6 +65,10 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 2. どのライセンスでも、本人や公式と誤認させる使い方・誹謗中傷などは禁止です
 3. 別の声を使うときは `erkit voice list` で style id を調べ、`config\kit.yaml` の `voice.speaker` を変えます
 4. クレジットの表記が要る声なら、`config\kit.yaml` の `voice.credits` に書きます。最後のスライドに「ナレーション音声: …」と出ます。動画を公開するなら、公開先の説明にも書きます
+
+## 会社の PC で GitHub Copilot と使う
+
+会社の PC で VS Code の GitHub Copilot（エージェント）と使うときは、[copilot.md](copilot.md) の手順で準備します（会社のアカウントの非公開リポジトリに取り込む、許可リストを書く、段 1 は `install.ps1 -SkipBrowser`）。
 
 ## Claude Code のプラグイン（任意）
 
