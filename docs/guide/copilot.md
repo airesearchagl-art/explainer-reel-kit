@@ -120,6 +120,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 erkit doctor --skip-browser --skip-llm
 ```
 
+建築の題材なら、`config\kit.yaml` の `voice.dictionaries` を `[architecture]` にしておきます（読み辞書。既定では使われません。[04-storyboard.md](04-storyboard.md)）。
+
 段 1 では、ffmpeg・PowerPoint・AivisSpeech の行が `NG` でかまいません（段 2 で入れます。そのため最後は「足りないもの」と出ます）。見るのは次の行です。
 
 - `Python`・`Python のライブラリ` が `OK`
