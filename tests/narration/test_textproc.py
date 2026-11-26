@@ -284,3 +284,12 @@ def test_invalid_check_terms(tmp_path, content):
 def test_matches_lists_replaced_surfaces_once():
     d = PronunciationDictionary({"見付": "ミツケ", "見付け": "ミツケ", "建具": "タテグ"})
     assert d.matches("見付けと見付と建具と見付け") == ["見付け", "見付", "建具"]
+
+
+def test_alnum_surface_not_inside_longer_alnum():
+    """英数字の表記（A3 など）は、前後に英数字が続く所（A30・SA3・B1F の B1 など）には当たらない。"""
+    from explainer_reel_kit.narration.textproc import PronunciationDictionary
+    d = PronunciationDictionary({"A3": "エーサン", "A3用紙": "エーサンヨウシ", "B1": "ビーイチ"})
+    assert d.apply("A3用紙とA3、A30とSA3") == "エーサンヨウシとエーサン、A30とSA3"
+    assert d.apply("B1Fの機械室とB1判") == "B1Fの機械室とビーイチ判"
+    assert d.apply("A3。") == "エーサン。"

@@ -82,6 +82,19 @@ def split_text(text: str, max_chars: int = DEFAULT_MAX_CHARS) -> list[str]:
     return [chunk for group in split_paragraph_chunks(text, max_chars) for chunk in group]
 
 
+_ALNUM = "A-Za-z0-9"
+
+
+def _guarded(surface: str) -> str:
+    """英数字で始まる・終わる表記は、前後に英数字が続く所には当てない（「A3」が「A30」「SA3」に当たらないように）。"""
+    pat = re.escape(surface)
+    if surface[:1].isascii() and surface[:1].isalnum():
+        pat = rf"(?<![{_ALNUM}])" + pat
+    if surface[-1:].isascii() and surface[-1:].isalnum():
+        pat = pat + rf"(?![{_ALNUM}])"
+    return pat
+
+
 class PronunciationDictionary:
     """Surface form → reading, applied as plain text replacement before synthesis.
 
@@ -96,7 +109,7 @@ class PronunciationDictionary:
         self.entries = dict(entries)
         self.check_terms = [t for t in dict.fromkeys(check_terms) if t not in self.entries]
         keys = sorted(self.entries, key=len, reverse=True)
-        self._pattern = re.compile("|".join(re.escape(k) for k in keys)) if keys else None
+        self._pattern = re.compile("|".join(_guarded(k) for k in keys)) if keys else None
 
     def apply(self, text: str) -> str:
         if self._pattern is None:
