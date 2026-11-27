@@ -111,7 +111,7 @@ def subtitle_text(sentence: str) -> str:
 
 
 def _scene_card(doc: dict, sid: str) -> dict:
-    """既定の場面の見出し・文（画像が無い場面用）。文字だけのカード（recipe_params.card）は、その見出しと文。"""
+    """場面の見出しと文。intro・outro は見出しと文のカード、台本のシーンは見出しだけ。"""
     if sid == "intro":
         intro = doc.get("intro") or {}
         body = [intro.get("summary", "")] + [f"・{p}" for p in intro.get("prerequisites") or []]
@@ -123,14 +123,9 @@ def _scene_card(doc: dict, sid: str) -> dict:
             body.append(str(outro["next"]))
         return {"title": "まとめ", "body": [b for b in body if b]}
     sc = next(s for s in doc["scenes"] if s["id"] == sid)
-    card = (sc.get("recipe_params") or {}).get("card")
-    if isinstance(card, dict) and isinstance(card.get("title"), str) and card["title"].strip():
-        body = [str(card[k]) for k in ("text", "meta") if isinstance(card.get(k), str) and card[k].strip()]
-        return {"title": card["title"], "body": body}
-    body = sc.get("on_screen_text") or []
-    if isinstance(body, str):
-        body = [body]
-    return {"title": sc.get("heading", ""), "body": [str(b) for b in body]}
+    # 台本のシーン: 見出しはシーンの見出し（slides と同じ）。カード・画面テキスト・来歴ラベル・注釈は
+    # annotate.scene_display が場面に足す
+    return {"title": sc.get("heading", ""), "body": []}
 
 
 def storyboard_subtitles(doc: dict) -> dict[str, dict[int, str]]:
@@ -149,7 +144,8 @@ def from_storyboard(doc: dict, timings: Sequence[Any], durations: dict, narratio
                     images: dict[str, str] | None = None, credit: str | None = None,
                     total_ms: int | None = None, weights: dict | None = None,
                     source: dict | None = None, wav_dir: Path | None = None,
-                    readings: dict[str, str] | None = None) -> tuple[dict, list[str]]:
+                    readings: dict[str, str] | None = None,
+                    image_dir: Path | None = None) -> tuple[dict, list[str]]:
     """台本 → 中間データ。戻り値 (中間データ, 警告)。
 
     timings: reel.mux.read_slide_timings の結果（SlideTiming: id・start_ms・adv_ms・transition_ms）。
@@ -166,6 +162,9 @@ def from_storyboard(doc: dict, timings: Sequence[Any], durations: dict, narratio
     字幕の別表記（台本の subtitles）があれば、その段落の字幕は別表記の文。文の数が原稿と同じなら文ごと、違えば段落の
     時間を文字の重みで分ける。
     images: {場面 id: 画像のパス（中間データのフォルダからの相対か絶対）}。readings: {場面 id: 合成入力（辞書の後）}。
+    image_dir: images の相対パスの起点（中間データのフォルダ。画像の大きさと隣の marks.json を読む）。
+    画面の決まり（annotate.scene_display）: 台本のシーンには見出し・来歴ラベル（撮影前は「撮影前（仮）」、カードは無し）・
+    画面テキスト・注釈（赤枠・矢印の位置と、出す時刻＝slides と同じ段落）を足す。outro の画像にも来歴ラベルを足す。
     """
     from . import sync
     from .subtitles import wrap_subtitle
@@ -243,6 +242,7 @@ def from_storyboard(doc: dict, timings: Sequence[Any], durations: dict, narratio
                     owner = next((x[0] for x in ids if x[1] <= ca + 1e-6 < x[2]), ids[-1][0])
                     cue_list.append({"sentence": owner, "text": piece, "lines": wrap_subtitle(piece),
                                      "start_frame": _frame_at(ca), "end_frame": _frame_at(cb)})
+    warnings += _add_display(doc, out, timings, durations, images or {}, image_dir)
     prev = 0
     for c in cue_list:   # 丸めで重なったら後ろへ寄せる。場面の外へ出たら切る
         c["start_frame"] = max(c["start_frame"], prev)
@@ -253,6 +253,50 @@ def from_storyboard(doc: dict, timings: Sequence[Any], durations: dict, narratio
         out["cues"].append(c)
         prev = c["end_frame"]
     return out, warnings
+
+
+def _image_file(rel: str | None, image_dir: Path | None) -> Path | None:
+    if not rel:
+        return None
+    p = Path(rel)
+    if not p.is_absolute() and image_dir is not None:
+        p = Path(image_dir) / p
+    return p
+
+
+def _add_display(doc: dict, out: dict, timings: Sequence[Any], durations: dict, images: dict[str, str],
+                 image_dir: Path | None) -> list[str]:
+    """台本のシーンに画面の決まり（見出し・来歴ラベル・画面テキスト・注釈）を、outro の画像に来歴ラベルを足す。"""
+    from .annotate import DEFAULT_LABEL, PLACEHOLDER_LABEL, RASTER, scene_display
+
+    warnings: list[str] = []
+    by_id = {s["id"]: s for s in doc.get("scenes") or []}
+    slide_sec = {it["id"]: it.get("slide_sec") for it in durations.get("items") or [] if isinstance(it, dict)}
+    for t, sc in zip(timings, out["scenes"]):
+        start = t.start_ms / 1000
+        if t.id in by_id:
+            scene = by_id[t.id]
+            sec = slide_sec.get(t.id)
+            scene_ms = int(round(sec * 1000)) if isinstance(sec, (int, float)) and sec > 0 else int(t.adv_ms)
+            extra, w = scene_display(scene, start=start, scene_ms=scene_ms,
+                                     image_file=_image_file(images.get(t.id), image_dir),
+                                     has_image=bool(images.get(t.id)), sentences=out["sentences"])
+            if "placeholder" in extra or "card" in extra:
+                sc.pop("image", None)   # 撮影前・貼れない形式・カードは画像を描かない
+            sc.update(extra)
+            warnings += w
+        elif t.id == "outro":
+            img = (doc.get("outro") or {}).get("image")
+            if isinstance(img, dict):
+                f = _image_file(images.get("outro"), image_dir)
+                if f is not None and f.suffix.lower() in RASTER:
+                    sc["label"] = str(img.get("label") or DEFAULT_LABEL)
+                else:
+                    sc.pop("image", None)
+                    sc["label"] = PLACEHOLDER_LABEL
+                    sc["placeholder"] = {"ref": str(img.get("ref") or ""),
+                                         "reason": "未対応の形式" if f is not None else "撮影予定"}
+    return warnings
 
 
 def storyboard_images(doc: dict, assets_dir: Path, rel_to: Path | None = None) -> dict[str, str]:

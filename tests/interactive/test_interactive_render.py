@@ -114,8 +114,9 @@ def test_missing_scenes_dir_means_default_scenes(tmp_path):
 
 
 def test_default_scene_fits_image_above_subtitle_band():
-    assert fit_box(2420, 1000) == (0, 73, 1920, 793)
-    assert fit_box(1000, 1000) == (490, 0, 940, 940)
+    # 画像枠は見出しの下・来歴ラベルの上（slides の配置を字幕帯 y 940 の上に縮めたもの）
+    assert fit_box(2420, 1000) == (72, 137, 1776, 734)
+    assert fit_box(1000, 1000) == (580, 124, 760, 760)
 
 
 def test_renderer_layers_and_credit_on_last_scene(tmp_path):

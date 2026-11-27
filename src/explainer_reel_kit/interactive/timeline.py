@@ -27,6 +27,9 @@ KANA = re.compile(r'[぀-ヿ]')
 DEFAULT_WEIGHTS = {'comma': 1.6, 'punct': 0.3, 'punct_chars': '、。「」・', 'kana': 1.0, 'digit': 2.6, 'other': 2.0}
 
 
+DISPLAY_KEYS = ("heading", "label", "placeholder", "card", "text", "recipe", "appear", "view", "annotations")
+
+
 class TimelineError(ValueError):
     """中間データの形・並びの誤り、知らない文の id など。"""
 
@@ -149,6 +152,9 @@ class Timeline:
             d = dict(index=i + 1, id=sc["id"], title=sc.get("title", ""), f0=sc["start_frame"], f1=sc["end_frame"],
                      start=sc["start_frame"] / self.fps, end=sc["end_frame"] / self.fps,
                      image=self._resolve(sc.get("image")), body=list(sc.get("body") or []))
+            for k in DISPLAY_KEYS:   # 画面の決まり（見出し・来歴ラベル・注釈など。既定の場面と image 部品が使う）
+                if k in sc:
+                    d[k] = sc[k]
             self.scenes.append(d)
             self.by_id[d["id"]] = d
         self._scene_starts = [s["f0"] for s in self.scenes]

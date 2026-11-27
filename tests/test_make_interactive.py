@@ -192,6 +192,21 @@ def test_sample_makes_mp4_without_powerpoint_and_verify_passes(built):
 
 
 @needs_ffmpeg
+def test_sample_default_scenes_show_provenance_heading_and_marks(built):
+    """撮影の場面（既定の場面）は slides と同じく、見出し・来歴ラベル（実キャプチャ）・台本の注釈を出す。"""
+    out = built["out"]
+    tl = json.loads((out / "work" / "render-timeline.json").read_text(encoding="utf-8"))
+    sc = {s["id"]: s for s in tl["scenes"]}
+    for sid in ("s03", "s04", "s05"):
+        assert sc[sid]["label"] == "実キャプチャ" and sc[sid]["heading"] and sc[sid]["annotations"], sid
+    assert [a["mark"] for a in sc["s04"]["annotations"]] == ["glass_select", "u_row_lowe"]
+    assert sc["s05"]["annotations"][0]["kind"] == "arrow"
+    shown = {e["text"] for e in json.loads((out / "checks" / "screen_text.json").read_text(encoding="utf-8"))
+             if not e["subtitle"]}
+    assert {"実キャプチャ", "計算ページを開く", "ガラスの種類を選ぶ", "結果を比べる"} <= shown
+
+
+@needs_ffmpeg
 def test_run_json_records_render_mode_from_the_command(built):
     run = built["run"]
     assert run["render_mode"] == {"mode": "interactive", "source": "command"}

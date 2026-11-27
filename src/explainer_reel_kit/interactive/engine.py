@@ -50,6 +50,7 @@ BLUE = '#8fb4ff'
 GREEN = '#8fd6a5'
 CORAL = '#ff8f7d'
 VEIL = '#0b1a2c'      # 非注目部分にかける幕
+ACCENT = '#d92d20'    # 台本の注釈（赤枠・矢印）。slides（deck/builder.py の ACCENT）と同じ赤
 STEP_DONE = '#3f6f8c' # 進行表示の済んだ段（見出し）
 CHIP_FILL = '#0b1a2ccc'  # チップ・要点の面
 PILL_FILL = '#10233a'    # 札（ピル）の面
@@ -385,9 +386,33 @@ def _mk_tag(kind, size):
     return im
 
 
+def _mk_arrow(length, height, angle_q, color):
+    """ブロック矢印（PowerPoint の右矢印と同じ形: 軸の太さは高さの半分、頭の長さは高さの半分）。
+
+    angle_q は向き（度 × 10 の整数。0 で右向き）。中心まわりに回した画像を返す（中心は画像の中心）。
+    """
+    S = SS
+    L, Hh = length * S, height * S
+    hl = Hh * 0.5
+    pts = [(0, Hh * 0.25), (L - hl, Hh * 0.25), (L - hl, 0), (L, Hh / 2), (L - hl, Hh), (L - hl, Hh * 0.75),
+           (0, Hh * 0.75)]
+    pad = int(math.hypot(L, Hh) / 2) + 2 * S
+    cx = cy = pad
+    im = Image.new('RGBA', (2 * pad, 2 * pad), (0, 0, 0, 0))
+    a = math.radians(angle_q / 10.0)
+    ca, sa = math.cos(a), math.sin(a)
+    poly = []
+    for x, y in pts:
+        x, y = x - L / 2, y - Hh / 2
+        poly.append((cx + x * ca - y * sa, cy + x * sa + y * ca))
+    ImageDraw.Draw(im).polygon(poly, fill=rgba(color))
+    n = 2 * pad // S
+    return im.resize((n, n), Image.LANCZOS)
+
+
 MAKERS = {
     'text': _mk_text, 'textrot': _mk_textrot, 'rr': _mk_rr, 'glow': _mk_glow, 'circ': _mk_circ,
-    'path': _mk_path, 'hatch': _mk_hatch, 'img': _mk_img, 'tag': _mk_tag,
+    'path': _mk_path, 'hatch': _mk_hatch, 'img': _mk_img, 'tag': _mk_tag, 'arrow': _mk_arrow,
 }
 FN = {}  # 場面固有の図（場面コードの側で登録する: FN['名前'] = 関数(*params) → RGBA の画像）
 
@@ -522,6 +547,14 @@ class Frame:
     def tag(self, kind, x, y, size=24, a=1.0):
         self.add(('tag', kind, size), x - M, y - M, a)
         return tag_size(kind, size)[0]
+
+    def arrow(self, tip_x, tip_y, angle, length=130, height=65, color=ACCENT, a=1.0):
+        """ブロック矢印。先端が (tip_x, tip_y)、向きは angle（度。0 で右向き、時計回り）。"""
+        q = int(round(angle * 10)) % 3600
+        rad = math.radians(q / 10.0)
+        cx, cy = tip_x - math.cos(rad) * length / 2, tip_y - math.sin(rad) * length / 2
+        n = 2 * (int(math.hypot(length * SS, height * SS) / 2) + 2 * SS) // SS
+        self.add(('arrow', int(length), int(height), q, color), cx - n / 2, cy - n / 2, a)
 
     def fn(self, name, x, y, *params, a=1.0):
         self.add(('fn', name) + params, x, y, a)

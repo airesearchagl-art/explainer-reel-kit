@@ -36,8 +36,55 @@
           "title": { "type": "string", "description": "見出し（既定の場面が使う）" },
           "start_frame": { "type": "integer", "minimum": 0 },
           "end_frame": { "type": "integer", "minimum": 1, "description": "この場面の最後のフレームの次（start 以上 end 未満）" },
-          "image": { "type": "string", "description": "既定の場面で全面に出す画像（説明図の PNG・撮影画像）。このファイルのフォルダからの相対か絶対パス" },
-          "body": { "type": "array", "items": { "type": "string" }, "description": "画像が無いときに既定の場面が出す文（intro の summary など）" }
+          "image": { "type": "string", "description": "既定の場面で出す画像（説明図の PNG・撮影画像）。このファイルのフォルダからの相対か絶対パス。来歴ラベル（label）を必ず添えて出す" },
+          "body": { "type": "array", "items": { "type": "string" }, "description": "intro・outro で既定の場面が出す文（summary・checks など）" },
+          "heading": { "type": "string", "description": "台本のシーンの見出し。あれば既定の場面は slides と同じ配置（見出し・画像・画面テキスト・来歴ラベル）で描く" },
+          "label": { "enum": ["実キャプチャ", "途中成果", "説明用再構成図", "撮影前（仮）"], "description": "画像の来歴（台本の image.label。撮影前は 撮影前（仮））。既定の場面は画像の右下の外に必ず出す。無い画像は 説明用再構成図 として出す" },
+          "placeholder": {
+            "type": "object", "additionalProperties": false, "required": ["ref", "reason"],
+            "description": "撮影前（画像が無い・貼れない形式）。既定の場面は仮の枠と「<reason>: <ref>」を出す",
+            "properties": { "ref": { "type": "string" }, "reason": { "type": "string" } }
+          },
+          "card": {
+            "type": "object", "additionalProperties": false, "required": ["title"],
+            "description": "文字だけのカード（台本の recipe_params.card）。画像の代わりに出し、来歴ラベルは出さない",
+            "properties": { "title": { "type": "string", "minLength": 1 }, "text": { "type": "string" }, "meta": { "type": "string" } }
+          },
+          "text": { "type": "array", "items": { "type": "string" }, "description": "画面テキスト（台本の on_screen_text。text_build は 1 行ずつ）" },
+          "recipe": { "type": "string", "description": "台本のレシピ（記録）" },
+          "appear": {
+            "type": "object", "additionalProperties": false,
+            "description": "見出し・画像・画面テキスト（行ごと）の現れ始める秒（slides のアニメーションと同じ順と間）",
+            "properties": {
+              "heading": { "type": "number", "minimum": 0 },
+              "image": { "type": "number", "minimum": 0 },
+              "text": { "type": "array", "items": { "type": "number", "minimum": 0 } }
+            }
+          },
+          "view": { "$ref": "#/$defs/rect", "description": "拡大して出す範囲（元の画像に対する 0〜1。slides の zoom と同じ）" },
+          "annotations": {
+            "type": "array",
+            "description": "注釈（赤枠・矢印）。位置は元の画像に対する 0〜1、時刻は slides と同じ段落",
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["kind", "at_sec"],
+              "properties": {
+                "kind": { "enum": ["box", "arrow"] },
+                "mark": { "type": ["string", "null"] },
+                "status": { "enum": ["mark", "coords", "default"], "description": "mark: marks.json／coords: 台本の座標／default: 位置が決まらず既定の位置" },
+                "box": { "$ref": "#/$defs/rect" },
+                "start": { "$ref": "#/$defs/point" },
+                "end": { "$ref": "#/$defs/point" },
+                "paragraph": { "type": "integer", "minimum": 1, "description": "どの段落の始まりに合わせたか（記録）" },
+                "at_sec": { "type": "number", "minimum": 0, "description": "現れ始める秒" },
+                "until_sec": { "type": "number", "minimum": 0, "description": "消え始める秒（次の枠に替わる。無ければ場面の終わりまで）" },
+                "move_sec": { "type": "number", "minimum": 0, "description": "矢印: start から end へ動き始める秒" },
+                "move_dur_sec": { "type": "number", "minimum": 0 },
+                "view": { "$ref": "#/$defs/rect", "description": "zoom: per_mark の、この枠の範囲" },
+                "morph_sec": { "type": "number", "minimum": 0, "description": "zoom: per_mark で前の枠の範囲から移り始める秒" },
+                "morph_dur_sec": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
         }
       }
     },
@@ -97,6 +144,14 @@
     }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$", "maxLength": 64 }
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$", "maxLength": 64 },
+    "rect": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "w", "h"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number", "exclusiveMinimum": 0 }, "h": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "point": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    }
   }
 }

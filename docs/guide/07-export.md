@@ -98,6 +98,19 @@ interactive は最後に MP4 を確かめ、`checks\検証結果.md` に残し�
 - 全体を同じ量だけ上げ下げし、強い音だけをリミッターで抑えます（文ごとの大きさの差はそのまま）。ナレーションの WAV と `durations.json` は変えません
 - 結果は `run.json` の `stages.mux.loudness` に残り、目安（-16 ± 1 LUFS）から外れたときは注意を出します（止めない）
 
+出来上がりの MP4 を自分で測るときは、PowerShell で次のようにします（Windows PowerShell 5.1 でも読めます。`$mp4` は自分の MP4 のパスに）。最後の 2 行が統合ラウドネス（`I:` の LUFS）と true peak（`Peak:` の dBFS）です。
+
+```powershell
+$mp4 = "$env:USERPROFILE\ExplainerReelKit\output\ka08-interactive\u_value.mp4"
+ffmpeg -hide_banner -nostats -i $mp4 -map a:0 -af ebur128=peak=true -f null - 2>&1 | Select-String -Pattern '^\s+(I|Peak):' | Select-Object -Last 2
+```
+
+`I:` が -16 ± 1 LUFS、`Peak:` が -1.5 以下なら目安どおりです。ffmpeg を使わずに見るなら、出力フォルダの `run.json` の記録を読みます（`stages.mux.loudness.after` の `lufs` と `true_peak`）。
+
+```powershell
+(Get-Content "$env:USERPROFILE\ExplainerReelKit\output\ka08-interactive\run.json" -Raw -Encoding UTF8 | ConvertFrom-Json).stages.mux.loudness.after
+```
+
 ## 場面の長さを決める（slot_sec）
 
 音楽や別の映像に合わせるなど、場面の長さを決めたいときは、台本のその場面に `slot_sec: 秒` を書きます（台本の版は `kit-1.2.0`。[storyboard.md](../design/storyboard.md)）。

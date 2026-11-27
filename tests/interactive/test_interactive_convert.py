@@ -82,5 +82,8 @@ def test_text_card_scene_uses_the_card_and_no_image(tmp_path):
     timings = [_T("intro", 0, 1000, 0), _T("s01", 1000, 1000, 0), _T("s02", 2000, 1000, 0), _T("outro", 3000, 1000, 0)]
     out, _ = from_storyboard(doc, timings, {"items": []}, {})
     sc = {s["id"]: s for s in out["scenes"]}
-    assert sc["s01"]["title"] == "カードの見出し" and sc["s01"]["body"] == ["カードの文"]
-    assert sc["s02"]["title"] == "比べる" and sc["s02"]["body"] == ["画面の文字"]
+    # slides と同じ: 見出しはシーンの見出し、カードは画像の代わり（来歴ラベルは出さない）、画面テキストは別
+    assert sc["s01"]["heading"] == "見る" and sc["s01"]["card"] == {"title": "カードの見出し", "text": "カードの文"}
+    assert "label" not in sc["s01"] and "image" not in sc["s01"]
+    assert sc["s02"]["heading"] == "比べる" and sc["s02"]["text"] == ["画面の文字"]
+    assert validate_timeline(out) == []

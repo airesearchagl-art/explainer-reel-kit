@@ -105,4 +105,21 @@ def test_resync_report_lists_changed_sentences_and_scene_shifts(tmp_path):
     assert "再合成した段落" in md and "s01-3" in md
     assert json.loads((tmp_path / "checks" / "resync.json").read_text(encoding="utf-8"))["cues_before"] == 4
     first = sync.resync_report(None, new, None, tmp_path / "c2")
-    assert first["compared"] is False and "比べていません" in (tmp_path / "c2" / "resync.md").read_text(encoding="utf-8")
+    md2 = (tmp_path / "c2" / "resync.md").read_text(encoding="utf-8")
+    assert first["compared"] is False and first["first"] is True and "初めての合成（前の出力なし）" in md2
+
+
+def test_first_build_does_not_say_resynthesized(tmp_path):
+    """初めての作成では、すべての段落を合成していても「再合成」と書かない（文の一覧も出さない）。"""
+    new = {"fps": 30, "scenes": [{"id": "s01", "start_frame": 0, "end_frame": 90}],
+           "sentences": [{"id": "s01-1", "scene": "s01", "paragraph": 1, "spoken": "はじめの文。",
+                          "start_sec": 0.2, "end_sec": 1.5}], "cues": [], "total_frames": 90}
+    durations = {"items": [{"id": "s01", "synthesized_paragraphs": [1]}]}
+    rec = sync.resync_report(None, new, durations, tmp_path / "first")
+    md = (tmp_path / "first" / "resync.md").read_text(encoding="utf-8")
+    assert rec["first"] is True and rec["sentences"] == []
+    assert "再合成" not in md and "初めての合成（前の出力なし）" in md
+    # 前の出力の WAV を使い回したとき（--reuse-run）は、前の中間データが無くても初めての作成ではない
+    durations2 = {"items": [{"id": "s01", "synthesized_paragraphs": [1], "reused_from": "prev/work/narration"}]}
+    rec2 = sync.resync_report(None, new, durations2, tmp_path / "again")
+    assert rec2["first"] is False and "再合成した段落: s01 の段落 1" in (tmp_path / "again" / "resync.md").read_text(encoding="utf-8")

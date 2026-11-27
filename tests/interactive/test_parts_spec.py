@@ -319,7 +319,7 @@ def test_image_part_maps_annotations_from_image_pixels(tmp_path):
     (tmp_path / "assets").mkdir()
     Image.new("RGB", (400, 200), "white").save(tmp_path / "assets" / "plan.png")
     engine.set_asset_dirs([tmp_path / "assets"])
-    T, sc = _scene([{"type": "image", "box": [96, 200, 800, 400], "motion": "cut",
+    T, sc = _scene([{"type": "image", "box": [96, 200, 800, 434], "motion": "cut",   # 下の 34px は来歴ラベルの行
                      "images": [{"src": "plan.png"}],
                      "annotations": [{"shape": "box", "rect": [100, 50, 100, 50], "sentence": 2},
                                      {"shape": "label", "xy": [200, 100], "text": "注記", "sentence": 3},
@@ -333,6 +333,7 @@ def test_image_part_maps_annotations_from_image_pixels(tmp_path):
     boxes = [(k, x, y) for k, x, y, _ in f_.ops if k[0] == "rr" and k[4] == "#f6b93b38"]
     assert boxes and boxes[0][0][1:3] == (200, 100)
     assert "注記" in texts_of(f_.ops) and any(k[0] == "circ" and k[3] == AMBER for k, *_ in f_.ops)
+    assert "説明用再構成図" in texts_of(f_.ops)   # 台本の画像ではない静止画の来歴ラベル（既定）
 
 
 def test_compare_beforeafter_needs_two_images():

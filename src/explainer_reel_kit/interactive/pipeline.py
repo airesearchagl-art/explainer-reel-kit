@@ -290,14 +290,16 @@ def render_storyboard(storyboard: Path, doc: Mapping[str, Any], out_dir: Path, s
                   "sha256": _sha256(Path(storyboard)), "pptx": str(paths.pptx), "durations": str(paths.durations)}
         tl, warns = iconv.from_storyboard(dict(doc), timings, durations, narration, images=images, credit=credit,
                                           total_ms=int(round(total * 1000)), source=source,
-                                          wav_dir=paths.narration_dir, readings=dict(readings) if readings else None)
+                                          wav_dir=paths.narration_dir, readings=dict(readings) if readings else None,
+                                          image_dir=paths.work)
         old_tl = _previous_timeline(paths, reuse_run)
         write_timeline(tl, paths.render_timeline)
         resync = isync.resync_report(old_tl, tl, durations, paths.checks)
         write_srt(tl["cues"], tl["fps"], paths.srt)
         measured = sum(1 for e in tl["sentences"] if e.get("timing") == "measured")
         log(f"[interactive] 文の時刻: 測った {measured} / {len(tl['sentences'])}。字幕 {paths.srt}。"
-            f"作り直しの比較 {paths.checks / 'resync.md'}（変わった文と前後 {len(resync['sentences'])}）")
+            + (f"初めての合成（前の出力なし）。記録 {paths.checks / 'resync.md'}" if resync.get("first") else
+               f"作り直しの比較 {paths.checks / 'resync.md'}（変わった文と前後 {len(resync['sentences'])}）"))
         log(f"[interactive] 中間データ {paths.render_timeline}（場面 {len(tl['scenes'])}、文 {len(tl['sentences'])}、"
             f"字幕 {len(tl['cues'])}、{tl['total_frames']} フレーム）")
 
@@ -332,7 +334,8 @@ def render_storyboard(storyboard: Path, doc: Mapping[str, Any], out_dir: Path, s
             "silent_mp4": str(paths.silent_mp4), "scenes_dir": str(sdir) if sdir else None,
             "network": "使わない（描画はこの PC の中だけ）", "warnings": warns,
             "sentences": len(tl["sentences"]), "measured_sentences": measured, "cues": len(tl["cues"]),
-            "resync": {"compared": resync["compared"], "synthesized_paragraphs": resync["synthesized_paragraphs"],
+            "resync": {"compared": resync["compared"], "first": resync.get("first", False),
+                       "synthesized_paragraphs": resync["synthesized_paragraphs"],
                        "report": str(paths.checks / "resync.md")}, "render": rec}
 
 

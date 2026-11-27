@@ -41,8 +41,12 @@ slides と共通に使い、**書き出しの段だけ**を差し替える。場
 
 優先順位: その場面の Python の場面コード（`<場面 id>.py`・`index.py`）＞ `scenes.yaml` の指定 ＞ 既定の場面。
 
-**既定の場面**: シーンの画像（説明図の PNG・撮影画像）を字幕帯の上にいっぱいに出す（細線は縮小の割合で太らせる）。
-画像の無い場面（intro・outro・文字だけのカード `recipe_params.card`）は見出しと文のカード。
+**既定の場面**（`scenes.default_scene`）: 台本のシーンは slides（`deck/builder.py` の `_scene_slide`）と同じものを同じ順に出す。
+見出し・画像（細線は縮小の割合で太らせる）・画面テキスト・来歴ラベル（`image.label`。撮影前は `撮影前（仮）`、文字だけのカード
+`recipe_params.card` は出さない）・台本の注釈（赤枠・矢印。位置は slides と同じ `marks.json`、時刻は slides と同じ段落）。
+来歴ラベルは必ず出る（消す設定は無い）。配置は `scenes.py` の `HEAD_BOX`・`IMAGE_BOX`・`TEXT_BOX`・`LABEL_RIGHT`（字幕帯の上）。
+中間データの場面の `heading`・`label`・`placeholder`・`card`・`text`・`appear`・`view`・`annotations` は `annotate.py` が台本から作る。
+画像の無い場面（intro・outro）は見出しと文のカード。
 
 静止画は場面コードのフォルダの `assets/` と、その親の `assets/` から探す（`scenes/<reel id>/` なら `scenes/<reel id>/assets/` と `scenes/assets/`）。**台本のフォルダと出力フォルダの中のファイルだけ**を読む（URL・その外のファイルは誤り）。
 
@@ -87,7 +91,7 @@ scenes:
 | `steps` | 手順の番号付きリスト | `stagger`・強調 `roomhighlight` |
 | `table` | 表の行・列の強調（行・列は見出しの文字で指定） | `stagger`・強調 `roomhighlight` |
 | `number` | 数値の強調 | `counter` |
-| `image` | 画像と注釈（枠・引き出し線） | `clipreveal`・強調 `roomhighlight` |
+| `image` | 画像と注釈（枠・引き出し線）。画像ごとに来歴ラベルを必ず出す（台本の画像は台本の `image.label`、ほかの静止画は `label`、無ければ `説明用再構成図`） | `clipreveal`・強調 `roomhighlight` |
 | `compare` | 比較の左右 | `slidein`・強調 `roomhighlight` |
 | `callout` | 要点の囲み・帯 | `stagger`・入れ替え `fadethrough` |
 | `flow` | 流れ（札を矢印でつなぐ） | `stagger`・強調 `roomhighlight` |
@@ -133,7 +137,7 @@ scenes:
 | 項目 | 内容 |
 |---|---|
 | `fps`・`width`・`height`・`total_frames` | 今は 30 fps・1920×1080 だけ |
-| `scenes[]` | `id`・`title`・`start_frame`・`end_frame`（0 から切れ目なく total_frames まで）・`image`・`body` |
+| `scenes[]` | `id`・`title`・`start_frame`・`end_frame`（0 から切れ目なく total_frames まで）・`image`・`body`。台本のシーンは画面の決まり `heading`・`label`（来歴）・`placeholder`・`card`・`text`・`appear`・`view`・`annotations`（赤枠・矢印の位置と出す秒） |
 | `sentences[]` | `id`（`<場面 id>-<番号>`）・`scene`・`paragraph`・`spoken`（原稿。`T.at` はここから語を探す）・`reading`（合成入力）・`subtitle`・`start_sec`・`end_sec`・`timing` |
 | `cues[]` | 字幕。`sentence`・`text`・`start_frame`・`end_frame`（重ならない）・`lines`（2 行まで） |
 | `meta` | `title`・`credit`（ナレーション音声のクレジット。最後の場面の左下に常に出す） |

@@ -35,7 +35,10 @@
 
 - **キットは台本のフォルダの `scenes/` の下のコードだけを読み込んで実行します**（人から受け取ったコードを読み込む用途は想定しない）
 - 優先順位: その場面の Python の場面コード（`<場面 id>.py`・`index.py`）＞ `scenes.yaml` ＞ 既定の場面
-- **既定の場面**: シーンの画像（説明図の PNG・撮影画像）を字幕の帯の上にいっぱいに出す（細い線は縮小の割合で太らせる）。画像の無い場面（intro・outro・文字だけのカード）は見出しと文のカード
+- **既定の場面**: 台本のシーンは slides と同じものを同じ順に出す。上から見出し（シーンの見出し）・画像（説明図の PNG・撮影画像。細い線は縮小の割合で太らせる）・画面テキスト（`on_screen_text`。`text_build` は 1 行ずつ）、画像の右下の外に**来歴ラベル**（`image.label` の `実キャプチャ`・`説明用再構成図` など）。来歴ラベルは**必ず出て、消す設定はありません**（撮影前の仮の枠は `撮影前（仮）`。文字だけのカード `recipe_params.card` は slides と同じく出さない）。字幕の帯（y 940 から）には重ねません
+  - 配置（1920×1080）: 見出し `(72, 24, 1776, 88)`、画像 `(72, 124, 1776, 760)`（画面テキストがあれば高さ 680）、画面テキスト `(72, 816, 1440, 112)`、来歴ラベル 24px を右端 x 1848・下端 y 928 にそろえる（slides の 13.333×7.5 インチの配置を字幕の帯の上に縮めたもの）
+  - **注釈は台本のとおり**: 赤枠・矢印の位置は slides と同じ `marks.json`（`recipe_params.mark`・`box`・`to`）、色は slides と同じ赤。出す時刻も slides と同じ決め方で、枠が複数でナレーションの段落の数と同じなら枠 k は段落 k の始まり（違えば均等に割る）、矢印は見出し・画像の後に現れて動く。`zoom` は slides と同じ範囲を切り出し、`zoom: per_mark` は段落の始まりで次の枠の範囲へ移る。効果がスライドの秒に収まらなければ slides と同じく同じ比率で縮める
+  - 画像の無い場面（intro・outro）は見出しと文のカード。outro に画像があれば左に文、右に画像と来歴ラベル
 - 静止画: 場面コードのフォルダの `assets/` と、その親の `assets/`
 - 例: [samples/u-value/scenes/u-value/scenes.yaml](../../samples/u-value/scenes/u-value/scenes.yaml)
 
@@ -95,10 +98,16 @@ scenes:
 | `steps` | 番号付きの手順（印 number・check・cross・dot・arrow、縦・横） | `items`・`marker`・`direction`・`boxed` | `stagger`・`roomhighlight` |
 | `table` | 表の行・列の強調（**行・列は見出しの文字で指す**） | `columns`・`widths`・`rows`・`highlights`・`theme` | `stagger`・`roomhighlight` |
 | `number` | 数値の強調（大きな数字・単位・説明、割合の帯） | `items`（`value`・`unit`・`caption`・`ratio`） | `counter` |
-| `image` | 画像を並べる・重ねて切り替える、注釈（枠・丸・注目点・引き出し線） | `images`・`annotations` | `clipreveal`・`roomhighlight` |
+| `image` | 画像を並べる・重ねて切り替える、注釈（枠・丸・注目点・引き出し線）。画像ごとに来歴ラベルを右下の外に必ず出す（下の注） | `images`（`src`・`label` など）・`annotations` | `clipreveal`・`roomhighlight` |
 | `compare` | 左右の比較（題・本文・要点・結論・画像） | `left`・`right` | `slidein`・`roomhighlight` |
 | `callout` | 要点の囲み・帯・札・面、同じ場所で入れ替わる文、語句のマーカー | `text` か `texts`・`style`・`mark` | `stagger`・`switch: fadethrough` |
 | `flow` | 札・箱・文字を横に並べて矢印でつなぐ | `items`・`arrows` | `stagger`・`roomhighlight` |
+
+**画像の来歴ラベル（`image`・`compare` の画像）**: 画像ごとに右下の外へ必ず出し、消す項目はありません。
+
+- 台本の画像（中間データの場面の画像と同じファイル。中身が同じなら `scenes/assets/` に写したものも）: 台本の `image.label`。部品の `label` に違う値を書くと書き方の誤り（終了コード 2）
+- それ以外の静止画（`scenes/assets/` などに置いたもの）: 部品の `label`（`実キャプチャ`・`途中成果`・`説明用再構成図`）。書かなければ `説明用再構成図`。キットはその画像の来歴を確かめられないので、実際の画面と名乗らない方に倒します。実際に撮った画面なら `label: 実キャプチャ` と書きます
+- Python の場面コード（`f.img`）で画像を出すときは、来歴を `f.text` で自分で書きます（キットは止めません）
 
 どの型にも `box`・きっかけ（`at`・`sentence`・`delay`）・`until`・`speed` が書けます。
 色の名前: `text`・`text2`・`text3`・`teal`・`teal_d`・`amber`・`blue`・`green`・`coral`・`ink`・`line`。

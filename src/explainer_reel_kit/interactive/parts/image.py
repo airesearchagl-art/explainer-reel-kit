@@ -2,12 +2,73 @@
 """画像の部品: image（画像を並べる・重ねて切り替える・注釈）と compare（比較の左右）。
 
 画像の座標（注釈の位置）は、元の画像の画素で書く（切り抜き crop を書いたときも元の画像の画素）。
+
+来歴ラベル（実キャプチャ／途中成果／説明用再構成図）は、画像ごとに右下の外へ必ず出す（消す項目は無い）:
+
+- 台本の画像（中間データの場面の画像と同じファイル。中身が同じなら別の場所の複製も）: 台本の ``image.label``。
+  部品の ``label`` に違う値を書くと誤り
+- それ以外の静止画（``scenes/assets/`` などに置いたもの）: 部品の ``label``。書かなければ ``説明用再構成図``
+  （来歴をキットが確かめられないため、実際の画面と名乗らない方に倒す。実際に撮った画面なら ``label: 実キャプチャ`` と書く）
 """
 from __future__ import annotations
 
+import functools
+import hashlib
+from pathlib import Path
+
 from .. import motion as mo
-from ..engine import (AMBER, LINE, PANEL, PAPER, TEXT, TEXT2, Frame, LayoutError, asset_size, tw, with_alpha)
+from ..engine import (AMBER, LINE, PANEL, PAPER, TEXT, TEXT2, TEXT3, Frame, LayoutError, asset_path, asset_size, tw,
+                      with_alpha)
 from .base import COLOR, DIM, ITEM_CUE, KEEP, LINES, SHOW, Part, check_icon, color
+
+LABELS = ["実キャプチャ", "途中成果", "説明用再構成図"]   # 台本の image.label と同じ
+DEFAULT_LABEL = "説明用再構成図"
+LABEL_ROW = 34          # 画像の下に空ける来歴ラベルの行（px）
+
+
+@functools.lru_cache(maxsize=256)
+def _digest(path: str, mtime: float, size: int) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _same_file(a: Path, b: Path) -> bool:
+    try:
+        if a.resolve() == b.resolve():
+            return True
+        sa, sb = a.stat(), b.stat()
+        if sa.st_size != sb.st_size:
+            return False
+        return _digest(str(a.resolve()), sa.st_mtime, sa.st_size) == _digest(str(b.resolve()), sb.st_mtime, sb.st_size)
+    except OSError:
+        return False
+
+
+def storyboard_label(T, src: str) -> str | None:
+    """src が台本の画像（中間データの場面の画像）と同じファイルなら、その場面の来歴ラベル。違えば None。"""
+    p = asset_path(src)
+    for sc in getattr(T, "scenes", None) or []:
+        img = sc.get("image")
+        if img and Path(img).is_file() and _same_file(p, Path(img)):
+            return sc.get("label") or DEFAULT_LABEL
+    return None
+
+
+def image_label(ctx, item: dict, where: str) -> str:
+    """部品の画像 1 枚の来歴ラベル（必ず文字を返す）。台本の画像に違う label を書いたら LayoutError（scenes.yaml の誤り）。"""
+    story = storyboard_label(ctx.T, item["src"])
+    given = item.get("label")
+    if story is not None:
+        if given and given != story:
+            raise LayoutError(f"{where}: {item['src']} は台本の画像で、来歴は「{story}」です（label: {given} は書けません）")
+        return story
+    return given or DEFAULT_LABEL
+
+
+def draw_label(f: Frame, label: str, right: float, top: float, a: float = 1.0) -> None:
+    """来歴ラベル（既定の場面と同じ見た目: 小さく、控えめな色、右寄せ）。"""
+    from ..scenes import LABEL_SIZE
+
+    f.text(label, right, top, size=LABEL_SIZE, color=TEXT3, a=a, anchor="r")
 
 IMG_PROPS = {
     "src": {"type": "string", "minLength": 1, "description": "静止画（scenes\\assets\\ などから探す）"},
@@ -17,6 +78,8 @@ IMG_PROPS = {
              "description": "細線の太らせ方（engine.img の mode。既定 auto）"},
     "paper": {"type": "boolean", "description": "明るい紙の面に載せる（図面）"},
     "caption": {"type": "string"},
+    "label": {"enum": LABELS, "description": "来歴ラベル（画像の右下の外に必ず出る）。台本の画像なら台本の image.label が使われ、"
+                                             "違う値は誤り。それ以外の静止画は書かなければ 説明用再構成図"},
 }
 ANNOT = {
     "type": "object", "additionalProperties": False, "required": ["shape"],
@@ -67,11 +130,15 @@ class Image_(Part):
         gap = self.spec.get("gap", 24)
         stack = self.spec.get("stack", False)
         cap = 50 if any(it.get("caption") for it in self.items) else 0
+        ih = self.h - cap - LABEL_ROW   # 画像の下に来歴ラベルの行
+        if ih < 20:
+            raise LayoutError(f"{self.ctx.where}: 画像と来歴ラベルが入りません（height を大きくする）")
         if stack:
-            cells = [(self.x, self.y, self.w, self.h - cap)] * n
+            cells = [(self.x, self.y, self.w, ih)] * n
         else:
             cw = (self.w - gap * (n - 1)) / n
-            cells = [(self.x + i * (cw + gap), self.y, cw, self.h - cap) for i in range(n)]
+            cells = [(self.x + i * (cw + gap), self.y, cw, ih) for i in range(n)]
+        self.labels = [image_label(self.ctx, it, f"{self.ctx.where}.images[{i}]") for i, it in enumerate(self.items)]
         self.cells = cells
         self.places = []
         for it, cell in zip(self.items, cells):
@@ -147,8 +214,11 @@ class Image_(Part):
                 continue
             self._img(f, t, i, a)
             cell = self.cells[i]
+            x, y, w, h, _, _ = self.places[i]
+            draw_label(f, self.labels[i], x + w, y + h + 6, a=a)   # 来歴ラベル（消せない）
             if it.get("caption"):
-                f.text(it["caption"], cell[0], cell[1] + cell[3] + 12, size=26, color=TEXT2, a=a, maxw=cell[2])
+                f.text(it["caption"], cell[0], cell[1] + cell[3] + LABEL_ROW + 12, size=26, color=TEXT2, a=a,
+                       maxw=cell[2])
             if not stack:
                 self.emphasize(f, t, i, cell, a, r=8)
         for an, c, end in self.notes:
@@ -228,6 +298,8 @@ class Compare(Part):
             if not (sp["left"].get("image") and sp["right"].get("image")):
                 raise LayoutError(f"{self.ctx.where}: beforeafter は左右の両方に image を書きます")
         self.tsize = sp.get("title_size", 40)
+        self.labels = {k: image_label(self.ctx, sp[k]["image"], f"{self.ctx.where}.{k}.image")
+                       for k in ("left", "right") if sp[k].get("image")}
 
     def _side(self, f, t, i, side, box, a):
         x, y, w, h = box
@@ -247,7 +319,8 @@ class Compare(Part):
             if img.get("paper"):
                 f.rr(x + 32, yy, w - 64, ih, r=8, fill=PAPER, a=a)
             f.img(img["src"], ix, iy, int(iw), int(ihh), crop=tuple(crop) if crop else None, mode=img.get("mode", "auto"), a=a)
-            yy += ih + 20
+            draw_label(f, self.labels["left" if i == 0 else "right"], ix + iw, iy + ihh + 6, a=a)
+            yy += ih + 20 + LABEL_ROW
         if side.get("body"):
             rows = self.lines(f, side["body"], x + 32, yy, w - 64, max(30, y + h - yy - 24), size=30, color_=TEXT2,
                               a=a)
@@ -293,7 +366,7 @@ class Compare(Part):
             sw, sh = asset_size(img["src"])
             crop = list(img.get("crop") or (0, 0, sw, sh))
             cw_, ch_ = crop[2] - crop[0], crop[3] - crop[1]
-            ix, iy, iw, ih = fit(cw_, ch_, (x + 16, y + 16, w - 32, h - 32))
+            ix, iy, iw, ih = fit(cw_, ch_, (x + 16, y + 16, w - 32, h - 32 - LABEL_ROW))
             split = ix + iw * pos
             if key == "l":
                 frac = (split - ix) / iw
@@ -305,6 +378,11 @@ class Compare(Part):
                 c2 = (crop[0] + int(cw_ * frac), crop[1], crop[2], crop[3])
                 if c2[2] - c2[0] >= 2:
                     f.img(img["src"], split, iy, max(1, int(ix + iw - split)), int(ih), crop=c2, mode=img.get("mode", "auto"), a=a)
+        # 来歴ラベル: 左の画像は左下、右の画像は右下（同じなら右下に 1 つ）
+        ll, rl = self.labels["left"], self.labels["right"]
+        if ll != rl:
+            f.text(ll, ix, iy + ih + 6, size=24, color=TEXT3, a=a)
+        draw_label(f, rl, ix + iw, iy + ih + 6, a=a)
         f.rr(split - 2, iy, 4, ih, r=2, fill="#ffffff", a=a)
         f.circ(split, iy + ih / 2, 44, fill="#ffffff", outline=LINE, ow=2, a=a)
         for side, ax in ((sp["left"], ix + 24), (sp["right"], ix + iw - 24)):

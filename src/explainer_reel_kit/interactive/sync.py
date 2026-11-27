@@ -193,13 +193,18 @@ def split_piece_times(a: float, b: float, pieces: Sequence[str], runs: Sequence[
 # ---------------------------------------------------------------- 作り直した前後の比較
 
 def resync_report(old: dict | None, new: dict, durations: dict | None, out_dir: Path) -> dict:
-    """checks\\resync.json・resync.md を書き、記録を返す。old が無ければ再合成した段落の一覧だけ。"""
+    """checks\\resync.json・resync.md を書き、記録を返す。
+
+    初めての作成（前の中間データが無く、使い回した WAV も無い）は ``first: true``。合成した段落を「再合成」とは
+    書かず、文の一覧も出さない（比べる相手が無い）。"""
     fps = new.get("fps", 30)
     resynth: dict[str, list[int]] = {}
     for it in (durations or {}).get("items") or []:
         if isinstance(it, dict) and it.get("synthesized_paragraphs"):
             resynth[it["id"]] = list(it["synthesized_paragraphs"])
-    rec: dict[str, Any] = {"compared": old is not None, "fps": fps, "synthesized_paragraphs": resynth,
+    reused = any(isinstance(it, dict) and it.get("reused_from") for it in (durations or {}).get("items") or [])
+    first = old is None and not reused
+    rec: dict[str, Any] = {"compared": old is not None, "first": first, "fps": fps, "synthesized_paragraphs": resynth,
                            "scenes": [], "sentences": [], "cues_before": None, "cues_after": len(new.get("cues") or [])}
     old_scenes = {s["id"]: s for s in (old or {}).get("scenes") or []}
     for s in new["scenes"]:
@@ -224,7 +229,7 @@ def resync_report(old: dict | None, new: dict, durations: dict | None, out_dir: 
             changed_idx.add(i)
         e["_moved"] = moved
         e["_redone"] = redone
-    show = sorted({j for i in changed_idx for j in (i - 1, i, i + 1) if 0 <= j < len(sents)})
+    show = [] if first else sorted({j for i in changed_idx for j in (i - 1, i, i + 1) if 0 <= j < len(sents)})
     for j in show:
         e = sents[j]
         o = old_sent.get(e["id"])
@@ -255,6 +260,15 @@ def _f(frame: int | None, fps: int) -> str:
 
 def _resync_md(rec: dict) -> str:
     fps = rec["fps"]
+    if rec.get("first"):
+        lines = ["# 作り直した前後の比較（resync）", "",
+                 "合成: 初めての合成（前の出力なし）。すべての段落を合成しました。",
+                 "比べる相手が無いので、時刻の比較はありません（読みや字幕を直して作り直すときに "
+                 "--reuse-run で前の出力を渡すと、変わった文と前後をここに出します）。", "",
+                 "## 場面の境界", "", "| 場面 | 始まり | 終わり |", "|---|---|---|"]
+        for s in rec["scenes"]:
+            lines.append(f"| {s['id']} | {_f(s['start_frame'], fps)} | {_f(s['end_frame'], fps)} |")
+        return "\n".join(lines) + "\n"
     lines = ["# 作り直した前後の比較（resync）", ""]
     if rec["synthesized_paragraphs"]:
         lines.append("再合成した段落: " + "、".join(f"{k} の段落 {', '.join(map(str, v))}"
