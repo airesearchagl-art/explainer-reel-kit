@@ -55,18 +55,25 @@ def split_sentences(text: str) -> list[str]:
     return [s for paragraph in split_paragraphs(text) for s in _sentences_of_line(paragraph)]
 
 
-def _pack(sentences: Sequence[str], max_chars: int) -> list[str]:
-    chunks: list[str] = []
-    current = ""
+def _pack_sentences(sentences: Sequence[str], max_chars: int) -> list[list[str]]:
+    """Rule 3 with the sentences of each chunk kept apart."""
+    chunks: list[list[str]] = []
+    current: list[str] = []
+    length = 0
     for sentence in sentences:
-        if current and len(current) + len(sentence) > max_chars:
+        if current and length + len(sentence) > max_chars:
             chunks.append(current)
-            current = sentence
+            current, length = [sentence], len(sentence)
         else:
-            current += sentence
+            current.append(sentence)
+            length += len(sentence)
     if current:
         chunks.append(current)
     return chunks
+
+
+def _pack(sentences: Sequence[str], max_chars: int) -> list[str]:
+    return ["".join(group) for group in _pack_sentences(sentences, max_chars)]
 
 
 def split_paragraph_chunks(text: str, max_chars: int = DEFAULT_MAX_CHARS) -> list[list[str]]:
@@ -75,6 +82,20 @@ def split_paragraph_chunks(text: str, max_chars: int = DEFAULT_MAX_CHARS) -> lis
         raise ValueError("max_chars must be >= 1")
     groups = [_pack(_sentences_of_line(p), max_chars) for p in split_paragraphs(text)]
     return [g for g in groups if g]
+
+
+def split_chunk_sentences(text: str, max_chars: int = DEFAULT_MAX_CHARS) -> list[list[list[str]]]:
+    """Paragraph → chunk → sentences. Joining the sentences of a chunk gives the chunk of
+    :func:`split_paragraph_chunks`."""
+    if max_chars < 1:
+        raise ValueError("max_chars must be >= 1")
+    groups = [_pack_sentences(_sentences_of_line(p), max_chars) for p in split_paragraphs(text)]
+    return [g for g in groups if g]
+
+
+def paragraph_sentences(paragraph: str) -> list[str]:
+    """Sentences of one paragraph (rules 1–2)."""
+    return _sentences_of_line(paragraph)
 
 
 def split_text(text: str, max_chars: int = DEFAULT_MAX_CHARS) -> list[str]:

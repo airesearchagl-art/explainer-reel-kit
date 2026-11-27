@@ -4,11 +4,14 @@
 
 ```text
 題材 → 台本（AI との対話）→ 説明図（コードで描く）・Web 画面の撮影 → ナレーション → スライド（.pptx）→ MP4
+                                                   （PowerPoint が無ければ：ナレーション → コード描画（字幕つき）→ MP4）
 ```
 
 - 台本は Markdown 1 枚。シーンごとに見出し・画像・ナレーションを書きます
 - 動画だけでなく、PowerPoint で直せる .pptx も残ります
 - 手元の PC で動きます。有料のサービスや API キーは要りません（音声は AivisSpeech、書き出しは PowerPoint）
+- **PowerPoint が無い PC（Linux も）でも MP4 まで作れます**。映像の作り方を `interactive`（コード描画）にすると、キットが 1 フレームずつ描き、字幕を焼き込んで SRT も書き出します（0.3.0 から）
+- ナレーションの音量は、どちらの作り方でも -16 LUFS（true peak -1.5 dBTP 以下）にそろえて MP4 に入れます（0.3.0 から）
 - 対話はふだん使う AI（Claude Code・Codex・Cursor・Copilot・手元の LLM など）で進めます
 - 社外秘を含む台本は、撮影・音声合成をこの PC の中だけに限ります（台本の `confidentiality`）
 
@@ -37,6 +40,14 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 ```
 
 出力先のフォルダ（`<日付>_u-value`）に `u_value.mp4` と、PowerPoint で直せる `u_value.pptx` ができます。
+
+PowerPoint が無いときは、同じサンプルをコード描画で作ります（PowerPoint を使わない。字幕の焼き込みと `u_value.srt`、検証の結果 `checks\検証結果.md` もできる）。
+
+```powershell
+erkit make samples\u-value\u-value.storyboard.md --serve samples\u-value\app --render-mode interactive
+```
+
+書き方は [説明図と撮影](docs/guide/05-visuals.md) の「コード描画の場面」、出力は [書き出し](docs/guide/07-export.md)。
 詰まったら [よくある失敗](docs/guide/troubleshooting.md) を見てください。
 
 ## 自分の題材で作る（AI と対話する）
@@ -66,16 +77,17 @@ Claude Code なら、プラグインを入れると `/explainer-reel-kit:explain
 | 台本の検証・JSON への変換 | `erkit check`・`erkit convert`（[仕様](docs/design/storyboard.md)） |
 | 説明図（HTML → PNG ＋ 注釈位置） | `erkit diagram`（[書き方](docs/design/diagram.md)） |
 | Web 画面の撮影・操作の記録 | `erkit capture`・`erkit record`（[書き方](docs/design/capture-web.md)） |
-| ナレーション（AivisSpeech） | `erkit voice list`・`erkit voice synth`・`erkit voice kana`（[仕様](docs/design/narration.md)） |
+| ナレーション（AivisSpeech）・作った後の読みの確かめ（文ごとの表と試聴ページ） | `erkit voice list`・`erkit voice synth`・`erkit voice kana`・`erkit voice review`（[仕様](docs/design/narration.md)） |
 | スライド（アニメーション付きの .pptx） | `erkit deck`（[仕様](docs/design/recipes.md)） |
-| 通し生成（撮影 → 説明図 → ナレーション → スライド → 書き出し → 音声の合成） | `erkit make`（[仕様](docs/design/make.md)。書き出しは Windows ＋ PowerPoint） |
+| 通し生成（撮影 → 説明図 → ナレーション → スライド → 書き出し → 音声の合成。音量そろえ） | `erkit make`（[仕様](docs/design/make.md)。書き出しは Windows ＋ PowerPoint） |
+| PowerPoint を使わない書き出し（コード描画・字幕の焼き込みと SRT・検証。変わった段落だけの再合成） | `erkit make` の `--render-mode interactive`・`--reuse-run`（[仕様](docs/design/interactive.md)） |
 | 環境の確認・社内で認められた AI の許可リストの確認 | `erkit doctor` |
 
 しないこと:
 
 - 動画の公開（動画サイトへのアップロード）や、外部のサービスとの連携
 - クラウドの AI の呼び出し（台本づくりの対話は、利用者の AI が受け持ちます。API キーは要りません）
-- ffmpeg・AivisSpeech・PowerPoint・声のモデルの同梱や自動の導入
+- ffmpeg・AivisSpeech・PowerPoint・声のモデルの同梱や自動の導入（同梱しているのは、コード描画の書体 Noto Sans JP だけ）
 
 ## 段ごとに試す（開発者向け）
 

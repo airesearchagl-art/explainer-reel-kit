@@ -36,8 +36,8 @@ erkit voice kana samples\u-value\u-value.storyboard.md --sentences --out output\
 
 - 読みが違う語は、読み辞書に書きます。建築の用語なら例の辞書があります: `erkit voice kana samples\u-value\u-value.storyboard.md --dictionary architecture`
 - 自分の辞書は `dictionaries\<名前>.yaml` に置き、`config\kit.yaml` の `voice.dictionaries` に名前を書きます（書き方は [narration.md](../design/narration.md)）
-- 読みで直せない語は、台本のナレーションを読みのとおりに書き換えます（「ユー値」「ローイー」など）
-- 抑揚・間は、試作の MP4 を聞いて確かめます
+- 読みで直せない語は、台本のナレーションを読みのとおりに書き換えます（「ユー値」「ローイー」など）。interactive の字幕には、段落の直後の `<!-- subtitle: … -->` で元の表記を出せます（[07-export.md](07-export.md) の「字幕」）
+- 抑揚・間は、試作の MP4 を聞いて確かめます。文ごとに聞き比べるなら、作った後に `erkit voice review`（[07-export.md](07-export.md) の「読みを文ごとに確かめる」）
 
 ## 4. 直す
 

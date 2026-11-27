@@ -75,6 +75,8 @@
 | `erkit voice kana samples/u-value/u-value.storyboard.md` | ナレーションの読みの確認（AivisSpeech が要る） |
 | `erkit make samples/u-value/u-value.storyboard.md --serve samples/u-value/app --dry-run` | 通し生成の段の順番を表示するだけ |
 | `erkit make samples/u-value/u-value.storyboard.md --serve samples/u-value/app` | 台本から MP4 まで |
+| `erkit make samples/u-value/u-value.storyboard.md --serve samples/u-value/app --render-mode interactive` | PowerPoint を使わずに MP4 まで（コード描画・字幕と SRT・検証。場面の指定は `scenes/<reel id>/scenes.yaml`） |
+| `erkit voice review samples/u-value/u-value.storyboard.md --run output/u-value-run` | 作った後の読みの確かめ（`--run` は `erkit make` の出力フォルダ。表と試聴ページ） |
 
 終了コード（どのコマンドも同じ考え方）:
 

@@ -1,0 +1,4254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/airesearchagl-art/explainer-reel-kit/schema/scenes.schema.json",
+  "title": "explainer-reel-kit 場面の指定（scenes.yaml）",
+  "description": "Python を書かずに場面を「型・中身・動くきっかけ」で書く（render_mode: interactive）。動きの名前はモーション見本帳の見本の id。src/explainer_reel_kit/interactive/spec.py の json_schema() から作る",
+  "type": "object",
+  "required": [
+    "version",
+    "scenes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scenes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/scene"
+      },
+      "description": "場面 id → その場面の指定"
+    }
+  },
+  "$defs": {
+    "scene": {
+      "type": "object",
+      "required": [
+        "parts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "上から積むときの部品の間（px、既定 40）"
+        }
+      }
+    },
+    "part": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "header",
+            "heading",
+            "title",
+            "cards",
+            "steps",
+            "table",
+            "number",
+            "image",
+            "compare",
+            "callout",
+            "flow"
+          ],
+          "description": "部品の型"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "header"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/header"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "heading"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/heading"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/title"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "cards"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/cards"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "steps"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/steps"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "table"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "number"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "image"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/image"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "compare"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/compare"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "callout"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/callout"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "flow"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/flow"
+          }
+        }
+      ]
+    },
+    "cue": {
+      "type": "object",
+      "properties": {
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        }
+      }
+    },
+    "header": {
+      "type": "object",
+      "description": "画面の上の見出し（左の色の帯＋題＋罫線）。右上に進行表示（progress）と札（label）、左下に注記（foot）。題は現れ方の動きで出し、罫線・進行表示・札は場面をまたいで動かさない",
+      "properties": {
+        "type": {
+          "const": "header",
+          "description": "見出し"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "fade-in",
+            "stagger-T03",
+            "typewriter",
+            "cut",
+            "fade"
+          ],
+          "description": "見本帳の見本の id（既定 fade-in）"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "題"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "題の文字の大きさ（既定 48）"
+        },
+        "label": {
+          "type": "string",
+          "description": "右上の札（薄い色）"
+        },
+        "label_accent": {
+          "type": "string",
+          "description": "右上の札のうち、強調する部分（TEAL・太字。label の右）"
+        },
+        "progress": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "total"
+          ],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "current": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "done": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          "description": "右上の進行表示（全体の段の数・今の段・済んだ段の数。今の段は TEAL、済んだ段は暗い色）"
+        },
+        "foot": {
+          "type": "string",
+          "description": "左下の注記（y 894、薄い色）"
+        }
+      },
+      "required": [
+        "type",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "heading": {
+      "type": "object",
+      "description": "場面の中の見出し 1 行（番号の丸 badge・続きの文 sub・上の罫線 rule を付けられる）。「1 段階目」の見出し、要点の一言、表の上の条件の書き添えなど",
+      "properties": {
+        "type": {
+          "const": "heading",
+          "description": "段の見出し"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "fade-in",
+            "stagger-T03",
+            "typewriter",
+            "cut",
+            "fade"
+          ],
+          "description": "見本帳の見本の id（既定 fade-in）"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（既定 40）"
+        },
+        "bold": {
+          "type": "boolean",
+          "description": "太字（既定 true）"
+        },
+        "color": {
+          "enum": [
+            "text",
+            "text2",
+            "text3",
+            "teal",
+            "teal_d",
+            "amber",
+            "blue",
+            "green",
+            "coral",
+            "ink",
+            "line"
+          ],
+          "description": "色の名前（engine の色）"
+        },
+        "badge": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99,
+          "description": "左に番号の丸（段の見出し）"
+        },
+        "sub": {
+          "type": "string",
+          "description": "見出しの右に続ける文（薄い色、30）"
+        },
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "rule": {
+          "type": "boolean",
+          "description": "上に罫線（区切り）"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 20
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "title": {
+      "type": "object",
+      "description": "画面の中央に、大きさの違う行を縦に並べる（導入・区切り・終わりの一枚）。行ごとにきっかけを付けられる",
+      "properties": {
+        "type": {
+          "const": "title",
+          "description": "中央の題"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "fade-in",
+            "stagger-T03",
+            "typewriter",
+            "cut",
+            "fade"
+          ],
+          "description": "見本帳の見本の id（既定 fade-in）"
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 14,
+                "maximum": 160,
+                "description": "文字の大きさ（px）"
+              },
+              "color": {
+                "enum": [
+                  "text",
+                  "text2",
+                  "text3",
+                  "teal",
+                  "teal_d",
+                  "amber",
+                  "blue",
+                  "green",
+                  "coral",
+                  "ink",
+                  "line"
+                ],
+                "description": "色の名前（engine の色）"
+              },
+              "bold": {
+                "type": "boolean"
+              },
+              "at": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "height": {
+          "type": "number",
+          "minimum": 40
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "lines"
+      ],
+      "additionalProperties": false
+    },
+    "cards": {
+      "type": "object",
+      "description": "カードを横に（columns: 1 で縦に）並べ、読み上げの順に現す・読んでいるカードを示す。番号の丸（numbered）、カードの間の矢印（arrows）、下の括弧と札（bracket）、カードの中の確かめの印（checks）",
+      "properties": {
+        "type": {
+          "const": "cards",
+          "description": "カードを読み上げ順に点灯"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "stagger",
+            "slidein",
+            "fade-in",
+            "cut",
+            "fade"
+          ],
+          "description": "見本帳の見本の id（既定 stagger）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "fill",
+            "underline",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 roomhighlight）"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "title": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+              },
+              "body": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+              },
+              "label": {
+                "type": "string",
+                "description": "題の上の小さな文（薄い色）"
+              },
+              "note": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1
+                      }
+                    ],
+                    "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "text"
+                    ],
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      },
+                      "focus": {
+                        "anyOf": [
+                          {
+                            "const": false
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "at": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                              },
+                              "sentence": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                              },
+                              "delay": {
+                                "type": "number",
+                                "minimum": -5,
+                                "maximum": 30,
+                                "description": "きっかけから何秒ずらすか（既定 0）"
+                              },
+                              "until": {
+                                "type": "object",
+                                "properties": {
+                                  "at": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                                  },
+                                  "sentence": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                                  },
+                                  "delay": {
+                                    "type": "number",
+                                    "minimum": -5,
+                                    "maximum": 30,
+                                    "description": "きっかけから何秒ずらすか（既定 0）"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                              }
+                            }
+                          }
+                        ],
+                        "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+                      },
+                      "text": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "minItems": 1
+                          }
+                        ],
+                        "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+                      }
+                    }
+                  }
+                ],
+                "description": "強調の文（AMBER・太字）。{text, at, sentence} で自分のきっかけ"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "原",
+                    "標",
+                    "仮",
+                    "写真所見",
+                    "未確認"
+                  ]
+                },
+                "description": "区分の札（engine の TAG_STYLE）"
+              },
+              "badge": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 99
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "text"
+                  ],
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    },
+                    "focus": {
+                      "anyOf": [
+                        {
+                          "const": false
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "at": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                            },
+                            "sentence": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                            },
+                            "delay": {
+                              "type": "number",
+                              "minimum": -5,
+                              "maximum": 30,
+                              "description": "きっかけから何秒ずらすか（既定 0）"
+                            },
+                            "until": {
+                              "type": "object",
+                              "properties": {
+                                "at": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                                },
+                                "sentence": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                                },
+                                "delay": {
+                                  "type": "number",
+                                  "minimum": -5,
+                                  "maximum": 30,
+                                  "description": "きっかけから何秒ずらすか（既定 0）"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                            }
+                          }
+                        }
+                      ],
+                      "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+                    },
+                    "text": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 1
+                        }
+                      ],
+                      "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "description": "列の数（既定は項目の数、最大 4）"
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "カードの間（px、既定 48）"
+        },
+        "row_gap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "行の間（px、既定 gap）"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 40,
+          "description": "カードの高さ（px、既定 220）"
+        },
+        "numbered": {
+          "type": "boolean",
+          "description": "左上に番号の丸（1 から）"
+        },
+        "arrows": {
+          "type": "boolean",
+          "description": "カードの間に矢印（横に並べたとき）"
+        },
+        "arrow_color": {
+          "enum": [
+            "text",
+            "text2",
+            "text3",
+            "teal",
+            "teal_d",
+            "amber",
+            "blue",
+            "green",
+            "coral",
+            "ink",
+            "line"
+          ],
+          "description": "色の名前（engine の色）"
+        },
+        "align": {
+          "enum": [
+            "top",
+            "middle"
+          ],
+          "description": "文の位置（middle: 番号の丸の下の残りの中央。段階のカード）"
+        },
+        "pad": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80,
+          "description": "カードの内側の余白（px、既定 24）"
+        },
+        "title_size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "body_size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "body_color": {
+          "enum": [
+            "text",
+            "text2",
+            "text3",
+            "teal",
+            "teal_d",
+            "amber",
+            "blue",
+            "green",
+            "coral",
+            "ink",
+            "line"
+          ],
+          "description": "色の名前（engine の色）"
+        },
+        "bracket": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            },
+            "until": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                },
+                "sentence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                },
+                "delay": {
+                  "type": "number",
+                  "minimum": -5,
+                  "maximum": 30,
+                  "description": "きっかけから何秒ずらすか（既定 0）"
+                }
+              },
+              "additionalProperties": false,
+              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    }
+                  }
+                }
+              ],
+              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sub": {
+              "type": "string",
+              "description": "札の下の文"
+            }
+          },
+          "description": "カードの列の下の括弧と、まとめの札（AMBER）"
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        },
+        "direction": {
+          "enum": [
+            "normal",
+            "reverse"
+          ],
+          "description": "slidein の向き（reverse で左から）"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "steps": {
+      "type": "object",
+      "description": "番号・印（check・cross・dot・arrow）の付いた項目を縦に（horizontal で横に）並べ、読み上げの順に出す。boxed で項目ごとに面を付ける。番号の丸は読み始めた項目だけ明るくする",
+      "properties": {
+        "type": {
+          "const": "steps",
+          "description": "手順の番号付きリスト"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "stagger",
+            "slidein",
+            "fade-in",
+            "cut"
+          ],
+          "description": "見本帳の見本の id（既定 stagger）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "fill",
+            "underline",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 roomhighlight）"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "text": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+              },
+              "sub": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "原",
+                    "標",
+                    "仮",
+                    "写真所見",
+                    "未確認"
+                  ]
+                },
+                "description": "区分の札（engine の TAG_STYLE）"
+              }
+            }
+          }
+        },
+        "marker": {
+          "enum": [
+            "number",
+            "check",
+            "cross",
+            "dot",
+            "arrow"
+          ],
+          "description": "項目の頭の印（既定 number）"
+        },
+        "direction": {
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "boxed": {
+          "type": "boolean",
+          "description": "項目ごとに面（カード）を付ける"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "sub_size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "row": {
+          "type": "number",
+          "minimum": 30,
+          "description": "1 項目の高さ（px）"
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "minimum": 40,
+          "description": "項目の幅（boxed のとき。既定は枠の幅）"
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "table": {
+      "type": "object",
+      "description": "表。列は columns の見出しの文字、行は rows の name（1 列目の文字）で指定する（番号では指定しない）。行は自分のきっかけで現れ、セルは自分のきっかけで書き足す。読んでいる行を示し、highlights で列・セルも示せる",
+      "properties": {
+        "type": {
+          "const": "table",
+          "description": "表の行・列の強調"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "stagger",
+            "fade-in",
+            "cut",
+            "fade"
+          ],
+          "description": "見本帳の見本の id（既定 stagger）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "fill",
+            "underline",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 roomhighlight）"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "列の見出し（左から）。1 列目は行の見出しの列"
+        },
+        "widths": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "列の幅（px、columns と同じ数）。無ければ等分"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  },
+                  "until": {
+                    "type": "object",
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                  },
+                  "focus": {
+                    "anyOf": [
+                      {
+                        "const": false
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          },
+                          "until": {
+                            "type": "object",
+                            "properties": {
+                              "at": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                              },
+                              "sentence": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                              },
+                              "delay": {
+                                "type": "number",
+                                "minimum": -5,
+                                "maximum": 30,
+                                "description": "きっかけから何秒ずらすか（既定 0）"
+                              }
+                            },
+                            "additionalProperties": false,
+                            "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                          }
+                        }
+                      }
+                    ],
+                    "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cells": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "text"
+                          ],
+                          "properties": {
+                            "at": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                            },
+                            "sentence": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                            },
+                            "delay": {
+                              "type": "number",
+                              "minimum": -5,
+                              "maximum": 30,
+                              "description": "きっかけから何秒ずらすか（既定 0）"
+                            },
+                            "until": {
+                              "type": "object",
+                              "properties": {
+                                "at": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                                },
+                                "sentence": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                                },
+                                "delay": {
+                                  "type": "number",
+                                  "minimum": -5,
+                                  "maximum": 30,
+                                  "description": "きっかけから何秒ずらすか（既定 0）"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                            },
+                            "focus": {
+                              "anyOf": [
+                                {
+                                  "const": false
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "at": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                                    },
+                                    "sentence": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                                    },
+                                    "delay": {
+                                      "type": "number",
+                                      "minimum": -5,
+                                      "maximum": 30,
+                                      "description": "きっかけから何秒ずらすか（既定 0）"
+                                    },
+                                    "until": {
+                                      "type": "object",
+                                      "properties": {
+                                        "at": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                                        },
+                                        "sentence": {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                                        },
+                                        "delay": {
+                                          "type": "number",
+                                          "minimum": -5,
+                                          "maximum": 30,
+                                          "description": "きっかけから何秒ずらすか（既定 0）"
+                                        }
+                                      },
+                                      "additionalProperties": false,
+                                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                                    }
+                                  }
+                                }
+                              ],
+                              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+                            },
+                            "text": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              ]
+                            },
+                            "color": {
+                              "enum": [
+                                "text",
+                                "text2",
+                                "text3",
+                                "teal",
+                                "teal_d",
+                                "amber",
+                                "blue",
+                                "green",
+                                "coral",
+                                "ink",
+                                "line"
+                              ],
+                              "description": "色の名前（engine の色）"
+                            },
+                            "size": {
+                              "type": "integer",
+                              "minimum": 14,
+                              "maximum": 160,
+                              "description": "文字の大きさ（px）"
+                            },
+                            "bold": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "description": "列の見出し → セルの文字（または {text, at, sentence, color, size}）"
+                  }
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "[行の見出し, 2 列目, 3 列目, …]（きっかけの要らない行）"
+              }
+            ]
+          }
+        },
+        "header": {
+          "type": "boolean",
+          "description": "見出しの行を描く（既定 true）"
+        },
+        "header_height": {
+          "type": "number",
+          "minimum": 16
+        },
+        "row_height": {
+          "type": "number",
+          "minimum": 16,
+          "description": "行の高さ（px、既定 150。paper は 34）"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "セルの文字の大きさ（既定 32。paper は 21）"
+        },
+        "name_size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "行の見出しの文字の大きさ（既定 34）"
+        },
+        "header_size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "theme": {
+          "enum": [
+            "dark",
+            "paper"
+          ],
+          "description": "paper: 明るい紙面（資料の抜き書き）"
+        },
+        "title": {
+          "type": "string",
+          "description": "paper の上の題の帯"
+        },
+        "note": {
+          "type": "string",
+          "description": "paper の下の注記"
+        },
+        "tint_column": {
+          "type": "string",
+          "description": "paper で色を付ける列（列の見出し）"
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "row": {
+                "type": "string"
+              },
+              "col": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "列・セル・行を示す時間（row・col は見出しの文字）"
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        }
+      },
+      "required": [
+        "type",
+        "columns",
+        "rows"
+      ],
+      "additionalProperties": false
+    },
+    "number": {
+      "type": "object",
+      "description": "数値のカード（大きな数字・単位・説明）を横に並べ、読み上げの順に出す。数字は見本帳 T08 のカウントアップ（motion: counter）。ratio を書くと、カードの下に割合の帯（0〜1）と目盛りを出す",
+      "properties": {
+        "type": {
+          "const": "number",
+          "description": "数値の強調"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "counter",
+            "stagger",
+            "fade-in",
+            "cut"
+          ],
+          "description": "見本帳の見本の id（既定 counter）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "underline",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 none）"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "unit": {
+                "type": "string"
+              },
+              "caption": {
+                "type": "string"
+              },
+              "ratio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "color": {
+                "enum": [
+                  "text",
+                  "text2",
+                  "text3",
+                  "teal",
+                  "teal_d",
+                  "amber",
+                  "blue",
+                  "green",
+                  "coral",
+                  "ink",
+                  "line"
+                ],
+                "description": "色の名前（engine の色）"
+              }
+            }
+          }
+        },
+        "card_width": {
+          "type": "number",
+          "minimum": 80
+        },
+        "height": {
+          "type": "number",
+          "minimum": 60,
+          "description": "カードの高さ（既定 138）"
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "カードの間（既定 20）"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 160,
+          "description": "数字の大きさ（既定 76）"
+        },
+        "bar_width": {
+          "type": "number",
+          "minimum": 80,
+          "description": "割合の帯の幅（既定は枠の幅）"
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "object",
+      "description": "画像を横に並べる（stack: true で同じ場所に重ね、きっかけで切り替える。見本帳 V02 fade）。注釈（annotations）は元の画像の画素で位置を書き、読み上げに合わせて出す",
+      "properties": {
+        "type": {
+          "const": "image",
+          "description": "画像と注釈"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "clipreveal",
+            "wipe",
+            "fade",
+            "stagger",
+            "cut"
+          ],
+          "description": "見本帳の見本の id（既定 clipreveal）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 roomhighlight）"
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "src"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "src": {
+                "type": "string",
+                "minLength": 1,
+                "description": "静止画（scenes\\assets\\ などから探す）"
+              },
+              "crop": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "minItems": 4,
+                "maxItems": 4,
+                "description": "切り抜き [左, 上, 右, 下]（元の画像の画素）"
+              },
+              "mode": {
+                "enum": [
+                  "auto",
+                  "thick",
+                  "thick2",
+                  "paper",
+                  "ink",
+                  "thick paper",
+                  "thick2 paper",
+                  ""
+                ],
+                "description": "細線の太らせ方（engine.img の mode。既定 auto）"
+              },
+              "paper": {
+                "type": "boolean",
+                "description": "明るい紙の面に載せる（図面）"
+              },
+              "caption": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "stack": {
+          "type": "boolean",
+          "description": "同じ場所に重ねて、きっかけで切り替える"
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "shape"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "shape": {
+                "enum": [
+                  "box",
+                  "circle",
+                  "point",
+                  "label"
+                ]
+              },
+              "rect": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4,
+                "description": "box: [x, y, 幅, 高さ]（元の画像の画素）"
+              },
+              "xy": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "circle・point・label の中心（元の画像の画素）"
+              },
+              "size": {
+                "type": "number",
+                "minimum": 4,
+                "description": "circle の直径（画面の px）"
+              },
+              "text": {
+                "type": "string"
+              },
+              "image": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "何枚目の画像か（既定 1）"
+              },
+              "dx": {
+                "type": "number"
+              },
+              "dy": {
+                "type": "number"
+              }
+            },
+            "description": "注釈: box（枠）・circle（丸）・point（注目点の脈動 28 hotspot）・label（引き出し線の注記 T10 callout）"
+          }
+        },
+        "height": {
+          "type": "number",
+          "minimum": 40
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        }
+      },
+      "required": [
+        "type",
+        "images"
+      ],
+      "additionalProperties": false
+    },
+    "compare": {
+      "type": "object",
+      "description": "左右 2 つの面に、題・本文・要点・結論（verdict）・画像を並べて比べる。既定は左右から滑り込む（見本帳 21 slidein）。両方に画像があれば、見本帳 11 beforeafter（つまみが動いて 2 枚を見比べる）も使える",
+      "properties": {
+        "type": {
+          "const": "compare",
+          "description": "比較の左右"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "slidein",
+            "stagger",
+            "fade-in",
+            "cut",
+            "beforeafter"
+          ],
+          "description": "見本帳の見本の id（既定 slidein）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "underline",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 roomhighlight）"
+        },
+        "left": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            },
+            "until": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                },
+                "sentence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                },
+                "delay": {
+                  "type": "number",
+                  "minimum": -5,
+                  "maximum": 30,
+                  "description": "きっかけから何秒ずらすか（既定 0）"
+                }
+              },
+              "additionalProperties": false,
+              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    }
+                  }
+                }
+              ],
+              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ],
+              "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "marker": {
+              "enum": [
+                "check",
+                "cross",
+                "dot",
+                "arrow"
+              ]
+            },
+            "verdict": {
+              "type": "string"
+            },
+            "verdict_color": {
+              "enum": [
+                "text",
+                "text2",
+                "text3",
+                "teal",
+                "teal_d",
+                "amber",
+                "blue",
+                "green",
+                "coral",
+                "ink",
+                "line"
+              ],
+              "description": "色の名前（engine の色）"
+            },
+            "image": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "src"
+              ],
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "静止画（scenes\\assets\\ などから探す）"
+                },
+                "crop": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "description": "切り抜き [左, 上, 右, 下]（元の画像の画素）"
+                },
+                "mode": {
+                  "enum": [
+                    "auto",
+                    "thick",
+                    "thick2",
+                    "paper",
+                    "ink",
+                    "thick paper",
+                    "thick2 paper",
+                    ""
+                  ],
+                  "description": "細線の太らせ方（engine.img の mode。既定 auto）"
+                },
+                "paper": {
+                  "type": "boolean",
+                  "description": "明るい紙の面に載せる（図面）"
+                }
+              }
+            }
+          }
+        },
+        "right": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            },
+            "until": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                },
+                "sentence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                },
+                "delay": {
+                  "type": "number",
+                  "minimum": -5,
+                  "maximum": 30,
+                  "description": "きっかけから何秒ずらすか（既定 0）"
+                }
+              },
+              "additionalProperties": false,
+              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    }
+                  }
+                }
+              ],
+              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ],
+              "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "marker": {
+              "enum": [
+                "check",
+                "cross",
+                "dot",
+                "arrow"
+              ]
+            },
+            "verdict": {
+              "type": "string"
+            },
+            "verdict_color": {
+              "enum": [
+                "text",
+                "text2",
+                "text3",
+                "teal",
+                "teal_d",
+                "amber",
+                "blue",
+                "green",
+                "coral",
+                "ink",
+                "line"
+              ],
+              "description": "色の名前（engine の色）"
+            },
+            "image": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "src"
+              ],
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "静止画（scenes\\assets\\ などから探す）"
+                },
+                "crop": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "description": "切り抜き [左, 上, 右, 下]（元の画像の画素）"
+                },
+                "mode": {
+                  "enum": [
+                    "auto",
+                    "thick",
+                    "thick2",
+                    "paper",
+                    "ink",
+                    "thick paper",
+                    "thick2 paper",
+                    ""
+                  ],
+                  "description": "細線の太らせ方（engine.img の mode。既定 auto）"
+                },
+                "paper": {
+                  "type": "boolean",
+                  "description": "明るい紙の面に載せる（図面）"
+                }
+              }
+            }
+          }
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "minimum": 60
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        },
+        "title_size": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 80
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ],
+      "additionalProperties": false
+    },
+    "callout": {
+      "type": "object",
+      "description": "要点の一言を囲む（style: box 幅いっぱいの囲み（AMBER の枠、文字は中央）／band 左に色の帯の付いた帯（文字は左。右に添え書き more）／pill 角の丸い札（中央。arrow で矢印）／panel TEAL の枠の面（左上に題。中身はほかの部品を box で重ねる））。texts で同じ場所の文を読み上げの順に入れ替え（見本帳 26 fadethrough）、mark で語句にマーカー（T13）",
+      "properties": {
+        "type": {
+          "const": "callout",
+          "description": "要点の囲み・帯"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "stagger",
+            "fade-in",
+            "slidein",
+            "cut",
+            "fade"
+          ],
+          "description": "見本帳の見本の id（既定 stagger）"
+        },
+        "switch": {
+          "enum": [
+            "fadethrough",
+            "cut"
+          ],
+          "description": "見本帳の見本の id（既定 fadethrough）"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          ],
+          "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+        },
+        "texts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "text": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "文字。文字列なら枠の幅で折り返し、並びなら 1 行ずつ（改行の位置を決める）"
+              }
+            }
+          },
+          "description": "同じ場所で入れ替わる文（読み上げの順）"
+        },
+        "title": {
+          "type": "string",
+          "description": "panel の題"
+        },
+        "style": {
+          "enum": [
+            "box",
+            "band",
+            "pill",
+            "panel"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "color": {
+          "enum": [
+            "text",
+            "text2",
+            "text3",
+            "teal",
+            "teal_d",
+            "amber",
+            "blue",
+            "green",
+            "coral",
+            "ink",
+            "line"
+          ],
+          "description": "色の名前（engine の色）"
+        },
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "arrow": {
+          "type": "boolean",
+          "description": "pill の右に矢印"
+        },
+        "more": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            },
+            "until": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                },
+                "sentence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                },
+                "delay": {
+                  "type": "number",
+                  "minimum": -5,
+                  "maximum": 30,
+                  "description": "きっかけから何秒ずらすか（既定 0）"
+                }
+              },
+              "additionalProperties": false,
+              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    }
+                  }
+                }
+              ],
+              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "description": "band の右の添え書き"
+        },
+        "mark": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            },
+            "until": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                },
+                "sentence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                },
+                "delay": {
+                  "type": "number",
+                  "minimum": -5,
+                  "maximum": 30,
+                  "description": "きっかけから何秒ずらすか（既定 0）"
+                }
+              },
+              "additionalProperties": false,
+              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    }
+                  }
+                }
+              ],
+              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "description": "文の中の語句に引くマーカー（見本帳 T13）"
+        },
+        "focus": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            },
+            "until": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                },
+                "sentence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                },
+                "delay": {
+                  "type": "number",
+                  "minimum": -5,
+                  "maximum": 30,
+                  "description": "きっかけから何秒ずらすか（既定 0）"
+                }
+              },
+              "additionalProperties": false,
+              "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                    },
+                    "sentence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                    },
+                    "delay": {
+                      "type": "number",
+                      "minimum": -5,
+                      "maximum": 30,
+                      "description": "きっかけから何秒ずらすか（既定 0）"
+                    },
+                    "until": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                        },
+                        "sentence": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                        },
+                        "delay": {
+                          "type": "number",
+                          "minimum": -5,
+                          "maximum": 30,
+                          "description": "きっかけから何秒ずらすか（既定 0）"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                    }
+                  }
+                }
+              ],
+              "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+            }
+          },
+          "description": "注目枠を付ける時間（at・sentence から until まで）"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 30
+        },
+        "width": {
+          "type": "number",
+          "minimum": 60,
+          "description": "pill の幅（既定は文字の幅から）"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "flow": {
+      "type": "object",
+      "description": "札（pill）・箱（box）・ただの文字（plain）を横に並べ、矢印でつなぐ。読み上げの順に出し、読んでいる札を示す",
+      "properties": {
+        "type": {
+          "const": "flow",
+          "description": "流れ（札を矢印でつなぐ）"
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+        },
+        "sentence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": -5,
+          "maximum": 30,
+          "description": "きっかけから何秒ずらすか（既定 0）"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4,
+          "description": "動きの速さ（見本帳の「速度」と同じく、長さをこの数で割る。既定 1）"
+        },
+        "until": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "minLength": 1,
+              "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+            },
+            "sentence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+            },
+            "delay": {
+              "type": "number",
+              "minimum": -5,
+              "maximum": 30,
+              "description": "きっかけから何秒ずらすか（既定 0）"
+            }
+          },
+          "description": "この時刻で部品を消す（見本帳 26 fadethrough の out .09s）。同じ場所の中身を入れ替えるとき"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "置く範囲 [x, y, 幅, 高さ]（px、1920×1080 の画面。字幕帯 y 940 より上）。無ければ上から順に積む"
+        },
+        "motion": {
+          "enum": [
+            "stagger",
+            "slidein",
+            "fade-in",
+            "cut"
+          ],
+          "description": "見本帳の見本の id（既定 stagger）"
+        },
+        "emphasis": {
+          "enum": [
+            "roomhighlight",
+            "underline",
+            "none"
+          ],
+          "description": "見本帳の見本の id（既定 roomhighlight）"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+              },
+              "sentence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+              },
+              "delay": {
+                "type": "number",
+                "minimum": -5,
+                "maximum": 30,
+                "description": "きっかけから何秒ずらすか（既定 0）"
+              },
+              "until": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                  },
+                  "sentence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 30,
+                    "description": "きっかけから何秒ずらすか（既定 0）"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+              },
+              "focus": {
+                "anyOf": [
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                      },
+                      "sentence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "minimum": -5,
+                        "maximum": 30,
+                        "description": "きっかけから何秒ずらすか（既定 0）"
+                      },
+                      "until": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "ナレーションの語句。この語句が読まれ始める秒がきっかけ（T.at）"
+                          },
+                          "sentence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "その場面の何番目の文か（1 から）。at と一緒なら、その文の中の語句"
+                          },
+                          "delay": {
+                            "type": "number",
+                            "minimum": -5,
+                            "maximum": 30,
+                            "description": "きっかけから何秒ずらすか（既定 0）"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "ここで終える（部品なら消す、項目なら示すのをやめる）"
+                      }
+                    }
+                  }
+                ],
+                "description": "示す時間（false で示さない。{at, sentence, until} で現れる時刻とは別に決める）"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "style": {
+                "enum": [
+                  "pill",
+                  "box",
+                  "plain"
+                ]
+              },
+              "color": {
+                "enum": [
+                  "text",
+                  "text2",
+                  "text3",
+                  "teal",
+                  "teal_d",
+                  "amber",
+                  "blue",
+                  "green",
+                  "coral",
+                  "ink",
+                  "line"
+                ],
+                "description": "色の名前（engine の色）"
+              }
+            }
+          }
+        },
+        "arrows": {
+          "type": "boolean",
+          "description": "札の間に矢印（既定 true）"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 160,
+          "description": "文字の大きさ（px）"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 30
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "札の間（px、既定 70。矢印が入る）"
+        },
+        "align": {
+          "enum": [
+            "left",
+            "center"
+          ]
+        },
+        "show": {
+          "enum": [
+            "each",
+            "all"
+          ],
+          "description": "each: 項目は自分のきっかけで現れる／all: 部品と一緒に現れる"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "読んでいない項目を沈める量（0 で沈めない）"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "読み終えた項目は沈めない"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -4,6 +4,7 @@
     erkit voice synth <台本 | 入力.json>       シーンごとの WAV と durations.json
     erkit voice kana <台本> [<台本> …]         辞書の語・確認語をエンジンがどう読むか（合成しない）
     erkit voice suggest <台本>                 手元の LLM に読みを聞き、辞書への追記案を表示する（辞書は書かない）
+    erkit voice review <台本> --run <出力>     文ごとの読みの確かめの表（review.tsv）と試聴ページ（listen.html）
 
 終了コード: 0 成功 / 1 エンジンの失敗 / 2 入力・引数の誤り / 3 上書きを止めた / 4 書き込めない
 """
@@ -37,7 +38,7 @@ NARRATION_INPUT_FILENAME = "narration-input.json"
 
 
 def configure(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    sub = parser.add_subparsers(dest="voice_command", metavar="<list|synth|kana|suggest>")
+    sub = parser.add_subparsers(dest="voice_command", metavar="<list|synth|kana|suggest|review>")
     sub.required = True
 
     common = argparse.ArgumentParser(add_help=False)
@@ -65,6 +66,9 @@ def configure(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     s.add_argument("--force", action="store_true", help="内容が変わった既存の WAV を上書きする")
     s.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS,
                    help=f"1 回の合成に渡す最大文字数。段落ごとに、超える分は句点で分割（既定 {DEFAULT_MAX_CHARS}）")
+    s.add_argument("--reuse-from", type=Path, metavar="フォルダ",
+                   help="前の合成の出力先（durations.json のあるフォルダ。読むだけ）。同じ内容の WAV は写し、"
+                        "変わった場面も、変わっていない段落の音声はそこから切り出す")
 
     k = sub.add_parser("kana", parents=[common, dicts], help="辞書の語と確認語の読みを一覧にする（合成しない）")
     k.add_argument("sources", type=Path, nargs="+", metavar="台本|入力.json")
@@ -85,6 +89,20 @@ def configure(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--all-terms", action="store_true", help="本文に出ない辞書の語も聞く")
     g.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS, help=argparse.SUPPRESS)
     add_llm_arguments(g)
+
+    r = sub.add_parser("review", parents=[common, dicts],
+                       help="文ごとの読みの確かめの表（原稿・字幕・合成入力・読み・書き起こし・印）と試聴ページを出す",
+                       description="erkit make（または erkit voice synth）で作った WAV を、文ごとに原稿・字幕・合成入力（辞書の後）・"
+                                   "エンジンの読み・書き起こしと並べる。書き起こしは faster-whisper があるときだけ（この PC の中で動かす）")
+    r.add_argument("storyboard", type=Path, metavar="台本", help=".storyboard.md / .storyboard.json")
+    r.add_argument("--run", required=True, type=Path, metavar="出力フォルダ",
+                   help="erkit make の出力フォルダ（work/narration の WAV を使う）か、erkit voice synth の出力先")
+    r.add_argument("--out", type=Path, help="書き出す先（既定: <出力フォルダ>/checks）")
+    r.add_argument("--speaker", type=int, help="声（style id）。既定は durations.json の値")
+    r.add_argument("--no-engine", action="store_true", help="エンジンに読みを問い合わせない（読みの列を空にする）")
+    r.add_argument("--no-transcribe", action="store_true", help="書き起こしをしない")
+    r.add_argument("--whisper-model", default="small",
+                   help="faster-whisper のモデル（名前かフォルダ。既定 small。この PC の中で読み込む）")
     parser.set_defaults(func=run)
     return parser
 
@@ -236,7 +254,10 @@ def _cmd_synth(args, cfg: kit_config.KitConfig, transport: Transport | None) -> 
             raise OutputError(f"{out_dir} に書き込めません: {e}") from e
     for p in dict_paths:
         print(f"読み辞書: {p}", file=sys.stderr)
-    run_synth(narration, out_dir, engine, dictionary=dictionary, force=args.force, max_chars=args.max_chars)
+    if args.reuse_from is not None and not args.reuse_from.is_dir():
+        raise InputError(f"--reuse-from のフォルダがありません: {args.reuse_from}")
+    run_synth(narration, out_dir, engine, dictionary=dictionary, force=args.force, max_chars=args.max_chars,
+              reuse_from=args.reuse_from)
     print(f"書き出しました: {out_dir / DURATIONS_FILENAME}")
     if doc is not None:
         credit = cfg.credit_for(narration.speaker)
@@ -328,6 +349,47 @@ def _cmd_suggest(args, cfg: kit_config.KitConfig, transport: Transport | None) -
     return 0
 
 
+def _cmd_review(args, cfg: kit_config.KitConfig, transport: Transport | None, transcriber=None) -> int:
+    """書くのは出力フォルダの checks/ だけ。台本・辞書・WAV は読むだけ。"""
+    from . import review as rv
+
+    path: Path = args.storyboard
+    if not path.is_file():
+        raise InputError(f"ファイルがありません: {path}")
+    if not _is_storyboard(path):
+        raise InputError("voice review は台本（.storyboard.md / .json）だけを受け付けます（区分と字幕の別表記を読むため）")
+    doc = _load_storyboard(path)
+    if not args.run.is_dir():
+        raise InputError(f"出力フォルダがありません: {args.run}")
+    engine = None
+    if not args.no_engine:
+        engine = _engine(args.engine or cfg.voice_engine, args.engine_url or cfg.voice_url, args.timeout, transport)
+        _guard_confidential(doc, engine.url)
+    dictionary, dict_paths = _dictionary(args, cfg)
+    for p in dict_paths:
+        print(f"読み辞書: {p}", file=sys.stderr)
+    model = None
+    if args.no_transcribe:
+        transcriber = None
+    elif transcriber is None:
+        transcriber = rv.load_transcriber(args.whisper_model)
+        if transcriber is None:
+            print("注意: faster-whisper が入っていないため、書き起こしの列を空にします"
+                  "（入れるなら pip install faster-whisper。モデルはこの PC の中で読み込む）", file=sys.stderr)
+        else:
+            model = args.whisper_model
+    result = rv.run_review(doc, args.run, dictionary, engine, speaker=args.speaker, out_dir=args.out,
+                           transcriber=transcriber, model=model,
+                           log=lambda message: print(message, file=sys.stderr, flush=True))
+    print(f"文 {result['sentences']}: ずれ {result['mismatch']}、辞書の語 {result['dictionary']}、"
+          f"確認語 {result['check_terms']}（試聴ページに {result['listed']} 文）")
+    print(f"書き出しました: {result['tsv']}")
+    print(f"書き出しました: {result['html']}")
+    if result["transcript"]:
+        print(f"書き出しました: {result['transcript']}")
+    return 0
+
+
 def run(args, *, transport: Transport | None = None) -> int:
     try:
         cfg = kit_config.load_config(args.config)
@@ -341,6 +403,8 @@ def run(args, *, transport: Transport | None = None) -> int:
             return _cmd_kana(args, cfg, transport)
         if args.voice_command == "suggest":
             return _cmd_suggest(args, cfg, transport)
+        if args.voice_command == "review":
+            return _cmd_review(args, cfg, transport)
         return _cmd_synth(args, cfg, transport)
     except NarrationError as error:
         print(f"エラー: {error}", file=sys.stderr)

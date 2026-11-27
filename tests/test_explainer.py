@@ -40,7 +40,7 @@ def test_schema_knows_explainer_and_kit_1_1_0():
     reel = schema["$defs"]["reel"]["properties"]
     assert reel["kind"]["enum"] == ["tool_intro", "work_manual", "explainer"]
     assert "kit-1.1.0" in reel["schema_version"]["enum"]
-    assert sb.SCHEMA_VERSION == "kit-1.1.0" and sb.KINDS == ("tool_intro", "work_manual", "explainer")
+    assert sb.SCHEMA_VERSION == "kit-1.2.0" and sb.KINDS == ("tool_intro", "work_manual", "explainer")
 
 
 def test_explainer_storyboard_passes():
@@ -95,7 +95,7 @@ def test_check_shows_the_kind(capsys):
 def test_templates_pass_check(capsys):
     assert erkit(["check", "--strict", str(EXPLAINER_TEMPLATE)]) == 0
     assert erkit(["check", str(TEMPLATES / "storyboard.md")]) == 0  # シーン数の警告は可
-    assert sb.load_storyboard(TEMPLATES / "storyboard.md")["reel"]["schema_version"] == "kit-1.1.0"
+    assert sb.load_storyboard(TEMPLATES / "storyboard.md")["reel"]["schema_version"] == sb.SCHEMA_VERSION == "kit-1.2.0"
 
 
 def test_explainer_template_follows_the_structure():

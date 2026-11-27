@@ -1,8 +1,8 @@
 """台本（storyboard）の読み込み・Markdown → JSON の変換・検証・区分。
 
-- スキーマ: パッケージのデータ ``data/schema/storyboard.schema.json``（kit-1.1.0）
-- 読める版: 1.0.0 / 1.1.0 / kit-1.0.0 / kit-1.1.0（1.0.0 / 1.1.0 は web / manual / generated の画像だけを使う台本。
-  ``kind: explainer`` は kit-1.1.0 から）
+- スキーマ: パッケージのデータ ``data/schema/storyboard.schema.json``（kit-1.2.0）
+- 読める版: 1.0.0 / 1.1.0 / kit-1.0.0 / kit-1.1.0 / kit-1.2.0（1.0.0 / 1.1.0 は web / manual / generated の画像だけを使う台本。
+  ``kind: explainer`` は kit-1.1.0 から。``reel.render_mode``・字幕の別表記 ``subtitles``・固定尺の枠 ``slot_sec`` は kit-1.2.0 から）
 - 社外秘の区分を読むのは :func:`confidentiality` だけ。ほかのモジュールはここで区分を読む
 """
 from __future__ import annotations
@@ -18,11 +18,20 @@ from typing import Any, Iterator
 import yaml
 from jsonschema import Draft202012Validator
 
-SCHEMA_VERSION = "kit-1.1.0"  # 新しく書く台本の版
-SCHEMA_VERSIONS = ("1.0.0", "1.1.0", "kit-1.0.0", "kit-1.1.0")  # 読める版
+SCHEMA_VERSION = "kit-1.2.0"  # 新しく書く台本の版
+SCHEMA_VERSIONS = ("1.0.0", "1.1.0", "kit-1.0.0", "kit-1.1.0", "kit-1.2.0")  # 読める版
 KINDS = ("tool_intro", "work_manual", "explainer")  # 台本の種別（reel.kind）
 #: 版ごとに足した種別（それより前の版の台本では使えない）
 KIND_SINCE = {"explainer": "kit-1.1.0"}
+#: 版ごとに足した項目（それより前の版の台本では使えない）。(項目名, 表示名) → 版
+FIELD_SINCE = {
+    ("render_mode", "映像の作り方（reel.render_mode）"): "kit-1.2.0",
+    ("subtitles", "字幕の別表記（subtitles）"): "kit-1.2.0",
+    ("slot_sec", "固定尺の枠（slot_sec）"): "kit-1.2.0",
+}
+#: 映像の作り方（reel.render_mode）。省略は slides
+RENDER_MODES = ("slides", "interactive")
+DEFAULT_RENDER_MODE = "slides"
 
 # 社外秘の区分（reel.confidentiality）
 CONFIDENTIAL = "confidential"
@@ -44,6 +53,8 @@ _SECTION = re.compile(r"^##\s+([A-Za-z0-9_-]+)\s*(?:[:：]\s*(.*?))?\s*$")
 _YAML_FENCE = re.compile(r"^```ya?ml\s*$")
 _FENCE_END = re.compile(r"^```\s*$")
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
+# 字幕の別表記（kit-1.2.0）: 段落の直後の <!-- subtitle: … -->（複数行でもよい）
+_SUBTITLE = re.compile(r"<!--\s*subtitle\s*[:：](.*?)-->", re.S)
 # 日本語の行動見出しは動詞（終止形）で終わる: 〜する / 〜る / 〜く / 〜す …
 _VERB_ENDING = re.compile(r"[うくぐすつぬぶむる]$")
 
@@ -95,7 +106,12 @@ def markdown_to_storyboard(text: str) -> dict[str, Any]:
     doc: dict[str, Any] = {"reel": reel}
     scenes: list[dict[str, Any]] = []
     for sec in sections:
-        meta, narration = _parse_section_body(sec)
+        meta, narration, subtitles = _parse_section_body(sec)
+        if subtitles:
+            if "subtitles" in meta:
+                raise ConversionError(f"{sec['line']} 行目: ## {sec['key']} の字幕の別表記が yaml ブロックと"
+                                      " <!-- subtitle: --> の両方にあります（どちらか一方に）")
+            meta = {**meta, "subtitles": subtitles}
         if sec["key"] in RESERVED_SECTIONS:
             if sec["key"] in doc:
                 raise ConversionError(f"{sec['line']} 行目: ## {sec['key']} が重複しています")
@@ -145,7 +161,7 @@ def _split_sections(body: str, first_line: int) -> list[dict[str, Any]]:
     return sections
 
 
-def _parse_section_body(sec: dict[str, Any]) -> tuple[dict[str, Any], str]:
+def _parse_section_body(sec: dict[str, Any]) -> tuple[dict[str, Any], str, list[dict[str, Any]]]:
     lines = sec["lines"]
     meta: dict[str, Any] = {}
     rest: list[str] = []
@@ -170,7 +186,8 @@ def _parse_section_body(sec: dict[str, Any]) -> tuple[dict[str, Any], str]:
         i += 1
     if not found_yaml:
         raise ConversionError(f"{sec['line']} 行目: ## {sec['key']} に ```yaml ブロックがありません")
-    return meta, _narration_from_lines(rest)
+    narration, subtitles = _narration_and_subtitles(rest, sec)
+    return meta, narration, subtitles
 
 
 def _narration_from_lines(lines: list[str]) -> str:
@@ -182,6 +199,31 @@ def _narration_from_lines(lines: list[str]) -> str:
         if parts:
             paragraphs.append(_join_lines(parts))
     return "\n".join(paragraphs)
+
+
+def _narration_and_subtitles(lines: list[str], sec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
+    """ナレーション（:func:`_narration_from_lines` と同じ）と、字幕の別表記 ``[{paragraph, text}]``（kit-1.2.0）。
+
+    ``<!-- subtitle: … -->`` は、その前にある一番近い段落の字幕になる（空行を挟んでもよい）。前に段落が無い・
+    同じ段落に 2 つある・中身が空のときは ConversionError。ほかの HTML コメントは今までどおり捨てる。
+    """
+    text = "\n".join(lines)
+    subtitles: list[dict[str, Any]] = []
+    for m in _SUBTITLE.finditer(text):
+        before = _narration_from_lines(text[: m.start()].split("\n"))
+        count = len([p for p in before.split("\n") if p]) if before else 0
+        body_lines = [ln.strip() for ln in m.group(1).strip().splitlines() if ln.strip()]
+        body = _join_lines(body_lines) if body_lines else ""
+        if count == 0:
+            raise ConversionError(f"{sec['line']} 行目の ## {sec['key']}: <!-- subtitle: --> の前に段落がありません"
+                                  "（字幕の別表記は、直す段落のすぐ後に書く）")
+        if not body:
+            raise ConversionError(f"{sec['line']} 行目の ## {sec['key']}: <!-- subtitle: --> の中身が空です")
+        if subtitles and subtitles[-1]["paragraph"] == count:
+            raise ConversionError(f"{sec['line']} 行目の ## {sec['key']}: 段落 {count} に <!-- subtitle: --> が"
+                                  " 2 つあります")
+        subtitles.append({"paragraph": count, "text": body})
+    return _narration_from_lines(lines), subtitles
 
 
 def _join_lines(parts: list[str]) -> str:
@@ -219,6 +261,20 @@ def confidentiality(doc: Any) -> str:
     return value if value in CONFIDENTIALITY_VALUES else CONFIDENTIAL
 
 
+def render_mode(doc: Any, override: str | None = None) -> str:
+    """映像の作り方（slides / interactive）。コマンドの指定（override）が台本の ``reel.render_mode`` より優先。
+
+    どちらも無い・読めない値は slides（今までの経路）。override に知らない値を渡すと ValueError。
+    """
+    if override is not None:
+        if override not in RENDER_MODES:
+            raise ValueError(f"render_mode は {' / '.join(RENDER_MODES)} のどれかです: {override!r}")
+        return override
+    reel = doc.get("reel") if isinstance(doc, dict) else None
+    value = reel.get("render_mode") if isinstance(reel, dict) else None
+    return value if value in RENDER_MODES else DEFAULT_RENDER_MODE
+
+
 # ---------------------------------------------------------------- validation
 
 def _fmt_path(path) -> str:
@@ -240,6 +296,21 @@ def _iter_images(doc: dict[str, Any]):
     outro = doc.get("outro")
     if isinstance(outro, dict) and isinstance(outro.get("image"), dict):
         yield "outro", outro["image"]
+
+
+def _narration_nodes(doc: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
+    """(場所, intro / シーン / outro の dict)。ナレーションを持つところ。"""
+    if isinstance(doc.get("intro"), dict):
+        yield "intro", doc["intro"]
+    for idx, sc in _iter_scenes(doc):
+        yield f"scenes/{idx} ({sc.get('id')})", sc
+    if isinstance(doc.get("outro"), dict):
+        yield "outro", doc["outro"]
+
+
+def _version_before(version: Any, since: str) -> bool:
+    """version（読める版）が since より前か。読めない版は False（スキーマのエラーに任せる）。"""
+    return version in SCHEMA_VERSIONS and SCHEMA_VERSIONS.index(version) < SCHEMA_VERSIONS.index(since)
 
 
 def _kit_only_features(doc: dict[str, Any]) -> list[str]:
@@ -312,7 +383,36 @@ def validate_storyboard(doc: Any, base_dir: Path | None = None) -> Report:
     if since and version in SCHEMA_VERSIONS and SCHEMA_VERSIONS.index(version) < SCHEMA_VERSIONS.index(since):
         rep.errors.append(f"[version] reel.kind '{kind}' は {since} の種別です。schema_version を {since} にしてください")
 
-    if version in ("1.1.0", "kit-1.0.0", "kit-1.1.0") and "confidentiality" not in reel:
+    # --- 版ごとに足した項目（render_mode・subtitles・slot_sec）。スキーマはシーンから版を見られないため、ここで確かめる
+    skip_render_mode_version = False
+    for (key, label), field_since in FIELD_SINCE.items():
+        if not _version_before(version, field_since):
+            continue
+        places = [("reel", reel)] if key == "render_mode" else list(_narration_nodes(doc))
+        for where, node in places:
+            if key in node:
+                rep.errors.append(f"[version] {where}: {label}は {field_since} 以降の台本だけで使えます。"
+                                  f"schema_version を {field_since} にしてください")
+                skip_render_mode_version = skip_render_mode_version or key == "render_mode"
+
+    # --- 字幕の別表記の段落の番号
+    for where, node in _narration_nodes(doc):
+        subs = node.get("subtitles")
+        narration = node.get("narration")
+        if not (isinstance(subs, list) and isinstance(narration, str)):
+            continue
+        count = len([ln for ln in narration.splitlines() if ln.strip()])
+        seen_p: set[int] = set()
+        for s_item in subs:
+            n = s_item.get("paragraph") if isinstance(s_item, dict) else None
+            if isinstance(n, int) and not isinstance(n, bool):
+                if n > count:
+                    rep.errors.append(f"[subtitles] {where}: 段落 {n} がありません（ナレーションの段落は {count}）")
+                elif n in seen_p:
+                    rep.errors.append(f"[subtitles] {where}: 段落 {n} の字幕の別表記が 2 つあります")
+                seen_p.add(n)
+
+    if version in ("1.1.0", "kit-1.0.0", "kit-1.1.0", "kit-1.2.0") and "confidentiality" not in reel:
         rep.warnings.append("[confidentiality] reel.confidentiality が未記入です。未記入は confidential として扱います"
                             "（公開済みの情報・一般的な知識だけなら general と書く）")
 
@@ -332,6 +432,8 @@ def validate_storyboard(doc: Any, base_dir: Path | None = None) -> Report:
             continue
         if any(path[: len(s)] == s for s in skip):
             continue
+        if skip_render_mode_version and path == ("reel", "schema_version") and err.validator == "const":
+            continue  # render_mode の版は上の [version] で報告済み
         rep.errors.append(f"[schema] {_fmt_path(path)}: {err.message}")
 
     # --- manual 画像の参照切れ

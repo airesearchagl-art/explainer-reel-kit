@@ -71,6 +71,20 @@ if ($LASTEXITCODE -eq 0) { erkit make samples\u-value\u-value.storyboard.md --se
 - 書き出しの間は PowerPoint を触らないでください。開いたままのダイアログ（ライセンスの確認など）があると止まります。一度 PowerPoint を手で起動して閉じてから、もう一度試します
 - 時間切れで止まったら、`--from export` で続きから作り直します
 
+### PowerPoint が無い・入れられない
+
+`--render-mode interactive` で、PowerPoint を使わずに MP4 まで作れます（[07-export.md](07-export.md)）。`erkit doctor` の「コード描画」の行で確かめます。
+
+## コード描画（interactive）
+
+| 症状 | すること |
+|---|---|
+| 「scenes.yaml の誤り（合成の前に止めました）」（終了コード 2） | 表示の `scenes.s02.parts[1]` などの場所を直す。語句がナレーションに無い・2 つの文にある（`sentence` で文を決める）・文字が枠に入らない（文を短く・`box` を広く）が多い。`--dry-run` で確かめ直せる |
+| 場面の指定が効かない（すべて既定の場面になる） | 置き場が台本のフォルダの `scenes\<reel id>\scenes.yaml` か。サンプルを写したときは `scenes\u-value` のフォルダ名を新しい id に変える |
+| 「検証が要確認です」 | MP4 はできている。`checks\検証結果.md` の要確認の行を見て、場面の指定・字幕を直し、`--from export` で描き直す |
+| 「コード描画」の行が `NG`（Pillow・書体） | キットのフォルダで `python -m pip install -e ".[dev]"` をやり直す |
+| 音量の注意（目安から外れた・リミッターで大きく抑えた） | 止まらない。声の `volume` や原稿の強い語を見直す。結果は `run.json` の `stages.mux.loudness` |
+
 ## 出力先を変える
 
 既定の出力先はユーザーのフォルダの `ExplainerReelKit\output`、撮影素材は `ExplainerReelKit\captures` です。容量の大きいドライブに移すときは、環境変数か設定で変えます。

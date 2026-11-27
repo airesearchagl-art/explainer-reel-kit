@@ -351,7 +351,7 @@ def test_explainer_kind(fake_llm, draft_config, dummy_source, good_answer, tmp_p
     out = tmp_path / "out"
     assert draft(draft_config, out, dummy_source, "--kind", "explainer", "--confidentiality", "general") == 0
     doc = sb.load_storyboard(out / "dummy-tool.storyboard.md")
-    assert doc["reel"]["kind"] == "explainer" and doc["reel"]["schema_version"] == "kit-1.1.0"
+    assert doc["reel"]["kind"] == "explainer" and doc["reel"]["schema_version"] == sb.SCHEMA_VERSION
     prompt = posts(fake_llm)[-1]["messages"][-1]["content"]
     assert "一般の解説動画" in prompt and "問い（身近な場面）→ しくみ" in prompt
     assert "構成の決まり" not in build_prompt(DraftRequest("x", [dummy_source]), [])

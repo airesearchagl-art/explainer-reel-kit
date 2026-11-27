@@ -1,0 +1,4 @@
+# interactive の検証（python -m explainer_reel_kit.interactive verify / erkit make --render-mode interactive）の設定の例。
+# 社外秘の台本では、画面に出してはいけない語などをここに書く（そのフォルダは公開のリポジトリに入れない）。
+screen_text:
+  forbidden: [http, www]     # 画面のどこにも出さない語

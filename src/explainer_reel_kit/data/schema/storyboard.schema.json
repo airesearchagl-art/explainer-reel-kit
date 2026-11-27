@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/airesearchagl-art/explainer-reel-kit/blob/main/src/explainer_reel_kit/data/schema/storyboard.schema.json",
   "title": "explainer-reel-kit Storyboard",
-  "description": "台本（ストーリーボード）スキーマ kit-1.1.0。全工程（説明図・撮影・ナレーション・スライド・書き出し）が共有する唯一の約束事。intro / outro は固定テンプレートのスロット、scenes は 1 シーン＝1 スライド＝主画像 1 枚。1.0.0 / 1.1.0 の台本（web / manual / generated の画像だけを使うもの）もそのまま読める（docs/design/storyboard.md）。",
+  "description": "台本（ストーリーボード）スキーマ kit-1.2.0。全工程（説明図・撮影・ナレーション・スライド・書き出し）が共有する唯一の約束事。intro / outro は固定テンプレートのスロット、scenes は 1 シーン＝1 スライド＝主画像 1 枚。1.0.0 / 1.1.0 の台本（web / manual / generated の画像だけを使うもの）もそのまま読める（docs/design/storyboard.md）。",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -47,22 +47,41 @@
         "kind",
         "output_name"
       ],
-      "if": {
-        "required": [
-          "confidentiality"
-        ]
-      },
-      "then": {
-        "properties": {
-          "schema_version": {
-            "enum": [
-              "1.1.0",
-              "kit-1.0.0",
-              "kit-1.1.0"
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "confidentiality"
             ]
+          },
+          "then": {
+            "properties": {
+              "schema_version": {
+                "enum": [
+                  "1.1.0",
+                  "kit-1.0.0",
+                  "kit-1.1.0",
+                  "kit-1.2.0"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "render_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "schema_version": {
+                "const": "kit-1.2.0"
+              }
+            }
           }
         }
-      },
+      ],
       "properties": {
         "id": {
           "$ref": "#/$defs/slug",
@@ -79,9 +98,10 @@
             "1.0.0",
             "1.1.0",
             "kit-1.0.0",
-            "kit-1.1.0"
+            "kit-1.1.0",
+            "kit-1.2.0"
           ],
-          "description": "新しく書く台本は kit-1.1.0。1.0.0 / 1.1.0 / kit-1.0.0 の台本もそのまま読める（1.0.0 には confidentiality を書けない。kind: explainer は kit-1.1.0 から）"
+          "description": "新しく書く台本は kit-1.2.0。1.0.0 / 1.1.0 / kit-1.0.0 / kit-1.1.0 の台本もそのまま読める（1.0.0 には confidentiality を書けない。kind: explainer は kit-1.1.0 から。render_mode・字幕の別表記 subtitles・固定尺の枠 slot_sec は kit-1.2.0 から）"
         },
         "audience": {
           "enum": [
@@ -105,6 +125,14 @@
             "general"
           ],
           "description": "社外秘の区分。confidential: 社外秘（所属先の外に出せない情報）を含む・分からない／general: 公開済みの情報・一般的な知識だけ。書いていなければ confidential として扱う（安全側）"
+        },
+        "render_mode": {
+          "enum": [
+            "slides",
+            "interactive"
+          ],
+          "default": "slides",
+          "description": "映像の作り方（kit-1.2.0 から）。slides: PowerPoint で書き出す（今までの経路）／interactive: 場面の指定（scenes.yaml など）で 1 フレームずつ描き、字幕を付ける（PowerPoint を使わない）。省略は slides。erkit make の --render-mode が優先"
         },
         "aspect": {
           "enum": [
@@ -192,6 +220,12 @@
         },
         "duration_sec": {
           "$ref": "#/$defs/duration"
+        },
+        "subtitles": {
+          "$ref": "#/$defs/subtitles"
+        },
+        "slot_sec": {
+          "$ref": "#/$defs/slot"
         }
       }
     },
@@ -231,8 +265,45 @@
         },
         "duration_sec": {
           "$ref": "#/$defs/duration"
+        },
+        "subtitles": {
+          "$ref": "#/$defs/subtitles"
+        },
+        "slot_sec": {
+          "$ref": "#/$defs/slot"
         }
       }
+    },
+    "subtitles": {
+      "type": "array",
+      "minItems": 1,
+      "description": "字幕だけの表記（kit-1.2.0 から）。段落（ナレーションの改行で区切ったまとまり）ごとに、字幕に出す文を原稿と別に書く。合成には使わない（読み上げるのは原稿。字幕だけ直しても WAV を使い回す）。Markdown の台本では段落の直後の <!-- subtitle: … --> がこれになる。kit-1.2.0 の台本だけ（検証が確かめる）",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paragraph",
+          "text"
+        ],
+        "properties": {
+          "paragraph": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "何番目の段落か（1 から）"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "字幕に出す文。文の数が原稿の段落と同じなら文ごとに、違えば段落の時間を文字の重みで分けて出す"
+          }
+        }
+      }
+    },
+    "slot": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 600,
+      "description": "固定尺の枠（kit-1.2.0 から）。この場面の表示秒（切替効果の時間は含まない）を決める。ナレーションが短ければ後ろが無音、長ければ文の前後・文の間の無音を詰め、それでも超えれば止まって超過の秒数と選択肢を出す（音声は伸縮しない）。kit-1.2.0 の台本だけ"
     },
     "duration": {
       "type": "number",
@@ -430,6 +501,12 @@
         },
         "duration_sec": {
           "$ref": "#/$defs/duration"
+        },
+        "subtitles": {
+          "$ref": "#/$defs/subtitles"
+        },
+        "slot_sec": {
+          "$ref": "#/$defs/slot"
         },
         "recipe": {
           "$ref": "#/$defs/recipe"

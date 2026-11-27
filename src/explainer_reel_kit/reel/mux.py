@@ -4,6 +4,10 @@
 - 各 WAV は「スライド開始 ＋（切替効果の長さ）＋ pre_pause_sec」に置く（余白は WAV に含まれない）
 - 音声トラックは ffmpeg の filter_complex で「無音 → WAV → 無音 → …」を連結して作り、映像はコピー（再エンコードしない）
 - 映像と（計算上の）スライド合計時間、最終 MP4 の映像と音声の長さの差が 0.2 秒を超えたら警告
+- 音量そろえ: 連結したナレーションのトラック全体を、1 回目の測定値から決めた増幅量で一律に上げ下げし（volume）、
+  オーバーサンプリングした true peak リミッター（alimiter、-2.0 dBTP）で抑えて、-16 LUFS・true peak -1.5 dBTP 以下に
+  そろえてから MP4 に入れる（loudnorm の dynamic モードは使わない）。段落ごとの WAV と durations.json は変えない。
+  無音だけのトラックはそろえずに通す。目安から外れたら警告（止めない）。slides・interactive の両方で同じ
 """
 from __future__ import annotations
 
@@ -73,6 +77,7 @@ class MuxResult:
     morph_count: int = 0
     morph_extra_sec: float = 0.0  # Morph 1 か所あたりの追加時間（補正に使った値。補正しないときは 0）
     drift_corrected: bool = False
+    loudness: dict[str, Any] | None = None  # 音量そろえの記録。そろえなかったときは None
 
 
 # ---------------------------------------------------------------- timings
@@ -254,16 +259,13 @@ def plan_segments(timings: Sequence[SlideTiming], durations: dict[str, Any], wav
 _AFMT = f"aformat=sample_fmts=fltp:sample_rates={SAMPLE_RATE}:channel_layouts=mono"
 
 
-def build_ffmpeg_command(ffmpeg: str, video: Path, segments: Sequence[Segment], total_sec: float, out: Path,
-                         overwrite: bool = False) -> tuple[list[str], list[str]]:
-    """合成コマンドを組み立てる。戻り値 (コマンド, 警告)。
+def _audio_graph(segments: Sequence[Segment], total_sec: float, first_input: int) -> tuple[list[str], list[str]]:
+    """ナレーションのトラックの filter_complex（[aout] まで）。戻り値 (フィルタの並び, 警告)。
 
     音声 = [無音 gap0][wav0][無音 gap1][wav1]…[無音 tail]（concat）。重なる場合は後ろへずらし警告。
+    first_input は最初の WAV の入力番号（映像が 0 番なら 1）。
     """
     warnings: list[str] = []
-    cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y" if overwrite else "-n", "-i", str(video)]
-    for s in segments:
-        cmd += ["-i", str(s.wav)]
     parts: list[str] = []
     labels: list[str] = []
     cursor = 0.0
@@ -282,7 +284,7 @@ def build_ffmpeg_command(ffmpeg: str, video: Path, segments: Sequence[Segment], 
             warnings.append(f"{s.id}: 前のナレーションと {cursor - s.start_sec:.2f}s 重なるため後ろへずらしました")
         gap(s.start_sec - cursor)
         lab = f"w{k}"
-        parts.append(f"[{i + 1}:a]aresample={SAMPLE_RATE},{_AFMT}[{lab}]")
+        parts.append(f"[{i + first_input}:a]aresample={SAMPLE_RATE},{_AFMT}[{lab}]")
         labels.append(lab)
         cursor = max(cursor, s.start_sec) + s.length_sec
     if cursor > total_sec + 0.0005:
@@ -291,6 +293,19 @@ def build_ffmpeg_command(ffmpeg: str, video: Path, segments: Sequence[Segment], 
     if not labels:
         gap(total_sec)
     parts.append("".join(f"[{lab}]" for lab in labels) + f"concat=n={len(labels)}:v=0:a=1[aout]")
+    return parts, warnings
+
+
+def build_ffmpeg_command(ffmpeg: str, video: Path, segments: Sequence[Segment], total_sec: float, out: Path,
+                         overwrite: bool = False) -> tuple[list[str], list[str]]:
+    """合成コマンドを組み立てる（音量そろえなし）。戻り値 (コマンド, 警告)。
+
+    音声 = [無音 gap0][wav0][無音 gap1][wav1]…[無音 tail]（concat）。重なる場合は後ろへずらし警告。
+    """
+    cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y" if overwrite else "-n", "-i", str(video)]
+    for s in segments:
+        cmd += ["-i", str(s.wav)]
+    parts, warnings = _audio_graph(segments, total_sec, 1)
     cmd += [
         "-filter_complex", ";".join(parts),
         "-map", "0:v:0", "-map", "[aout]",
@@ -303,6 +318,148 @@ def build_ffmpeg_command(ffmpeg: str, video: Path, segments: Sequence[Segment], 
 
 def _run(cmd: Sequence[str]) -> "subprocess.CompletedProcess[str]":
     return subprocess.run(list(cmd), capture_output=True, text=True, encoding="utf-8", errors="replace")
+
+
+def build_track_command(ffmpeg: str, segments: Sequence[Segment], total_sec: float,
+                        track: Path) -> tuple[list[str], list[str]]:
+    """ナレーションのトラックだけを WAV（PCM、44.1 kHz モノラル）に書き出すコマンド。音量そろえの前段。"""
+    cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y"]
+    for s in segments:
+        cmd += ["-i", str(s.wav)]
+    parts, warnings = _audio_graph(segments, total_sec, 0)
+    cmd += ["-filter_complex", ";".join(parts), "-map", "[aout]", "-c:a", "pcm_s16le", str(track)]
+    return cmd, warnings
+
+
+# ---------------------------------------------------------------- 音量そろえ
+
+TARGET_LUFS = -16.0
+TARGET_TP = -1.5
+TARGET_LRA = 11.0
+LUFS_TOLERANCE = 1.0      # 2 パス後の目安（±1 LU）
+SILENT_BELOW_LUFS = -70.0  # これより小さい（または -inf）トラックは無音とみなし、そろえずに通す
+# true peak の目標。AAC にすると true peak が少し上がるため、-1.5 dBTP より 0.5 dB 低く抑える
+TP_HEADROOM = 0.5
+LIMIT_DBTP = TARGET_TP - TP_HEADROOM   # リミッターで抑える値（-2.0 dBTP）
+OVERSAMPLE = 4                         # リミッターを 44.1 kHz の 4 倍（176.4 kHz）で動かし、サンプルの間のピークも抑える
+LIMITER_WARN_DB = 6.0                  # リミッターで抑える量の目安がこれを超えたら警告（強い音が潰れるおそれ）
+GAIN_PASSES = 3                        # 増幅をかけ直す回数の上限（リミッターで小さくなった分を足す）
+GAIN_RETRY_LU = 0.5                    # そろえた結果が目標からこれ以上外れていれば、差を足してかけ直す
+
+
+def _loudnorm_json(stderr: str) -> dict[str, str] | None:
+    """loudnorm（print_format=json）の出力から、最後の { … } を読む。"""
+    m = re.findall(r"\{[^{}]*\}", stderr or "")
+    if not m:
+        return None
+    try:
+        data = json.loads(m[-1])
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _num(value: Any) -> float | None:
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    return None if v != v or v in (float("inf"), float("-inf")) else v
+
+
+def measure_loudness(ffmpeg: str, path: Path, runner: Runner = _run) -> dict[str, Any] | None:
+    """loudnorm の測定（1 パス目と同じ）。戻り値 {i, tp, lra, thresh, offset, raw}。測れなければ None。"""
+    cmd = [ffmpeg, "-hide_banner", "-nostats", "-i", str(path),
+           "-af", f"loudnorm=I={TARGET_LUFS}:TP={TARGET_TP - TP_HEADROOM}:LRA={TARGET_LRA}:print_format=json",
+           "-f", "null", "-"]
+    res = runner(cmd)
+    if res.returncode != 0:
+        return None
+    data = _loudnorm_json(res.stderr)
+    if not data:
+        return None
+    return {"i": _num(data.get("input_i")), "tp": _num(data.get("input_tp")), "lra": _num(data.get("input_lra")),
+            "thresh": _num(data.get("input_thresh")), "offset": _num(data.get("target_offset")), "raw": data}
+
+
+def gain_filter(gain_db: float) -> str:
+    """一律の増幅 → オーバーサンプリングした true peak リミッター（-2.0 dBTP）→ 44.1 kHz に戻す。
+
+    alimiter は 4 倍（176.4 kHz）で動かし、サンプルの間のピーク（true peak）も抑える。level=0 で自動の音量調整を切る
+    （増幅は volume だけが決める。リミッターはピークだけを抑える）。
+    """
+    limit = 10 ** (LIMIT_DBTP / 20)
+    return (f"volume={gain_db:.2f}dB,aresample={SAMPLE_RATE * OVERSAMPLE},"
+            f"alimiter=limit={limit:.4f}:attack=1:release=50:level=0,aresample={SAMPLE_RATE}")
+
+
+def normalize_track(ffmpeg: str, track: Path, out: Path, runner: Runner = _run) -> tuple[dict[str, Any], list[str]]:
+    """トラックを -16 LUFS・true peak -1.5 dBTP 以下にそろえる（決まった処理）。
+
+    1. 1 パス目（loudnorm の測定だけ）で統合ラウドネス・true peak を測る
+    2. 増幅量 = 目標 -16 LUFS − 測定値 を決め、volume で全体を同じだけ上げ下げする
+    3. オーバーサンプリングした true peak リミッターで -2.0 dBTP に抑える（AivisSpeech の WAV は true peak が約 0 dBTP の
+       ため、上げる向きでは必ずピークが目標を超える。loudnorm の dynamic モードは使わない）
+    4. そろえた結果を測り、リミッターで小さくなって目標から 0.5 LU 以上外れていれば、差を増幅量に足して元のトラックから
+       かけ直す（最大 3 回。どの回も一律の増幅＋同じリミッターなので、結果は入力で決まる）
+    戻り値 (記録, 警告)。無音（測れない・-70 LUFS 未満）なら そろえずに track をそのまま out に写す（記録の skipped に理由）。
+    """
+    warnings: list[str] = []
+    record: dict[str, Any] = {"target_lufs": TARGET_LUFS, "target_tp": TARGET_TP,
+                              "method": "linear gain + true-peak limiter"}
+    before = measure_loudness(ffmpeg, track, runner)
+    if before is None or before["i"] is None or before["i"] < SILENT_BELOW_LUFS:
+        shutil.copyfile(track, out)
+        record["skipped"] = "無音のトラック（ナレーションが空）のため、そろえずに通しました"
+        record["before"] = {"lufs": before["i"] if before else None, "true_peak": before["tp"] if before else None}
+        return record, warnings
+    record["before"] = {"lufs": before["i"], "true_peak": before["tp"], "lra": before["lra"]}
+    # 増幅量 = 目標 − 測定値。リミッターがピークを抑えると全体が少し小さくなるので、そろえた結果を測り直し、
+    # 目標から 0.5 LU 以上外れていれば、その差を増幅量に足してもう一度かける（元のトラックから。最大 GAIN_PASSES 回）
+    gain = TARGET_LUFS - before["i"]
+    passes: list[dict[str, Any]] = []
+    for _ in range(GAIN_PASSES):
+        cmd = [ffmpeg, "-hide_banner", "-nostats", "-y", "-i", str(track), "-af", gain_filter(gain),
+               "-ar", str(SAMPLE_RATE), "-ac", "1", "-c:a", "pcm_s16le", str(out)]
+        res = runner(cmd)
+        if res.returncode != 0:
+            raise MuxError(f"音量そろえ（volume ＋ alimiter）に失敗しました（終了コード {res.returncode}）: "
+                           f"{(res.stderr or '').strip()[-800:]}")
+        got = measure_loudness(ffmpeg, out, runner)
+        passes.append({"gain_db": round(gain, 2), "lufs": None if got is None else got["i"]})
+        if (got is None or got["i"] is None or abs(got["i"] - TARGET_LUFS) < GAIN_RETRY_LU
+                or len(passes) == GAIN_PASSES):
+            break   # gain は最後にかけた増幅量のまま
+        gain += TARGET_LUFS - got["i"]
+    peak_after_gain = (before["tp"] + gain) if before["tp"] is not None else None
+    reduction = max(0.0, peak_after_gain - LIMIT_DBTP) if peak_after_gain is not None else None
+    record["gain_db"] = round(gain, 2)
+    record["passes"] = passes
+    record["limiter"] = {
+        "limit_dbtp": LIMIT_DBTP, "oversample": OVERSAMPLE,
+        # 増幅だけをかけたときの true peak（測定値＋増幅量）と、リミッターで抑える量の目安（最大のピークで）
+        "peak_after_gain_dbtp": None if peak_after_gain is None else round(peak_after_gain, 2),
+        "max_reduction_db_est": None if reduction is None else round(reduction, 2),
+    }
+    if reduction is not None and reduction > LIMITER_WARN_DB:
+        warnings.append(f"音量そろえで、ピークをリミッターで最大およそ {reduction:.1f} dB 抑えました"
+                        f"（増幅 {gain:+.1f} dB に対して、元の音の true peak が {before['tp']:.1f} dBTP と高いため）。"
+                        "強い音が潰れていないか聞いて確かめてください")
+    return record, warnings
+
+
+def check_loudness(record: dict[str, Any], after: dict[str, Any] | None) -> list[str]:
+    """出来上がりの測定値を記録に入れ、目安（-16±1 LUFS・-1.5 dBTP 以下）から外れたら警告を返す。"""
+    if after is None:
+        record["after"] = None
+        return ["音量そろえの後の音量を測れませんでした（ffmpeg の loudnorm）"]
+    record["after"] = {"lufs": after["i"], "true_peak": after["tp"]}
+    out: list[str] = []
+    if after["i"] is not None and abs(after["i"] - TARGET_LUFS) > LUFS_TOLERANCE:
+        out.append(f"ナレーションの音量が {after['i']:.1f} LUFS で、目安（{TARGET_LUFS:.0f}±{LUFS_TOLERANCE:.0f}）から外れています")
+    if after["tp"] is not None and after["tp"] > TARGET_TP:
+        out.append(f"ナレーションの true peak が {after['tp']:.1f} dBTP で、目安（{TARGET_TP} 以下）を超えています")
+    return out
 
 
 def probe_duration(ffprobe: str, path: Path, stream: str | None = None, runner: Runner = _run) -> float | None:
@@ -324,7 +481,12 @@ def probe_duration(ffprobe: str, path: Path, stream: str | None = None, runner: 
 
 def mux(video: Path, pptx: Path, ids: Sequence[str], durations_path: Path, out: Path, *,
         wav_dir: Path | None = None, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe", overwrite: bool = False,
-        transition_before_timer: bool = True, runner: Runner = _run) -> MuxResult:
+        transition_before_timer: bool = True, runner: Runner = _run, loudness: bool = True,
+        morph_correction: bool = True) -> MuxResult:
+    """loudness=True（既定）なら、ナレーションのトラックを -16 LUFS・true peak -1.5 dBTP 以下にそろえる。
+
+    morph_correction=False なら、無音 MP4 とスライド秒数の合計の差を Morph の切替の追加時間とみなさない
+    （コード描画の無音 MP4 は Morph の時間を足さず、フレームの切り上げで最大 1 フレーム長いだけなので）。"""
     video, pptx, out = Path(video), Path(pptx), Path(out)
     if not video.is_file():
         raise MuxError(f"無音 MP4 がありません: {video}")
@@ -344,7 +506,7 @@ def mux(video: Path, pptx: Path, ids: Sequence[str], durations_path: Path, out: 
     total = video_sec if video_sec else expected
     warnings: list[str] = []
     info: list[str] = []
-    extra, corrected, why_not = morph_drift(video_sec, expected, morphs)
+    extra, corrected, why_not = morph_drift(video_sec, expected, morphs) if morph_correction else (0.0, False, None)
     if video_sec is None:
         warnings.append("ffprobe で無音 MP4 の長さを取得できないため、スライド秒数の合計を映像の長さとみなしました")
     elif corrected:
@@ -363,14 +525,41 @@ def mux(video: Path, pptx: Path, ids: Sequence[str], durations_path: Path, out: 
     warnings = w + warnings
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    cmd, w = build_ffmpeg_command(ffmpeg, video, segments, total, out, overwrite)
-    warnings += w
-    res = runner(cmd)
-    if res.returncode != 0:
-        raise MuxError(f"ffmpeg が失敗しました（終了コード {res.returncode}）: {(res.stderr or '').strip()[-800:]}")
+    loud: dict[str, Any] | None = None
+    if not loudness:
+        cmd, w = build_ffmpeg_command(ffmpeg, video, segments, total, out, overwrite)
+        warnings += w
+        res = runner(cmd)
+        if res.returncode != 0:
+            raise MuxError(f"ffmpeg が失敗しました（終了コード {res.returncode}）: {(res.stderr or '').strip()[-800:]}")
+    else:
+        import tempfile
+
+        # 段落ごとの WAV は変えない。連結したトラックを一時フォルダに書き、そろえてから MP4 に入れる
+        with tempfile.TemporaryDirectory(prefix="er-mux-", dir=out.parent) as temp:
+            track, normalized = Path(temp) / "narration.wav", Path(temp) / "narration.loudnorm.wav"
+            tcmd, w = build_track_command(ffmpeg, segments, total, track)
+            warnings += w
+            res = runner(tcmd)
+            if res.returncode != 0:
+                raise MuxError(f"ffmpeg（ナレーションのトラック）が失敗しました（終了コード {res.returncode}）: "
+                               f"{(res.stderr or '').strip()[-800:]}")
+            loud, w = normalize_track(ffmpeg, track, normalized, runner)
+            warnings += w
+            cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y" if overwrite else "-n",
+                   "-i", str(video), "-i", str(normalized),
+                   "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                   "-movflags", "+faststart", str(out)]
+            res = runner(cmd)
+            if res.returncode != 0:
+                raise MuxError(f"ffmpeg が失敗しました（終了コード {res.returncode}）: {(res.stderr or '').strip()[-800:]}")
+        if "skipped" not in loud:
+            warnings += check_loudness(loud, measure_loudness(ffmpeg, out, runner))   # 出来上がりの MP4 で測る
+        else:
+            info.append(loud["skipped"])
 
     result = MuxResult(out, expected, video_sec, command=cmd, warnings=warnings, info=info, morph_count=morphs,
-                       morph_extra_sec=round(extra, 4), drift_corrected=corrected)
+                       morph_extra_sec=round(extra, 4), drift_corrected=corrected, loudness=loud)
     result.output_video_sec = probe_duration(ffprobe, out, "v:0", runner)
     result.output_audio_sec = probe_duration(ffprobe, out, "a:0", runner)
     if result.output_video_sec is not None and result.output_audio_sec is not None:
