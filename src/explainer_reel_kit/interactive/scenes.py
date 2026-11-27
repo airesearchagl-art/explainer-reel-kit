@@ -177,21 +177,21 @@ def load_scenes(scenes_dir: Path | None, scene_ids: list[str], *, extra_asset_di
 # ---------------------------------------------------------------- 既定の場面
 #
 # 台本のシーン（中間データの場面に heading がある）は slides（deck/builder.py の _scene_slide）と同じ配置で描く。
-# slides の 13.333×7.5 インチを、字幕帯（y 940 から）の上の範囲に縮めて当てはめる:
-#   見出し（上）→ 画像（その下）→ 画面テキスト（左下）と来歴ラベル（画像の右下の外）。字幕と重ねない。
+# slides の 13.333×7.5 インチを 1920×1080 に当てる（1 インチ ＝ 144 px）。本家の interactive と同じ値:
+#   見出し（上）→ 画像（その下）→ 来歴ラベル（画像の右下の外）。字幕帯（y 940 から）と重ねない。
+#   画面テキスト（on_screen_text）は interactive では出さない（slides の位置だと字幕の帯と重なるため）。
+#   出る時刻は slides のアニメーションのまま計算する（画面テキストの段も時刻の計算には数える）。
 
-HEAD_BOX = (72, 24, 1776, 88)            # 見出し（slides の HEAD_BOX）
-IMAGE_BOX = (72, 124, 1776, 760)         # 画像（slides の IMAGE_BOX）。画面テキストが無いとき
-IMAGE_BOX_TEXT = (72, 124, 1776, 680)    # 画面テキストがあるとき
-TEXT_BOX = (72, 816, 1440, 112)          # 画面テキスト（slides の TEXT_BOX。左下）
-LABEL_RIGHT, LABEL_BOTTOM = 1848, 928    # 来歴ラベル（slides の LABEL_BOX。画像枠の右端にそろえ、画像の下の外）
-LABEL_SIZE = 24
-HEAD_SIZES = (52, 48, 44, 40, 36, 32)
-TEXT_SIZES = (30, 28, 26, 24, 22, 20)
-BOX_LINE = 8                             # 赤枠の線（slides の 4.5pt は 1920 幅で約 9px）
+HEAD_X, HEAD_CENTER_Y = 72, 104          # 見出し: x 72、縦の中心 104（slides の HEAD_BOX）
+HEAD_BOX = (HEAD_X, HEAD_CENTER_Y - 44, 1776, 88)
+IMAGE_BOX = (72, 180, 1776, 724)         # 画像: 縦横比を保って収める（slides の IMAGE_BOX。区分の表示の行を残す）
+LABEL_RIGHT, LABEL_TOP = 1848, 912       # 区分の表示: 右端 1848・上端 912、右寄せ（slides の LABEL_BOX）
+LABEL_SIZE = 20
+HEAD_SIZES = (56, 52, 48, 44, 40, 36)    # 56px・太字。入らなければ 36px まで縮める
+BOX_LINE = 9                             # 赤枠の線（slides の 4.5pt ＝ 9px。線は縁の中心）
 ARROW_LEN, ARROW_H = 130, 65             # 矢印（slides の 0.9 × 0.45 インチ）
 FADE = 0.4
-HEAD_FADE, IMAGE_FADE, TEXT_FADE = 0.5, 0.7, 0.5   # slides の deck.recipes の FADE・IMAGE_FADE と同じ
+HEAD_FADE, IMAGE_FADE = 0.5, 0.7   # slides の deck.recipes の FADE・IMAGE_FADE と同じ
 BOX_FADE, BOX_EXIT, BLINK, ARROW_FADE = 0.4, 0.3, 0.6, 0.3
 DEFAULT_LABEL = "説明用再構成図"           # 来歴の分からない画像（annotate.DEFAULT_LABEL と同じ）
 
@@ -225,22 +225,13 @@ def _heading(f: Frame, text: str, a: float, box=HEAD_BOX) -> None:
     if size is not None:
         f.text(text, x, y + (h - size) / 2, size=size, w="B", a=a, maxw=w)
         return
-    f.text_box(text, x, y, w, h, size=HEAD_SIZES[-1], weight="B", a=a, valign="c")
+    # 36px でも 1 行に入らなければ 2 行（縦の中心は同じ。画像の枠 y 180 より上に収める）
+    f.text_box(text, x, y - 12, w, h + 24, size=HEAD_SIZES[-1], weight="B", a=a, valign="c")
 
 
-def draw_label(f: Frame, label: str, right: float = LABEL_RIGHT, bottom: float = LABEL_BOTTOM) -> None:
-    """来歴ラベル（slides の Provenance Label: 小さく、控えめな色、右寄せ・下寄せ）。消す設定は無い。"""
-    f.text(label, right, bottom - LABEL_SIZE, size=LABEL_SIZE, color=TEXT3, anchor="r")
-
-
-def _text_lines(lines: list[str], box=TEXT_BOX) -> tuple[int, list[list[str]]]:
-    """画面テキストの大きさと、行ごとの折り返し。枠に入らなければ LayoutError。"""
-    x, y, w, h = box
-    for size in TEXT_SIZES:
-        rows = [wrap_text(ln, "R", size, w) for ln in lines]
-        if int(size * 1.3) * (sum(len(r) for r in rows) - 1) + size <= h:
-            return size, rows
-    raise LayoutError(f"画面テキストが枠に入りません（{TEXT_SIZES[-1]}px でも {box[3]}px を超える）: {' / '.join(lines)}")
+def draw_label(f: Frame, label: str, right: float = LABEL_RIGHT, top: float = LABEL_TOP) -> None:
+    """区分の表示（slides の Provenance Label: 20px、控えめな色、右寄せ）。消す設定は無い。"""
+    f.text(label, right, top, size=LABEL_SIZE, color=TEXT3, anchor="r")
 
 
 def _view_at(t: float, sc: dict) -> dict | None:
@@ -283,10 +274,10 @@ def _box_screen(rect, v, b) -> tuple[float, float, float, float]:
 
 
 def _blink(t: float, t0: float) -> float:
-    """slides の点滅（1 回、0.6 秒）の代わり: いったん薄くして戻す。"""
-    if t <= t0 or t >= t0 + BLINK:
-        return 1.0
-    return 1.0 - 0.8 * math.sin(math.pi * (t - t0) / BLINK)
+    """slides の点滅（1 回、0.6 秒）: 前半は隠れ、後半に戻る。"""
+    if t0 <= t < t0 + BLINK / 2:
+        return 0.0
+    return 1.0
 
 
 def _annotations(f: Frame, t: float, sc: dict, rect, v: dict, image: str | None, box) -> None:
@@ -363,8 +354,7 @@ def _slide_scene(f: Frame, t: float, sc: dict) -> None:
     start = sc["start"]
     ap = sc.get("appear") or {}
     _heading(f, sc.get("heading") or sc.get("title") or "", ramp(t, ap.get("heading", start), HEAD_FADE))
-    lines = list(sc.get("text") or [])
-    box = IMAGE_BOX_TEXT if lines else IMAGE_BOX
+    box = IMAGE_BOX   # 画面テキストは出さない（字幕の帯と重なるため）。画像の枠はいつも同じ
     ai = ramp(t, ap.get("image", start), IMAGE_FADE)
     card, image, ph = sc.get("card"), sc.get("image"), sc.get("placeholder")
     if card:
@@ -377,15 +367,6 @@ def _slide_scene(f: Frame, t: float, sc: dict) -> None:
     elif ph is not None:
         rect = _placeholder(f, ph, box, ai)
         _annotations(f, t, sc, rect, {"x": 0.0, "y": 0.0, "w": 1.0, "h": 1.0}, None, box)
-    if lines:
-        size, rows = _text_lines(lines)
-        times = list(ap.get("text") or [])
-        yy = TEXT_BOX[1]
-        for i, r in enumerate(rows):
-            a = ramp(t, times[i] if i < len(times) else ap.get("image", start), TEXT_FADE)
-            for ln in r:
-                f.text(ln, TEXT_BOX[0], yy, size=size, a=a, maxw=TEXT_BOX[2])
-                yy += int(size * 1.3)
     if not card and (image or ph is not None):
         draw_label(f, sc.get("label") or DEFAULT_LABEL)
 
@@ -405,18 +386,18 @@ def _body_rows(body: list[str], maxw: float, maxh: float, sizes=(40, 32)):
 def _summary_with_image(f: Frame, t: float, sc: dict) -> None:
     """outro に画像があるとき（slides の outro: 左に見出しと文、右に画像）。画像には来歴ラベルを添える。"""
     a = ramp(t, sc["start"], FADE)
-    _heading(f, sc.get("title") or "", a, box=(72, 24, 820, 88))
-    rows, _ = _body_rows(sc.get("body") or [], 820, 760)
+    _heading(f, sc.get("title") or "", a, box=(HEAD_X, HEAD_CENTER_Y - 44, 820, 88))
+    rows, _ = _body_rows(sc.get("body") or [], 820, IMAGE_BOX[3])
     if rows is None:
         raise LayoutError(f"{sc['id']}: 既定の場面の文が左の欄に入りません（文を短くするか、場面コードを書く）")
-    y, prev = 140, 0
+    y, prev = IMAGE_BOX[1], 0
     for line, size, color, i in rows:
         if i != prev:
             y += 18
             prev = i
         f.text(line, 72, y, size=size, color=color, a=a * ramp(t, sc["start"] + 0.2 * i, FADE), maxw=820)
         y += int(size * 1.5)
-    box = (936, 124, 912, 760)
+    box = (936, IMAGE_BOX[1], 912, IMAGE_BOX[3])
     if sc.get("image"):
         rect, crop, _ = _placed(sc["image"], None, box)
         f.img(sc["image"], rect[0], rect[1], rect[2], rect[3], mode="auto", a=ramp(t, sc["start"] + 0.3, IMAGE_FADE))

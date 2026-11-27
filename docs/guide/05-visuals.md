@@ -90,7 +90,7 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item output\u-value\check-capture.png }
 ## コード描画の場面（interactive のときだけ）
 
 interactive では、場面ごとに**場面の指定**（`scenes.yaml`）を書くと、カード・表・手順などの部品が、ナレーションの読み上げに合わせて現れ、読んでいる所を示します。
-**書かなくても MP4 まで作れます**（書かない場面は既定の場面: slides と同じく、見出し・説明図や撮影画像・画面テキスト・**来歴ラベル**（`実キャプチャ`・`説明用再構成図`。必ず出る）・**台本の赤枠と矢印**（marks.json の位置に、slides と同じ段落で）を字幕の上に出す。画像の無い intro・outro は見出しと文のカード）。
+**書かなくても MP4 まで作れます**（書かない場面は既定の場面: slides と同じく、見出し・説明図や撮影画像・**来歴ラベル**（`実キャプチャ`・`説明用再構成図`。必ず出る）・**台本の赤枠と矢印**（marks.json の位置に、slides と同じ段落で）を字幕の上に出す。台本の画面テキスト（`on_screen_text`）は、字幕の帯と重なるため interactive では出しません。画像の無い intro・outro は見出しと文のカード）。
 手本は [samples/u-value/scenes/u-value/scenes.yaml](../../samples/u-value/scenes/u-value/scenes.yaml)（説明図の s01・s02 を部品で描き、撮影の s03〜s05 と intro は既定の場面）。
 
 ### 置き場

@@ -42,9 +42,9 @@ slides と共通に使い、**書き出しの段だけ**を差し替える。場
 優先順位: その場面の Python の場面コード（`<場面 id>.py`・`index.py`）＞ `scenes.yaml` の指定 ＞ 既定の場面。
 
 **既定の場面**（`scenes.default_scene`）: 台本のシーンは slides（`deck/builder.py` の `_scene_slide`）と同じものを同じ順に出す。
-見出し・画像（細線は縮小の割合で太らせる）・画面テキスト・来歴ラベル（`image.label`。撮影前は `撮影前（仮）`、文字だけのカード
+見出し・画像（細線は縮小の割合で太らせる）・来歴ラベル（`image.label`。撮影前は `撮影前（仮）`、文字だけのカード
 `recipe_params.card` は出さない）・台本の注釈（赤枠・矢印。位置は slides と同じ `marks.json`、時刻は slides と同じ段落）。
-来歴ラベルは必ず出る（消す設定は無い）。配置は `scenes.py` の `HEAD_BOX`・`IMAGE_BOX`・`TEXT_BOX`・`LABEL_RIGHT`（字幕帯の上）。
+来歴ラベルは必ず出る（消す設定は無い）。配置は `scenes.py` の `HEAD_BOX`・`IMAGE_BOX`・`LABEL_RIGHT`・`LABEL_TOP`（字幕帯の上）。画面テキスト（on_screen_text）は interactive では出さない（字幕の帯と重なるため）。
 中間データの場面の `heading`・`label`・`placeholder`・`card`・`text`・`appear`・`view`・`annotations` は `annotate.py` が台本から作る。
 画像の無い場面（intro・outro）は見出しと文のカード。
 

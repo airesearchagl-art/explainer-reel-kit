@@ -139,7 +139,8 @@ def test_heading_is_drawn_like_slides(tmp_path):
     # 見出しは slides と同じく少し遅れて現れる（LEAD_IN の後）
     ops = scene_ops(r, start_of("s01") + 0.1)
     assert "画面を開く" not in texts_of(ops)
-    assert "条件を入れる" in texts_at(r, start_of("s01") + SEC - 0.1)   # 画面テキスト（on_screen_text）
+    # 画面テキスト（on_screen_text）は interactive では出さない（字幕の帯と重なるため。本家と同じ）
+    assert "条件を入れる" not in texts_at(r, start_of("s01") + SEC - 0.1)
 
 
 def test_label_heading_and_image_stay_above_the_subtitle_band(tmp_path):
@@ -168,7 +169,9 @@ def test_boxes_follow_the_paragraphs_like_slides(tmp_path):
     para2 = min(s["start_sec"] for s in tl["sentences"] if s["scene"] == "s01" and s["paragraph"] == 2)
     assert anns[1]["at_sec"] >= para2 and anns[0]["until_sec"] <= anns[1]["at_sec"]
     assert red_boxes(scene_ops(r, anns[0]["at_sec"] - 0.05)) == []                  # 段落 1 の枠の前は無い
-    first = red_boxes(scene_ops(r, anns[0]["at_sec"] + 0.5))
+    # フェード 0.4 秒 → 点滅 0.6 秒（前半 0.3 秒は隠れる）の後は出ている
+    assert red_boxes(scene_ops(r, anns[0]["at_sec"] + 0.5)) == []
+    first = red_boxes(scene_ops(r, anns[0]["at_sec"] + 0.8))
     assert len(first) == 1
     later = red_boxes(scene_ops(r, anns[1]["at_sec"] + 1.0))                        # 段落 2 の後は 2 つ目の枠だけ
     assert len(later) == 1 and later[0][1] > first[0][1]
@@ -286,3 +289,20 @@ def test_short_scene_compresses_the_chain_like_slides(tmp_path):
     long, _ = scene_display(scene, start=10.0, scene_ms=20000, image_file=assets / "s1.png", has_image=True,
                             sentences=[])
     assert long["annotations"][0]["at_sec"] > out["annotations"][0]["at_sec"]
+
+
+def test_layout_matches_the_main_repository_values():
+    """見出し・画像の枠・区分の表示・赤枠と矢印の値（本家の interactive の配置の表と同じ）。"""
+    from explainer_reel_kit.interactive import scenes as isc
+    from explainer_reel_kit.interactive.parts import image as pimg
+
+    assert (isc.HEAD_X, isc.HEAD_CENTER_Y) == (72, 104)
+    assert isc.HEAD_BOX[1] + isc.HEAD_BOX[3] / 2 == 104
+    assert isc.HEAD_SIZES[0] == 56 and isc.HEAD_SIZES[-1] == 36
+    assert isc.IMAGE_BOX == (72, 180, 1776, 724)
+    assert (isc.LABEL_RIGHT, isc.LABEL_TOP, isc.LABEL_SIZE) == (1848, 912, 20)
+    assert isc.BOX_LINE == 9 and (isc.ARROW_LEN, isc.ARROW_H) == (130, 65)
+    assert (isc.BOX_FADE, isc.BOX_EXIT, isc.BLINK, isc.ARROW_FADE) == (0.4, 0.3, 0.6, 0.3)
+    assert isc._blink(10.1, 10.0) == 0.0 and isc._blink(10.4, 10.0) == 1.0   # 点滅の前半は隠れる
+    assert not hasattr(isc, "IMAGE_BOX_TEXT") and not hasattr(isc, "TEXT_BOX")  # 画面テキストは出さない
+    assert pimg.LABEL_ROW == 30

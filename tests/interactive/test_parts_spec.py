@@ -319,7 +319,7 @@ def test_image_part_maps_annotations_from_image_pixels(tmp_path):
     (tmp_path / "assets").mkdir()
     Image.new("RGB", (400, 200), "white").save(tmp_path / "assets" / "plan.png")
     engine.set_asset_dirs([tmp_path / "assets"])
-    T, sc = _scene([{"type": "image", "box": [96, 200, 800, 434], "motion": "cut",   # 下の 34px は来歴ラベルの行
+    T, sc = _scene([{"type": "image", "box": [96, 200, 800, 430], "motion": "cut",   # 下の 30px は区分の表示の行
                      "images": [{"src": "plan.png"}],
                      "annotations": [{"shape": "box", "rect": [100, 50, 100, 50], "sentence": 2},
                                      {"shape": "label", "xy": [200, 100], "text": "注記", "sentence": 3},

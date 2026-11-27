@@ -23,7 +23,7 @@ from .base import COLOR, DIM, ITEM_CUE, KEEP, LINES, SHOW, Part, check_icon, col
 
 LABELS = ["実キャプチャ", "途中成果", "説明用再構成図"]   # 台本の image.label と同じ
 DEFAULT_LABEL = "説明用再構成図"
-LABEL_ROW = 34          # 画像の下に空ける来歴ラベルの行（px）
+LABEL_ROW = 30          # 画像の下に空ける区分の表示の行（px。表示は 20px）
 
 
 @functools.lru_cache(maxsize=256)
