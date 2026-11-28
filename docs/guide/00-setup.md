@@ -5,7 +5,7 @@
 | もの | 用途 | 入れ方 |
 |---|---|---|
 | Windows 10 / 11 | — | — |
-| PowerPoint（デスクトップ版） | スライドを MP4 に書き出す | 利用者のライセンスで |
+| PowerPoint（デスクトップ版） | スライドを MP4 に書き出す（無くてもよい。下の「PowerPoint が無い PC」） | 利用者のライセンスで |
 | Python 3.10 以上 | キットの本体 | `winget install Python.Python.3.12` か python.org |
 | Git（任意） | キットを取ってくる | `winget install Git.Git`（ZIP でダウンロードしてもよい） |
 | ffmpeg | ナレーションを動画に重ねる | `winget install Gyan.FFmpeg`（入れたら PowerShell を開き直す） |
@@ -56,6 +56,17 @@ if ($LASTEXITCODE -eq 0) { Invoke-Item "$env:USERPROFILE\ExplainerReelKit\output
 ```
 
 出力先のフォルダ（`<日付>_u-value`）の中に `u_value.mp4` と `u_value.pptx` ができます。
+
+## PowerPoint が無い PC
+
+PowerPoint が無くても、映像の作り方を **interactive**（コード描画）にすれば MP4 まで作れます（Linux でも）。要るのは Python・ffmpeg・AivisSpeech（説明図・撮影を使うならブラウザ）で、書体はキットに同梱しています。
+`erkit doctor` の「コード描画（interactive。PowerPoint を使わない）」の行が `OK` なら使えます（PowerPoint の行が `NG` でもかまいません）。
+
+```powershell
+erkit make samples\u-value\u-value.storyboard.md --serve samples\u-value\app --render-mode interactive
+```
+
+字幕の焼き込みと SRT、検証の結果も一緒にできます（[07-export.md](07-export.md)）。
 
 ## 声のライセンスを確かめる
 

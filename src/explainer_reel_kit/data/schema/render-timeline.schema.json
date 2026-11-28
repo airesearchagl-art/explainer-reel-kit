@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/airesearchagl-art/explainer-reel-kit/blob/main/src/explainer_reel_kit/data/schema/render-timeline.schema.json",
+  "title": "explainer-reel-kit render timeline (interactive の中間データ)",
+  "description": "映像の段（render_mode: interactive）が受け取る中間データ。fps・解像度・total_frames、scenes、sentences（任意で words）、cues。台本からは erkit make が出力フォルダの work/render-timeline.json に作る。並び・重なりの決まり（場面は 0 フレームから切れ目なく total_frames まで、字幕は重ならない など）は src/explainer_reel_kit/interactive/timeline.py が確かめる",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "fps", "width", "height", "total_frames", "scenes", "sentences", "cues"],
+  "properties": {
+    "format": { "const": "explainer-reel/render-timeline@1" },
+    "fps": { "const": 30, "description": "今は 30 fps だけ" },
+    "width": { "const": 1920, "description": "今は 1920×1080 だけ" },
+    "height": { "const": 1080 },
+    "total_frames": { "type": "integer", "minimum": 1 },
+    "source": {
+      "type": "object",
+      "description": "どこから作ったか（記録だけ。kind: storyboard など、元のファイルのパス・ハッシュ）"
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "credit": { "type": ["string", "null"], "description": "ナレーション音声のクレジット。あれば最後の場面の左下に常に出す（場面コードがあっても）" }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "start_frame", "end_frame"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "title": { "type": "string", "description": "見出し（既定の場面が使う）" },
+          "start_frame": { "type": "integer", "minimum": 0 },
+          "end_frame": { "type": "integer", "minimum": 1, "description": "この場面の最後のフレームの次（start 以上 end 未満）" },
+          "image": { "type": "string", "description": "既定の場面で出す画像（説明図の PNG・撮影画像）。このファイルのフォルダからの相対か絶対パス。来歴ラベル（label）を必ず添えて出す" },
+          "body": { "type": "array", "items": { "type": "string" }, "description": "intro・outro で既定の場面が出す文（summary・checks など）" },
+          "heading": { "type": "string", "description": "台本のシーンの見出し。あれば既定の場面は slides と同じ配置（見出し・画像・画面テキスト・来歴ラベル）で描く" },
+          "label": { "enum": ["実キャプチャ", "途中成果", "説明用再構成図", "撮影前（仮）"], "description": "画像の来歴（台本の image.label。撮影前は 撮影前（仮））。既定の場面は画像の右下の外に必ず出す。無い画像は 説明用再構成図 として出す" },
+          "placeholder": {
+            "type": "object", "additionalProperties": false, "required": ["ref", "reason"],
+            "description": "撮影前（画像が無い・貼れない形式）。既定の場面は仮の枠と「<reason>: <ref>」を出す",
+            "properties": { "ref": { "type": "string" }, "reason": { "type": "string" } }
+          },
+          "card": {
+            "type": "object", "additionalProperties": false, "required": ["title"],
+            "description": "文字だけのカード（台本の recipe_params.card）。画像の代わりに出し、来歴ラベルは出さない",
+            "properties": { "title": { "type": "string", "minLength": 1 }, "text": { "type": "string" }, "meta": { "type": "string" } }
+          },
+          "text": { "type": "array", "items": { "type": "string" }, "description": "画面テキスト（台本の on_screen_text。text_build は 1 行ずつ）" },
+          "recipe": { "type": "string", "description": "台本のレシピ（記録）" },
+          "appear": {
+            "type": "object", "additionalProperties": false,
+            "description": "見出し・画像・画面テキスト（行ごと）の現れ始める秒（slides のアニメーションと同じ順と間）",
+            "properties": {
+              "heading": { "type": "number", "minimum": 0 },
+              "image": { "type": "number", "minimum": 0 },
+              "text": { "type": "array", "items": { "type": "number", "minimum": 0 } }
+            }
+          },
+          "view": { "$ref": "#/$defs/rect", "description": "拡大して出す範囲（元の画像に対する 0〜1。slides の zoom と同じ）" },
+          "annotations": {
+            "type": "array",
+            "description": "注釈（赤枠・矢印）。位置は元の画像に対する 0〜1、時刻は slides と同じ段落",
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["kind", "at_sec"],
+              "properties": {
+                "kind": { "enum": ["box", "arrow"] },
+                "mark": { "type": ["string", "null"] },
+                "status": { "enum": ["mark", "coords", "default"], "description": "mark: marks.json／coords: 台本の座標／default: 位置が決まらず既定の位置" },
+                "box": { "$ref": "#/$defs/rect" },
+                "start": { "$ref": "#/$defs/point" },
+                "end": { "$ref": "#/$defs/point" },
+                "paragraph": { "type": "integer", "minimum": 1, "description": "どの段落の始まりに合わせたか（記録）" },
+                "at_sec": { "type": "number", "minimum": 0, "description": "現れ始める秒" },
+                "until_sec": { "type": "number", "minimum": 0, "description": "消え始める秒（次の枠に替わる。無ければ場面の終わりまで）" },
+                "move_sec": { "type": "number", "minimum": 0, "description": "矢印: start から end へ動き始める秒" },
+                "move_dur_sec": { "type": "number", "minimum": 0 },
+                "view": { "$ref": "#/$defs/rect", "description": "zoom: per_mark の、この枠の範囲" },
+                "morph_sec": { "type": "number", "minimum": 0, "description": "zoom: per_mark で前の枠の範囲から移り始める秒" },
+                "morph_dur_sec": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sentences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "scene", "spoken", "start_sec", "end_sec"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "scene": { "$ref": "#/$defs/id" },
+          "spoken": { "type": "string", "minLength": 1, "description": "読み上げる原稿の文。場面コードの T.at(文, 語) はこの文の中から語を探す" },
+          "paragraph": { "type": "integer", "minimum": 1, "description": "場面のナレーションの何番目の段落の文か（記録だけ。作り直しの比較に使う）" },
+          "timing": { "enum": ["measured", "estimated"], "description": "時刻の出どころ（記録だけ）。measured: 合成の分割の境目と WAV の無音から測った／estimated: 文字の重みで按分した推定" },
+          "reading": { "type": "string", "description": "合成に渡した読み（読みの書き換えの後。記録だけ）" },
+          "subtitle": { "type": "string", "description": "字幕の表記（記録だけ。字幕の表示は cues）" },
+          "start_sec": { "type": "number", "minimum": 0 },
+          "end_sec": { "type": "number", "minimum": 0 },
+          "words": {
+            "type": "array",
+            "description": "語の開始時刻（書き起こしなどで実測できたとき。あれば T.at は推定より先にこれを使う）",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text", "start_sec"],
+              "properties": {
+                "text": { "type": "string", "minLength": 1 },
+                "start_sec": { "type": "number", "minimum": 0 },
+                "end_sec": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "start_frame", "end_frame"],
+        "properties": {
+          "sentence": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+          "text": { "type": "string", "minLength": 1 },
+          "start_frame": { "type": "integer", "minimum": 0 },
+          "end_frame": { "type": "integer", "minimum": 1, "description": "表示する最後のフレームの次（start 以上 end 未満）" },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": { "type": "string", "minLength": 1 },
+            "description": "改行を決めておくとき（2 行まで）。無ければ字幕の規則で折る"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$", "maxLength": 64 },
+    "rect": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "w", "h"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number", "exclusiveMinimum": 0 }, "h": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "point": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    }
+  }
+}

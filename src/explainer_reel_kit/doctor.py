@@ -3,6 +3,9 @@
 同じ確認を ``erkit make`` が実行の前に使う（残りの段に要るものだけ）。
 
 終了コード: 0 そろっている（Windows 以外で PowerPoint が無いのは対象外として数えない） / 1 足りないものがある / 2 設定の誤り
+
+PowerPoint は slides（既定の映像の作り方）の書き出しにだけ使う。コード描画（interactive）の行がそろっていれば、
+PowerPoint が無くても ``erkit make --render-mode interactive`` で MP4 まで作れる（表示の最後にそう書く）。
 """
 from __future__ import annotations
 
@@ -35,6 +38,7 @@ HINTS = {
     "output": "config/kit.yaml の output_root か環境変数 ERKIT_OUTPUT_ROOT で、書き込めるフォルダを指定する",
     "approved_ai": "config/approved_ai.yaml の形を直す（書き方はファイルの先頭のコメントと docs/guide/confidentiality.md）。"
                    "書くのは人だけ",
+    "interactive": 'キットのフォルダで python -m pip install -e ".[dev]" をやり直す（Pillow と同梱の書体が要る）',
     "llm": "erkit draft・erkit voice suggest を使うときだけ要る。LM Studio か Ollama のサーバーを起動し、erkit llm check で確かめる",
 }
 
@@ -129,11 +133,45 @@ def check_powerpoint(platform: str | None = None, registered: Callable[[], bool]
 
     if not is_windows(platform):
         return CheckResult("powerpoint", "PowerPoint（書き出し）", SKIP,
-                           "Windows でだけ使う（この PC では .pptx まで作り、書き出しの手順を表示する）")
+                           "Windows でだけ使う（slides ではこの PC で .pptx まで作り、書き出しの手順を表示する。"
+                           f"MP4 まで作るなら {INTERACTIVE_COMMAND}）")
     if not (registered or _powerpoint_registered)():
         return CheckResult("powerpoint", "PowerPoint（書き出し）", FAIL,
                            "PowerPoint.Application が登録されていない", HINTS["powerpoint"])
     return CheckResult("powerpoint", "PowerPoint（書き出し）", OK, "PowerPoint.Application（COM）が登録されている")
+
+
+INTERACTIVE_NAME = "コード描画（interactive。PowerPoint を使わない）"
+INTERACTIVE_COMMAND = "erkit make --render-mode interactive"
+
+
+def check_interactive(ffmpeg: CheckResult | None = None) -> CheckResult:
+    """コード描画（render_mode: interactive）に要るもの: Pillow・同梱の書体 2 つ（・ffmpeg は別の行）。
+
+    Pillow か書体が無ければ不合格。ffmpeg の行が不合格なら注意（不合格は ffmpeg の行で 1 件に数える）。"""
+    try:
+        import PIL
+        from PIL import ImageFont
+
+        from .interactive.engine import FONT_DIR, FONT_FILES
+    except ImportError as e:
+        return CheckResult("interactive", INTERACTIVE_NAME, FAIL, f"Pillow を読み込めない（{e}）", HINTS["interactive"])
+    names = list(FONT_FILES.values())
+    missing = [n for n in names if not (FONT_DIR / n).is_file()]
+    if missing:
+        return CheckResult("interactive", INTERACTIVE_NAME, FAIL, f"同梱の書体が無い: {', '.join(missing)}（{FONT_DIR}）",
+                           HINTS["interactive"])
+    for n in names:
+        try:
+            ImageFont.truetype(str(FONT_DIR / n), 24)
+        except OSError as e:
+            return CheckResult("interactive", INTERACTIVE_NAME, FAIL, f"書体 {n} を読めない（{e}）", HINTS["interactive"])
+    detail = f"Pillow {getattr(PIL, '__version__', '?')}・書体 {' / '.join(names)}"
+    if ffmpeg is not None and ffmpeg.status == FAIL:
+        return CheckResult("interactive", INTERACTIVE_NAME, WARN, f"{detail}。ffmpeg が無いため、まだ MP4 にできない",
+                           HINTS["ffmpeg"])
+    return CheckResult("interactive", INTERACTIVE_NAME, OK,
+                       f"{detail}。PowerPoint が無くても {INTERACTIVE_COMMAND} で MP4 まで作れる")
 
 
 def check_engine(engine_name: str | None, url: str | None, speaker: int, *, transport=None,
@@ -218,8 +256,10 @@ def run_checks(cfg: kit_config.KitConfig, *, engine_url: str | None = None, chan
     results = [check_python(), check_packages()]
     results.append(CheckResult("browser", "ブラウザ（撮影・説明図）", SKIP, "--skip-browser") if skip_browser
                    else check_browser(channel, executable))
-    results.append(check_ffmpeg())
+    ff = check_ffmpeg()
+    results.append(ff)
     results.append(check_powerpoint(platform))
+    results.append(check_interactive(ff))
     results += check_engine(cfg.voice_engine, engine_url or cfg.voice_url, cfg.voice_speaker, transport=transport)
     results.append(check_output_root(kit_config.output_root(cfg, output_root)))
     return results
@@ -236,6 +276,29 @@ def print_results(results: list[CheckResult], cfg: kit_config.KitConfig, out=pri
             out(f"      → {r.hint}")
     bad = [r for r in results if r.status == FAIL]
     out("そろっています" if not bad else f"足りないもの {len(bad)} 件（上の → の手順で入れてください。キットは自動では入れません）")
+    note = interactive_note(results)
+    if note:
+        out(note)
+
+
+def routes(results: list[CheckResult]) -> dict[str, bool]:
+    """MP4 までの道: slides（PowerPoint で書き出す）と interactive（コード描画）が、この PC で使えるか。
+
+    音声合成エンジン・ffmpeg など両方に要るものは見ない（その行で不合格に数える）。"""
+    by = {r.key: r for r in results}
+    pp, it = by.get("powerpoint"), by.get("interactive")
+    return {"slides": pp is not None and pp.status == OK, "interactive": it is not None and it.status == OK}
+
+
+def interactive_note(results: list[CheckResult]) -> str | None:
+    """PowerPoint が使えない（Windows 以外・未導入）とき、interactive の道を案内する 1 行。"""
+    r = routes(results)
+    if r["slides"] or "powerpoint" not in {x.key for x in results}:
+        return None
+    if r["interactive"]:
+        return (f"PowerPoint が無くても、interactive（{INTERACTIVE_COMMAND}）なら MP4 まで作れます"
+                "（PowerPoint は slides の書き出しにだけ使う）")
+    return "PowerPoint もコード描画（interactive）も使えないため、この PC では .pptx までです（上の行を直すと MP4 まで作れます）"
 
 
 def configure(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -256,7 +319,8 @@ def configure(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
 
 def register(sub) -> None:
     configure(sub.add_parser("doctor", help="動画を作るのに要るものがそろっているか確かめる",
-                             description="Python・ライブラリ・ブラウザ・ffmpeg・PowerPoint・AivisSpeech（既定の声）・出力先・"
+                             description="Python・ライブラリ・ブラウザ・ffmpeg・PowerPoint・コード描画（Pillow・書体）・"
+                                         "AivisSpeech（既定の声）・出力先・"
                                          "社内で認められた AI の許可リストと、任意で手元の LLM を確かめる"))
 
 
@@ -275,7 +339,8 @@ def run(args, *, transport=None, platform: str | None = None) -> int:
         results.append(check_llm(args.llm_config))
     if args.json:
         print(json.dumps({"config": str(cfg.path) if cfg.path else None,
-                          "ok": all(r.ok for r in results), "checks": [asdict(r) for r in results]},
+                          "ok": all(r.ok for r in results), "routes": routes(results),
+                          "checks": [asdict(r) for r in results]},
                          ensure_ascii=False, indent=2))
     else:
         print_results(results, cfg)
@@ -291,5 +356,6 @@ def main(argv: list[str] | None = None, **kw) -> int:
     return run(args, **kw)
 
 
-__all__ = ["CheckResult", "run_checks", "check_engine", "check_ffmpeg", "check_powerpoint", "check_browser",
+__all__ = ["CheckResult", "run_checks", "check_engine", "check_ffmpeg", "check_powerpoint", "check_interactive",
+           "interactive_note", "routes", "check_browser",
            "check_packages", "check_python", "check_output_root", "check_llm", "check_approved_ai", "main"]

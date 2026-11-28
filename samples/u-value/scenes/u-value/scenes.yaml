@@ -1,0 +1,71 @@
+# u-value の場面の指定（erkit make --render-mode interactive で使う。Python の場面コードは付けない）。
+# 書き方: src/explainer_reel_kit/interactive/README.md。形の正本: src/explainer_reel_kit/data/schema/scenes.schema.json
+#
+# - 説明図の場面（s01・s02）は、説明図の中身（説明用再構成図）を部品で描き、読み上げに合わせて出す
+# - 撮影の場面（s03〜s05）は書かない＝既定の場面（slides と同じく見出し・撮影画像・来歴ラベル「実キャプチャ」・台本の赤枠と矢印）。
+#   撮影画像は実行のたびに作るので、ここから参照しない
+# - intro は書かない＝既定の場面（見出しと文のカード）
+# 文言・数値は台本（画面の文字・ナレーション・outro の checks）と SOURCES.md・計算ページの表にあるものだけ。
+# きっかけ: sentence は場面の何番目の文か（1 から）、at はナレーションの語句（読まれ始める秒）。
+version: 1
+scenes:
+  s01:                                  # 熱の逃げ方を知る: 3 つの道を読み上げの順に出し、読んでいるものを明るく
+    parts:
+      - type: header
+        title: 熱の逃げ方を知る
+        label: 説明用再構成図
+      - type: cards
+        box: [96, 250, 1728, 300]
+        columns: 3
+        title_size: 48
+        body_size: 32
+        items:
+          - {title: 伝導, body: ガラスや枠そのものを、熱が伝わる, at: 伝導}
+          - {title: 対流, body: 窓の近くで冷やされた空気が下に流れ、部屋の空気と入れ替わって熱を運ぶ, at: 対流}
+          - {title: 放射, body: 暖かい部屋から冷たいガラスへ、熱が光と同じように飛ぶ, at: 放射}
+  s02:                                  # U 値の意味をつかむ: 定義 → ガラスの種類ごとの目安の範囲（行を読み上げに合わせて強調）
+    parts:
+      - type: header
+        title: U 値の意味をつかむ
+        label: 説明用再構成図
+      - type: callout
+        box: [96, 214, 1728, 110]
+        text: U 値 ＝ 1 m²・温度差 1℃ あたりに流れる熱（W）。小さいほど熱を通しにくい
+        size: 36
+        sentence: 1
+      - type: table                     # 行・列は見出しの文字で指定する。数値は SOURCES.md と計算ページの表のまま
+        box: [96, 350, 1728, 400]
+        columns: [ガラスの種類, U 値の目安 W/(m²·K)]
+        widths: [1100, 628]
+        header_height: 64
+        row_height: 80                  # 見出し 64 ＋ 4 行 × 80 ＝ 384（box の高さ 400 に収める）
+        size: 34
+        sentence: 3
+        rows:
+          - name: 単板ガラス
+            cells:
+              U 値の目安 W/(m²·K): {text: 5.8〜6.0, sentence: 4, at: 単板ガラス, color: coral}
+          - name: 複層ガラス（空気層）
+            cells:
+              U 値の目安 W/(m²·K): 2.7〜4.0
+          - name: Low-E 複層ガラス（空気層）
+            cells:
+              U 値の目安 W/(m²·K): {text: 1.6〜2.7, sentence: 4, at: ローイー複層ガラス, color: green}
+          - name: ガス入り Low-E 複層ガラス
+            cells:
+              U 値の目安 W/(m²·K): 1.1〜1.9
+      - type: callout
+        box: [96, 770, 1728, 90]
+        text: 製品・空気の層の厚さで変わる。あくまで目安
+        size: 32
+        sentence: 5
+  outro:                                # 確かめること（台本の outro の checks）
+    parts:
+      - type: header
+        title: 確かめること
+      - type: steps
+        box: [96, 250, 1728, 330]
+        marker: check
+        items:
+          - {text: U 値はガラスだけの値か、枠を含む窓全体の値か, sentence: 1}
+          - {text: 製品ごとの値は、カタログや性能の表示で確かめる, sentence: 2}

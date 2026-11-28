@@ -1,5 +1,10 @@
 """通し生成（``erkit make``）: 台本 → 撮影 → 説明図 → 素材 → ナレーション → スライド → 書き出し → 音声の合成。
 
+映像の作り方（render_mode）: ``--render-mode`` ＞ 台本の ``reel.render_mode`` ＞ slides。
+slides は書き出しの段で PowerPoint を使う。interactive は書き出しの段（段の名前は同じ ``export``）をコード描画に
+差し替え、PowerPoint を使わない。interactive だけ、音声の合成の後に検証の段（``verify``）がある。
+scenes.yaml は出力フォルダを作る前（合成の前）に確かめ、誤りは終了コード 2。
+
 出力::
 
     <出力先のルート>/<YYYYMMDD>_<reel id>[_<一言>]/       同じ名前があれば -2, -3 …
@@ -13,6 +18,10 @@
             narration/           <id>.wav と durations.json
             <output_name>.silent.mp4
             check/overlay.png    確認用の一覧画像（赤枠・矢印を画像に描いたもの）
+        interactive のときは、さらに:
+        <output_name>.srt        字幕（焼き込みと同じデータから）
+        checks/                  検証結果.md・verify.json・resync.md など
+        work/render-timeline.json・work/pauses.json・work/interactive/build/
     <撮影素材のルート>/web/<reel id>/   Web の撮影（日付なし。撮り直すと上書き）
 
 実行の前に、残りの段に要るもの（ブラウザ・操作定義・音声合成エンジンと声・PowerPoint・ffmpeg）を一度に確かめ、
@@ -36,9 +45,11 @@ from ..capture.web.serve import is_local_url
 from ..deck import marks as deck_marks
 from ..deck.builder import BuildError, build_deck
 from ..export import Exporter, ExportError, is_windows, manual_command, powershell_exporter
+from ..interactive.pipeline import InteractiveError, resolve_render_mode
 from ..narration.adapter import AdapterError, slide_ids, storyboard_to_narration_input
 from ..narration.dictionaries import load_dictionaries
 from ..narration.errors import NarrationError
+from ..narration.fit import fit_slots, slot_seconds
 from ..narration.synth import parse_input, run_synth
 from ..narration.textproc import PronunciationDictionary
 from ..narration.tts import TTSEngine, get_engine
@@ -46,7 +57,9 @@ from .assets import AssetsError, resolve_assets, stage_assets
 from .mux import MuxError, mux
 
 RUN_FORMAT = "explainer-reel-kit/run@1"
-STAGES = ("capture", "diagram", "assets", "voice", "deck", "export", "mux")
+STAGES = ("capture", "diagram", "assets", "voice", "deck", "export", "mux")  # slides の段
+INTERACTIVE_STAGES = STAGES + ("verify",)  # interactive の段（書き出しの段の中身が違い、検証の段がある）
+ALL_STAGES = INTERACTIVE_STAGES  # --from に書ける段の名前
 STAGE_TITLES = {
     "capture": "Web 画面の撮影",
     "diagram": "説明図を描く",
@@ -55,7 +68,9 @@ STAGE_TITLES = {
     "deck": "スライド",
     "export": "書き出し（PowerPoint）",
     "mux": "音声の合成",
+    "verify": "検証",
 }
+INTERACTIVE_TITLES = {"export": "書き出し（コード描画。PowerPoint を使わない）", "verify": "検証（interactive）"}
 JST = timezone(timedelta(hours=9))
 
 
@@ -72,9 +87,10 @@ class MakeStop(MakeError):
 
 
 class StageFailed(Exception):
-    def __init__(self, stage: str, message: str):
+    def __init__(self, stage: str, message: str, exit_code: int = 1):
         super().__init__(message)
         self.stage = stage
+        self.exit_code = exit_code  # 2: scenes.yaml などの誤り（段の途中で見つけたとき）
 
 
 @dataclass
@@ -100,6 +116,8 @@ class MakeOptions:
     dry_run: bool = False
     offline: bool = False
     force: bool = False
+    reuse_run: Path | None = None  # 前の出力フォルダ。その work/narration の WAV を使い回し、変わった段落だけ合成する
+    render_mode: str | None = None  # slides / interactive。台本の reel.render_mode より優先（None なら台本・既定）
     ffmpeg: str = "ffmpeg"
     ffprobe: str = "ffprobe"
     platform: str | None = None
@@ -120,7 +138,7 @@ class Hooks:
 
 @dataclass
 class MakeResult:
-    status: str  # done / needs_export / dry_run
+    status: str  # done / needs_export / dry_run（interactive の検証が要確認でも done。run.json の stages.verify を見る）
     out_dir: Path | None
     run: dict[str, Any] = field(default_factory=dict)
     next_steps: list[str] = field(default_factory=list)
@@ -163,8 +181,8 @@ class Maker:
         self.h = hooks or Hooks()
         self.log = log
         self.storyboard = Path(opts.storyboard)
-        if opts.from_stage is not None and opts.from_stage not in STAGES:
-            raise MakeError(f"--from には {' / '.join(STAGES)} のどれかを指定してください")
+        if opts.from_stage is not None and opts.from_stage not in ALL_STAGES:
+            raise MakeError(f"--from には {' / '.join(ALL_STAGES)} のどれかを指定してください")
         if not self.storyboard.is_file():
             raise MakeError(f"台本がありません: {self.storyboard}")
         try:
@@ -175,6 +193,13 @@ class Maker:
         errors = [e for e in rep.errors if not e.startswith("[image]")]  # manual の画像は素材の段で確かめる
         if errors:
             raise MakeError("台本が検証を通りません（erkit check で確かめてください）:\n  " + "\n  ".join(errors))
+        try:
+            self.render_mode, self.render_mode_source = resolve_render_mode(opts.render_mode, self.doc)
+        except InteractiveError as e:
+            raise MakeError(str(e)) from e
+        if opts.from_stage is not None and opts.from_stage not in self.stages:
+            raise MakeError(f"--from {opts.from_stage} は interactive のときだけ使えます"
+                            f"（slides の段: {' / '.join(STAGES)}）")
         self.reel = self.doc["reel"]
         self.reel_id = self.reel["id"]
         self.stem = self.reel["output_name"]
@@ -194,6 +219,8 @@ class Maker:
         self.speaker = self.narration_input["speaker"]
         self.engine_name = opts.engine or self.narration_input.get("engine") or self.cfg.voice_engine
         self.credit = self.cfg.credit_for(self.speaker)
+        if opts.reuse_run is not None and not (Path(opts.reuse_run) / "work" / "narration" / "durations.json").is_file():
+            raise MakeError(f"--reuse-run のフォルダに work/narration/durations.json がありません: {opts.reuse_run}")
         self.out_dir: Path | None = None
         self.run: dict[str, Any] = {}
         self._engine: TTSEngine | None = self.h.engine
@@ -212,6 +239,18 @@ class Maker:
             parts.append(_folder_part(self.o.label))
         return "_".join(p for p in parts if p)
 
+    @property
+    def interactive(self) -> bool:
+        return self.render_mode == "interactive"
+
+    @property
+    def stages(self) -> tuple[str, ...]:
+        """この映像の作り方の段（slides: STAGES、interactive: 検証の段まで）。"""
+        return INTERACTIVE_STAGES if self.interactive else STAGES
+
+    def title(self, name: str) -> str:
+        return (INTERACTIVE_TITLES.get(name) if self.interactive else None) or STAGE_TITLES[name]
+
     def stage_needed(self, name: str) -> tuple[bool, str]:
         """(実行するか, しない理由)。"""
         if name == "capture" and not web_scenes(self.doc):
@@ -222,13 +261,14 @@ class Maker:
             return False, f"--no-capture（{self.captures_dir} にある画像を使う）"
         if name == "diagram" and not diagram_scenes(self.doc):
             return False, "HTML の説明図のシーンがない"
-        if name in ("export", "mux") and self.h.exporter is None and not is_windows(self.o.platform):
+        if name in ("export", "mux") and not self.interactive and self.h.exporter is None \
+                and not is_windows(self.o.platform):
             return False, "Windows 以外（書き出しは PowerPoint のデスクトップ版で行う）"
         return True, ""
 
     def stages_to_run(self) -> list[str]:
-        start = STAGES.index(self.o.from_stage) if self.o.from_stage else 0
-        return list(STAGES[start:])
+        start = self.stages.index(self.o.from_stage) if self.o.from_stage else 0
+        return list(self.stages[start:])
 
     def command(self, from_stage: str | None = None) -> str:
         parts = ["erkit", "make", str(self.storyboard)]
@@ -238,9 +278,11 @@ class Maker:
                 parts += ["--out-dir", str(self.out_dir)]
         for flag, val in (("--serve", self.o.serve), ("--label", self.o.label if not from_stage else None),
                           ("--assets-root", self.o.assets_root), ("--actions", self.o.actions),
-                          ("--channel", self.o.channel)):
+                          ("--channel", self.o.channel), ("--reuse-run", self.o.reuse_run)):
             if val:
                 parts += [flag, str(val)]
+        if self.render_mode_source == "command":  # 台本と違う作り方を続きでも使う
+            parts += ["--render-mode", self.render_mode]
         if self.o.offline:
             parts.append("--offline")
         if self.o.allow_placeholders:
@@ -282,6 +324,9 @@ class Maker:
                 checks.append({"item": f"撮影の URL（{sid}）", "value": url, "ok": is_local_url(url)})
         if "diagram" in stages and self.stage_needed("diagram")[0]:
             checks.append({"item": "説明図", "value": "ネットワークを止めて描く", "ok": True})
+        if self.interactive and ("export" in stages or "verify" in stages):
+            checks.append({"item": "コード描画（interactive）",
+                           "value": "ネットワークを使わない（静止画は台本のフォルダと出力フォルダの中だけ）", "ok": True})
         checks.append({"item": "LLM", "value": "使わない（erkit make は台本を読むだけ）", "ok": True})
         return checks
 
@@ -341,10 +386,13 @@ class Maker:
             except NarrationError as e:
                 msg = f"{e}。{doctor.HINTS['engine']}"
             out.append((f"音声合成エンジン（{self.engine_url()}）と声 {self.speaker}", msg))
-        if "export" in stages and self.stage_needed("export")[0] and self.h.exporter is None:
+        if "export" in stages and self.interactive:   # PowerPoint は確かめない（使わない）
+            r = doctor.check_interactive()
+            out.append((r.name, None if r.status == doctor.OK else f"{r.detail}。{r.hint}"))
+        elif "export" in stages and self.stage_needed("export")[0] and self.h.exporter is None:
             r = doctor.check_powerpoint(self.o.platform)
             out.append((r.name, None if r.ok else f"{r.detail}。{r.hint}"))
-        if "mux" in stages and self.stage_needed("mux")[0]:
+        if ("mux" in stages and self.stage_needed("mux")[0]) or (self.interactive and "export" in stages):
             r = doctor.check_ffmpeg(self.o.ffmpeg, self.o.ffprobe)
             out.append((r.name, None if r.ok else f"{r.detail}。{r.hint}"))
         return out
@@ -366,10 +414,15 @@ class Maker:
             "export": ("PowerPoint（COM）", str(work / f"{self.stem}.silent.mp4")),
             "mux": ("ffmpeg", str(Path(out) / f"{self.stem}.mp4")),
         }
-        lines = []
+        if self.interactive:
+            sdir = self.scenes_dir()
+            io["export"] = (f"台本・.pptx のスライドの時刻・durations.json・場面の指定（{sdir or '無し。すべて既定の場面'}）",
+                            f"{work / (self.stem + '.silent.mp4')}・{Path(out) / (self.stem + '.srt')}")
+            io["verify"] = (str(Path(out) / f"{self.stem}.mp4"), str(Path(out) / "checks" / "検証結果.md"))
+        lines = [f"  映像の作り方: {self.render_mode}（{self.mode_source_text()}）"]
         for i, name in enumerate(stages, 1):
             need, why = self.stage_needed(name)
-            lines.append(f"  {i}. {name}（{STAGE_TITLES[name]}）" + ("" if need else f" — 省略: {why}"))
+            lines.append(f"  {i}. {name}（{self.title(name)}）" + ("" if need else f" — 省略: {why}"))
             if need:
                 lines.append(f"       入力: {io[name][0]}")
                 lines.append(f"       出力: {io[name][1]}")
@@ -382,7 +435,7 @@ class Maker:
         (self.out_dir / "run.json").write_text(json.dumps(self.run, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     def stage_record(self, name: str, **info: Any) -> None:
-        self.run["stages"][name] = {"title": STAGE_TITLES[name], **info}
+        self.run["stages"][name] = {"title": self.title(name), **info}
         self.write_run()
 
     def _previous_run(self) -> Path:
@@ -414,11 +467,12 @@ class Maker:
             if self.run.get("reel_id") != self.reel_id:
                 raise MakeError(f"{self.out_dir} は別の台本（{self.run.get('reel_id')}）の実行です")
             done = self.run.get("stages", {})
-            for name in STAGES[:STAGES.index(self.o.from_stage)]:
+            before = self.stages[:self.stages.index(self.o.from_stage)]
+            for name in before:
                 if (done.get(name) or {}).get("status") not in ("ok", "skipped"):
                     raise MakeError(f"前回の実行で {name} が終わっていないため、--from {self.o.from_stage} からは再開できません"
                                     f"（--from {name} を使ってください）")
-            self.run["stages"] = {k: v for k, v in done.items() if k in STAGES[:STAGES.index(self.o.from_stage)]}
+            self.run["stages"] = {k: v for k, v in done.items() if k in before}
             self.run.setdefault("resumed", []).append({"from": self.o.from_stage, "at": self.iso()})
             self.run.update(status="running", finished_at=None, error=None, resume=None)
         else:
@@ -442,6 +496,7 @@ class Maker:
             offline=self.o.offline,
             network_checks=network,
             engine={"name": self.engine_name, "url": self.engine_url()},
+            render_mode={"mode": self.render_mode, "source": self.render_mode_source},
             speaker=self.speaker, credit=self.credit,
             prereq=prereq, command=self.command(),
         )
@@ -454,6 +509,8 @@ class Maker:
         stages = self.stages_to_run()
         self.log(f"[make] {self.storyboard}（{self.reel_id}、区分: {self.confidentiality}）")
         network = self.guard_network(stages)
+        self.log(f"[make] 映像の作り方: {self.render_mode}（{self.mode_source_text()}）")
+        scenes_check = self.precheck(stages)
 
         if self.o.dry_run:
             self.log("[dry-run] 何も実行しません")
@@ -462,7 +519,9 @@ class Maker:
                      + (f"　クレジット: {self.credit}" if self.credit else ""))
             names = [label for label, _ in self.checks(stages)] if self.h.checks else None
             self.log("  実行の前に確かめるもの: " + ("、".join(names) if names else
-                     "ブラウザ・操作定義・音声合成エンジンと声・PowerPoint・ffmpeg のうち、残りの段に要るもの"))
+                     ("ブラウザ・操作定義・音声合成エンジンと声・コード描画（Pillow・書体）・ffmpeg のうち、残りの段に要るもの"
+                      "（PowerPoint は使わない）" if self.interactive else
+                      "ブラウザ・操作定義・音声合成エンジンと声・PowerPoint・ffmpeg のうち、残りの段に要るもの")))
             for line in self.plan_lines(stages):
                 self.log(line)
             return MakeResult("dry_run", None)
@@ -483,6 +542,9 @@ class Maker:
             self.log("[make] 前提: " + "、".join(prereq) + " — ok")
 
         self._start_record(stages, network, prereq)
+        if scenes_check is not None:
+            self.run["scenes_check"] = scenes_check
+            self.write_run()
         assert self.out_dir is not None
         self.log(f"[make] 出力: {self.out_dir}")
         steps: list[str] = []
@@ -493,8 +555,8 @@ class Maker:
                     self.stage_record(name, status="skipped", reason=why)
                     self.log(f"[{name}] 省略: {why}")
                     continue
-                self.log(f"[{name}] {STAGE_TITLES[name]}")
-                self.run["stages"][name] = {"title": STAGE_TITLES[name], "status": "running", "started_at": self.iso()}
+                self.log(f"[{name}] {self.title(name)}")
+                self.run["stages"][name] = {"title": self.title(name), "status": "running", "started_at": self.iso()}
                 self.write_run()
                 try:
                     info = getattr(self, f"_stage_{name}")() or {}
@@ -502,11 +564,16 @@ class Maker:
                     raise
                 except (AssetsError, BuildError, NarrationError, ExportError, MuxError) as e:
                     raise StageFailed(name, str(e)) from e
-                self.stage_record(name, status="ok", started_at=self.run["stages"][name]["started_at"],
+                except InteractiveError as e:
+                    raise StageFailed(name, str(e), e.exit_code) from e
+                status = info.pop("stage_status", "ok")
+                self.stage_record(name, status=status, started_at=self.run["stages"][name]["started_at"],
                                   finished_at=self.iso(), **info)
             if self.stage_needed("export")[0]:
                 self.run["status"] = "done"
                 self.log(f"[make] できました: {self.out_dir / (self.stem + '.mp4')}")
+                for line in self.done_lines():
+                    self.log("  " + line)
             else:
                 self.run["status"] = "needs_export"
                 steps = self.manual_steps()
@@ -518,9 +585,11 @@ class Maker:
         except StageFailed as e:
             self.run["stages"][e.stage].update(status="failed", error=str(e), finished_at=self.iso())
             self.run.update(status="failed", error=f"{e.stage}: {e}", resume=self.command(e.stage))
-            self.log(f"[make] 失敗した段: {e.stage}（{STAGE_TITLES[e.stage]}）")
+            self.log(f"[make] 失敗した段: {e.stage}（{self.title(e.stage)}）")
             self.log(f"  理由: {e}")
             self.log(f"  直したら、そこから: {self.run['resume']}")
+            if e.exit_code == 2:
+                raise MakeError(f"{e.stage}: {e}") from e
             raise MakeStop(f"{e.stage}: {e}") from e
         except Exception as e:  # 想定外の失敗も記録してから上へ
             self.run.update(status="failed", error=f"{type(e).__name__}: {e}", traceback=traceback.format_exc(limit=5))
@@ -528,6 +597,45 @@ class Maker:
         finally:
             self.run["finished_at"] = self.iso()
             self.write_run()
+
+    def done_lines(self) -> list[str]:
+        """できたときに表示する出力の一覧。"""
+        files = self.run.get("files") or {}
+        names = [("mp4", "動画"), ("pptx", "直すための PowerPoint"), ("srt", "字幕（SRT）")]
+        out = [f"{label}: {files[key]}" for key, label in names if files.get(key)]
+        ver = (self.run.get("stages") or {}).get("verify") or {}
+        if ver.get("report") or ver.get("error"):
+            state = "ok" if ver.get("ok") else ("要確認: " + "・".join(ver.get("failed") or []) if ver.get("failed")
+                                                else "要確認")
+            out.append(f"検証（{state}）: {ver.get('report') or ver.get('error')}")
+        return out
+
+    # ------------------------------------------------------------ interactive
+
+    def mode_source_text(self) -> str:
+        return {"command": "--render-mode", "storyboard": "台本の reel.render_mode", "default": "既定"}[self.render_mode_source]
+
+    def scenes_dir(self) -> Path | None:
+        from ..interactive.pipeline import scenes_dir_for
+
+        try:
+            return scenes_dir_for(self.storyboard, self.doc)
+        except InteractiveError:
+            return None
+
+    def precheck(self, stages: Sequence[str]) -> dict[str, Any] | None:
+        """interactive: scenes.yaml を出力フォルダを作る前（合成の前）に確かめる。誤りは MakeError（終了コード 2）。"""
+        if not self.interactive or "export" not in stages:
+            return None
+        from ..interactive.pipeline import precheck_scenes
+
+        try:
+            return precheck_scenes(self.storyboard, self.doc, log=self.log)
+        except InteractiveError as e:
+            self.log(f"[make] 何も作っていません: {e}")
+            if e.exit_code == 2:
+                raise MakeError(str(e)) from e
+            raise MakeStop(str(e)) from e
 
     def manual_steps(self) -> list[str]:
         assert self.out_dir is not None
@@ -615,10 +723,19 @@ class Maker:
         dictionary, dict_paths = self._dictionary()
         narration = parse_input(self.narration_input)
         out = self.work / "narration"
+        reuse_from = Path(self.o.reuse_run) / "work" / "narration" if self.o.reuse_run is not None else None
         durations = run_synth(narration, out, self.engine(), dictionary=dictionary, force=self.o.force,
-                              log=lambda m: self.log(f"[voice] {m}"))
-        total = sum(i["slide_sec"] for i in durations["items"])
-        return {"durations": str(out / "durations.json"), "dictionaries": dict_paths, "slides_sec": round(total, 2)}
+                              reuse_from=reuse_from, log=lambda m: self.log(f"[voice] {m}"))
+        synthesized = {i["id"]: i["synthesized_paragraphs"] for i in durations["items"] if i.get("synthesized_paragraphs")}
+        info: dict[str, Any] = {"durations": str(out / "durations.json"), "dictionaries": dict_paths,
+                                "reuse_from": str(reuse_from) if reuse_from is not None else None,
+                                "synthesized": synthesized}
+        slots = slot_seconds(self.doc)  # 固定尺の枠: 表示秒を枠にし、超えるなら無音を詰める。収まらなければ止める
+        if slots:
+            info["slots"] = fit_slots(out, slots, speed=narration.speed, log=lambda m: self.log(f"[voice] {m}"))
+            durations = json.loads((out / "durations.json").read_text(encoding="utf-8"))
+        info["slides_sec"] = round(sum(i["slide_sec"] for i in durations["items"]), 2)
+        return info
 
     def _stage_deck(self) -> dict[str, Any]:
         assert self.out_dir is not None
@@ -639,18 +756,54 @@ class Maker:
 
     def _stage_export(self) -> dict[str, Any]:
         assert self.out_dir is not None
+        if self.interactive:
+            return self._render_interactive()
         exporter = self.h.exporter or powershell_exporter()
         silent = self.work / f"{self.stem}.silent.mp4"
         info = exporter(self.out_dir / f"{self.stem}.pptx", silent, True)
         self.log(f"[export] {silent} {info.get('status', '')}")
         return {"silent_mp4": str(silent), "result": info}
 
+    def _render_interactive(self) -> dict[str, Any]:
+        """書き出しの段（interactive）: コード描画で無音 MP4・字幕（SRT）・中間データを作る。PowerPoint を使わない。"""
+        from ..interactive.pipeline import render_storyboard
+
+        assert self.out_dir is not None
+        info = render_storyboard(self.storyboard, self.doc, self.out_dir, self.stem, credit=self.credit,
+                                 reuse_run=self.o.reuse_run, ffmpeg=self.o.ffmpeg, ffprobe=self.o.ffprobe,
+                                 force=True, log=self.log)
+        self.run["warnings"] += list(info.get("warnings") or [])
+        self.run["files"]["srt"] = info["srt"]
+        self.log(f"[export] {info['silent_mp4']}（コード描画）、字幕 {info['srt']}")
+        return {"how": "interactive", **info}
+
+    def _stage_verify(self) -> dict[str, Any]:
+        """検証の段（interactive）: 出来上がった MP4 を確かめる。要確認でも止めない（MP4 は残す）。"""
+        from ..interactive.pipeline import verify_storyboard
+
+        assert self.out_dir is not None
+        res = verify_storyboard(self.out_dir, self.stem, self.scenes_dir(), storyboard=self.storyboard,
+                                ffmpeg=self.o.ffmpeg, ffprobe=self.o.ffprobe, log=self.log)
+        if res.get("report"):
+            self.run["files"]["verify_report"] = res["report"]
+        if not res.get("ok"):
+            what = "・".join(res.get("failed") or []) or res.get("error") or "要確認"
+            w = f"検証が要確認です（{what}）: {res.get('report') or res.get('error')}"
+            self.run["warnings"].append(w)
+            self.log(f"[verify] 注意: {w}")
+        else:
+            self.log(f"[verify] ok: {res['report']}")
+        out = dict(res)
+        out["result_status"] = out.pop("status", None)   # ok / needs_review / failed（段の status とは別に残す）
+        out["stage_status"] = "ok" if res.get("ok") else "needs_review"
+        return out
+
     def _stage_mux(self) -> dict[str, Any]:
         assert self.out_dir is not None
         final = self.out_dir / f"{self.stem}.mp4"
         res = mux(self.work / f"{self.stem}.silent.mp4", self.out_dir / f"{self.stem}.pptx", slide_ids(self.doc),
                   self.work / "narration" / "durations.json", final, ffmpeg=self.o.ffmpeg, ffprobe=self.o.ffprobe,
-                  overwrite=True)
+                  overwrite=True, morph_correction=not self.interactive)
         self.run["warnings"] += res.warnings
         for line in res.info:
             self.log(f"[mux] {line}")
@@ -658,7 +811,7 @@ class Maker:
         return {"mp4": str(final), "expected_sec": res.expected_sec, "video_sec": res.output_video_sec,
                 "audio_sec": res.output_audio_sec, "morph_count": res.morph_count,
                 "morph_extra_sec": res.morph_extra_sec, "drift_corrected": res.drift_corrected,
-                "silent_video_sec": res.video_sec, "info": res.info}
+                "silent_video_sec": res.video_sec, "info": res.info, "loudness": res.loudness}
 
 
 def make(opts: MakeOptions, cfg: kit_config.KitConfig | None = None, hooks: Hooks | None = None,

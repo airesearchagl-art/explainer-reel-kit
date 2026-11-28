@@ -17,6 +17,7 @@
 | `app/index.html` | 計算ページ（素の HTML と JavaScript だけ。外の URL を読まない）。撮影の既定の画面（1600×660）に 1 画面で収まる並び。撮るための `data-testid` |
 | `u-value.actions.yaml` | 操作定義（s03〜s05 の操作と注釈の部品） |
 | `SOURCES.md` | 使った数値と根拠 |
+| `scenes/u-value/scenes.yaml` | コード描画（interactive）の場面の指定。s01・s02 は説明図の中身を部品（カード・表・囲み）で描き、outro は確かめることの一覧。撮影の場面（s03〜s05）と intro は既定の場面（撮影画像をそのまま・見出しと文のカード） |
 
 ## 作り方の順番
 
@@ -32,5 +33,13 @@ erkit deck    samples/u-value/u-value.storyboard.md --assets-root output/u-value
 
 ナレーション（`erkit voice synth`）の `durations.json` を `erkit deck --durations` に渡すと、スライドの秒数が声の長さに合います。
 MP4 への書き出しは Windows と PowerPoint で行います（書き出しの段）。
+
+PowerPoint の無い PC（Linux・PowerPoint の入っていない Windows）では、コード描画で MP4 まで作れます（字幕の焼き込み・SRT・検証つき）:
+
+```bash
+erkit make samples/u-value/u-value.storyboard.md --serve samples/u-value/app --render-mode interactive
+```
+
+台本の版は kit-1.0.0 のまま（映像の作り方はコマンドで決める）。場面の指定は `scenes/u-value/scenes.yaml` で、合成の前に確かめます。
 
 自分の題材を作るときは、このフォルダを写して、台本 → 説明図の HTML → 撮るページと操作定義（`erkit record` でも作れる）の順に置き換えます。

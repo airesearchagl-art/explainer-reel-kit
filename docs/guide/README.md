@@ -9,9 +9,9 @@
 | 2 | [02-audience.md](02-audience.md) | 見る人（A・B・C）に合わせた言葉と深さ |
 | 3 | [03-outline.md](03-outline.md) | 構成（intro・シーン・outro）を決めて人に見せる |
 | 4 | [04-storyboard.md](04-storyboard.md) | 台本を書き、`erkit check` を通す |
-| 5 | [05-visuals.md](05-visuals.md) | 説明図（HTML）と Web 画面の撮影 |
+| 5 | [05-visuals.md](05-visuals.md) | 説明図（HTML）と Web 画面の撮影、コード描画の場面の指定（interactive のとき） |
 | 6 | [06-review.md](06-review.md) | 試作・スライドの確認・読みの確認 |
-| 7 | [07-export.md](07-export.md) | MP4 に書き出す・続きから作り直す |
+| 7 | [07-export.md](07-export.md) | MP4 に書き出す（PowerPoint か、PowerPoint を使わないコード描画）・字幕・続きから作り直す |
 | — | [batch.md](batch.md) | **まとめて進める**: 答えのひな形を先に渡し、1 回で台本と説明図まで（報告で確かめる） |
 | — | [confidentiality.md](confidentiality.md) | 社外秘の区分と、AI の使い分け（社内で認められた AI の許可リスト） |
 | — | [copilot.md](copilot.md) | **会社の PC で GitHub Copilot と使う**（非公開リポジトリへの取り込み、許可リスト、段 1・段 2） |
@@ -51,4 +51,4 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 サンプルのフォルダを写して、中身を置き換えるのがいちばん早い方法です（[04-storyboard.md](04-storyboard.md)）。
 台本・説明図の HTML・撮るページ・操作定義を 1 つのフォルダにまとめます。
 
-台本の仕様は [docs/design/](../design/) にあります（[台本](../design/storyboard.md)・[レシピ](../design/recipes.md)・[説明図](../design/diagram.md)・[撮影](../design/capture-web.md)・[注釈位置](../design/marks.md)・[ナレーション](../design/narration.md)・[通し生成](../design/make.md)）。
+台本の仕様は [docs/design/](../design/) にあります（[台本](../design/storyboard.md)・[レシピ](../design/recipes.md)・[説明図](../design/diagram.md)・[撮影](../design/capture-web.md)・[注釈位置](../design/marks.md)・[ナレーション](../design/narration.md)・[通し生成](../design/make.md)・[コード描画](../design/interactive.md)）。

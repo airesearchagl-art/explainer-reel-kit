@@ -397,7 +397,8 @@ def test_paragraph_starts_use_exact_frames(tmp_path, client, engine, make_input)
 def test_v1_fields_are_kept_in_v2_records(tmp_path, client, make_input):
     doc = run(parse_input(make_input()), tmp_path, client)
     v1_keys = {"id", "wav", "audio_sec", "slide_sec", "chunks", "sample_rate", "channels", "text_hash", "synth_hash"}
-    assert set(doc["items"][0]) == v1_keys | {"paragraph_starts_sec"}
+    chunk_keys = {"chunk_frames", "chunk_hashes", "chunk_sentences", "synthesized_paragraphs"}  # 足しただけ（version 2 のまま）
+    assert set(doc["items"][0]) == v1_keys | {"paragraph_starts_sec"} | chunk_keys
     assert {"format", "version", "complete", "speaker", "pre_pause_sec", "post_pause_sec"} <= set(doc)
 
 

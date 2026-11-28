@@ -1,7 +1,8 @@
 """``erkit make <台本>``: 台本から MP4 までの通し生成。
 
-終了コード: 0 できた（Windows 以外では .pptx まで作り、書き出しの手順を表示して 0） /
-1 前提が足りない・社外秘の確かめで止めた・段が失敗した / 2 引数・台本の誤り
+終了コード: 0 できた（slides では Windows 以外なら .pptx まで作り、書き出しの手順を表示して 0。
+interactive は PowerPoint を使わずにどの OS でも MP4 まで。検証が要確認でも 0 で、run.json と表示に残す） /
+1 前提が足りない・社外秘の確かめで止めた・段が失敗した / 2 引数・台本・scenes.yaml の誤り
 """
 from __future__ import annotations
 
@@ -10,15 +11,21 @@ import sys
 from pathlib import Path
 
 from .. import config as kit_config
-from .make import STAGE_TITLES, STAGES, Hooks, MakeError, MakeOptions, make
+from ..interactive import RENDER_MODES
+from .make import ALL_STAGES, STAGE_TITLES, STAGES, Hooks, MakeError, MakeOptions, make
 
 HELP = "台本から MP4 までを通しで作る（撮影 → 説明図 → ナレーション → スライド → 書き出し → 音声の合成）"
 
 
 def configure(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("storyboard", type=Path, metavar="台本", help=".storyboard.md / .json")
-    p.add_argument("--from", dest="from_stage", choices=STAGES, metavar="段",
-                   help="この段から再開する（" + " / ".join(STAGES) + "）。前回の出力フォルダを使う")
+    p.add_argument("--from", dest="from_stage", choices=ALL_STAGES, metavar="段",
+                   help="この段から再開する（" + " / ".join(STAGES) + "。interactive は verify も）。前回の出力フォルダを使う")
+    p.add_argument("--render-mode", choices=RENDER_MODES, metavar="作り方",
+                   help="映像の作り方（" + " / ".join(RENDER_MODES) + "）。台本の reel.render_mode より優先。"
+                        "interactive は PowerPoint を使わずにコード描画で MP4 まで作る（字幕・SRT・検証つき）")
+    p.add_argument("--reuse-run", type=Path, metavar="前の出力",
+                   help="前の出力フォルダの work/narration の WAV を使い回し、変わった段落だけ合成する")
     p.add_argument("--dry-run", action="store_true", help="何もせず、段の順番・入力・出力を表示する")
     p.add_argument("--offline", action="store_true", help="この PC の外へ出る設定があれば何もせずに止める（社外秘の台本は常に確かめる）")
     p.add_argument("--label", help="出力フォルダ名の最後に付ける一言（例: 試作）")
@@ -66,7 +73,7 @@ def options_from_args(args) -> MakeOptions:
         url_map=url_map, channel=args.channel, executable=args.executable, engine=args.engine,
         engine_url=args.engine_url, speaker=args.speaker, dictionaries=args.dictionary,
         allow_placeholders=args.allow_placeholders, no_capture=args.no_capture, from_stage=args.from_stage, dry_run=args.dry_run,
-        offline=args.offline, force=args.force)
+        offline=args.offline, force=args.force, reuse_run=args.reuse_run, render_mode=args.render_mode)
 
 
 def run(args, *, hooks: Hooks | None = None, platform: str | None = None) -> int:
@@ -94,4 +101,4 @@ def main(argv: list[str] | None = None, **kw) -> int:
     return run(args, **kw)
 
 
-__all__ = ["STAGES", "STAGE_TITLES", "configure", "main", "register", "run"]
+__all__ = ["ALL_STAGES", "STAGES", "STAGE_TITLES", "configure", "main", "register", "run"]

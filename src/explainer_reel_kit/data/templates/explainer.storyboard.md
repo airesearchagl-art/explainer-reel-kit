@@ -2,10 +2,11 @@
 # ===== reel（動画全体の情報）=====
 id: my-explainer               # 英小文字・数字・- ・_
 title: ○○のしくみと選び方      # intro スライドの大見出しにもなる
-schema_version: kit-1.1.0      # kind: explainer は kit-1.1.0 から
+schema_version: kit-1.2.0      # kind: explainer は kit-1.1.0 から
 audience: A                    # A: 初めての人 / B: よく使う人・詳しい人 / C: 専門家・作る人
 kind: explainer                # 一般の解説（問い → しくみ → 比べる → 選び方 → まとめ）
 confidentiality: general       # 公開済みの情報・一般的な知識だけ。社外秘が少しでも入る・分からないなら confidential
+# render_mode: interactive     # 映像の作り方（任意）。省略は slides（PowerPoint で書き出す）。interactive は PowerPoint を使わず描く
 aspect: "16:9"                 # 必ず引用符で囲む（いまは 16:9 のみ）
 output_name: my_explainer      # .pptx / .mp4 のファイル名（拡張子なし）
 ---

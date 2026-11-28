@@ -8,14 +8,14 @@
 | 段 | できること | 入れるもの |
 |---|---|---|
 | **段 1（すぐできる）** | 聞き取り → 構成 → 台本 → `erkit check`、説明図の HTML を書く | VS Code・GitHub Copilot・Python・Git・キット |
-| **段 2（後で）** | 説明図の PNG・Web 画面の撮影・ナレーション・スライド・MP4（`erkit make`） | ブラウザ・ffmpeg・AivisSpeech・PowerPoint |
+| **段 2（後で）** | 説明図の PNG・Web 画面の撮影・ナレーション・スライド・MP4（`erkit make`） | ブラウザ・ffmpeg・AivisSpeech・PowerPoint（**PowerPoint 無しの道**なら PowerPoint は要らない） |
 
 ## 何が PC の外に出るか
 
 | 段 | 外に出るもの（行き先） | PC の中だけで終わるもの |
 |---|---|---|
 | 段 1 | **Copilot が読んだもの**と、チャットに書いた文（GitHub Copilot）。読んだものは、人が見せたもの・**Copilot が自分で開いたファイル**（台本・資料・説明図の HTML・許可リストなど）・**Copilot が読んだターミナルの出力**（`erkit check` の結果など）。ほかに、会社の非公開リポジトリに push したもの（会社の GitHub） | `erkit check` の処理（台本の検証。出力を Copilot が読めば、その出力は外に出る）。許可リスト（`config/approved_ai.yaml`）は `.gitignore` で外してあり push されない |
-| 段 2 | 段 1 と同じ（Copilot が読んだもの） | 説明図の描画（ネットワークを止めて描く）、撮影（`confidential` なら PC の中の URL だけ）、音声合成（AivisSpeech は PC の中で動く）、スライド・動画の書き出し（PowerPoint・ffmpeg） |
+| 段 2 | 段 1 と同じ（Copilot が読んだもの） | 説明図の描画（ネットワークを止めて描く）、撮影（`confidential` なら PC の中の URL だけ）、音声合成（AivisSpeech は PC の中で動く）、スライド・動画の書き出し（PowerPoint・ffmpeg）、コード描画（interactive。ネットワークを使わない）と字幕・検証 |
 
 - キットの本体（`erkit`）は、クラウドの AI を呼びません。外に出るのは、**Copilot が読んだもの（人が見せたもの・Copilot が開いたファイル・ターミナルの出力）と、チャットに書いた文**です
 - エージェントの Copilot は、頼まれなくても、開いているフォルダ（ワークスペース）のファイルを自分で開いて読むことがあります。**社外秘の資料は、区分を決めて許可リストを確かめるまで、ワークスペースの中に置きません**（Copilot が先に読むのを防ぐため。資料はワークスペースの外に置き、確かめた後で `reels/` の下などに写す）
@@ -173,9 +173,10 @@ erkit check reels\my-tool\my-tool.storyboard.md
 | Chromium（Playwright が入れる）か Microsoft Edge | 説明図の描画・Web 画面の撮影 | `python -m playwright install chromium`（Chromium の各ライセンス）。Edge は Windows 標準 | Chromium: BSD ほか。Edge: Windows の一部 | 説明図はネットワークを止めて描く。撮影は `confidential` なら PC の中の URL だけ |
 | ffmpeg / ffprobe | 音声と映像の合成 | https://www.gyan.dev/ffmpeg/builds/（`winget install Gyan.FFmpeg`） | LGPL-2.1 以降 または GPL-2.0 以降（ビルドによる） | 使わない（PC の中のファイルだけ） |
 | AivisSpeech | ナレーションの音声合成 | https://aivis-project.com/ | エンジンは LGPL-3.0。声のモデルはモデルごと（ACML 1.0・ACML-NC 1.0 など） | PC の中（`127.0.0.1:10101`）だけで呼ぶ。`confidential` で外の URL なら原稿を送らずに止まる |
-| PowerPoint（デスクトップ版） | スライドを MP4 に書き出す | 所属先の Microsoft 365 / Office | 所属先のライセンス | 書き出しは PC の中 |
+| PowerPoint（デスクトップ版）。**PowerPoint 無しの道なら要らない** | スライドを MP4 に書き出す（slides） | 所属先の Microsoft 365 / Office | 所属先のライセンス | 書き出しは PC の中 |
+| 書体 Noto Sans JP（**キットに同梱**。申請で入れるものではない） | コード描画（interactive）の文字・字幕 | キットの `src/explainer_reel_kit/interactive/fonts/` | SIL Open Font License 1.1 | 使わない（キットの中のファイルを読むだけ） |
 
-Python のライブラリ（jsonschema・PyYAML・python-pptx・lxml・Pillow・Playwright）は段 1 の `install.ps1` で入っています。ライセンスは [THIRD_PARTY.md](../../THIRD_PARTY.md) にあります。
+Python のライブラリ（jsonschema・PyYAML・python-pptx・lxml・Pillow・Playwright）は段 1 の `install.ps1` で入っています（コード描画は Pillow で描く）。ライセンスは [THIRD_PARTY.md](../../THIRD_PARTY.md) にあります。
 
 入れたら、ブラウザを入れて確かめます（Chromium を入れられないときは Edge を使う: `erkit doctor --channel msedge`）。
 
@@ -189,6 +190,24 @@ erkit doctor
 ```powershell
 erkit make reels\my-tool\my-tool.storyboard.md --dry-run
 ```
+
+### PowerPoint 無しの道（interactive）
+
+会社の PC に PowerPoint のデスクトップ版が無い・入れられないときも、映像の作り方を **interactive**（コード描画）にすれば、キットのコマンドだけで MP4 まで作れます。
+
+- 申請して入れるのは **ffmpeg と AivisSpeech**（説明図・撮影を使うならブラウザも）。PowerPoint は要りません
+- 書体（Noto Sans JP）はキットに同梱、描画に使う Pillow は段 1 の `install.ps1` で入っています
+- 描画・字幕・検証はこの PC の中だけで行い、ネットワークを使いません（`confidential` の台本でも同じ）
+- できるもの: MP4（字幕の焼き込み）・字幕の SRT・直す用の .pptx・検証結果（`checks\検証結果.md`）
+
+`erkit doctor` で「コード描画（interactive。PowerPoint を使わない）」の行が `OK` なら、この道が使えます（PowerPoint の行が `NG` のままでも、最後に「interactive なら MP4 まで作れます」と出ます）。
+
+```powershell
+erkit make reels\my-tool\my-tool.storyboard.md --render-mode interactive --dry-run
+erkit make reels\my-tool\my-tool.storyboard.md --render-mode interactive
+```
+
+台本に `render_mode: interactive` と書けば、`--render-mode` を省けます（版は `kit-1.2.0`）。読み上げに合わせて画面を動かす書き方は [05-visuals.md](05-visuals.md) の「コード描画の場面」、出力と作り直しは [07-export.md](07-export.md)。
 
 自分の声のモデルを会社の PC に入れるかなど、声の選び方は [00-setup.md](00-setup.md) の「声のライセンスを確かめる」を見て、所属先と決めてください。
 

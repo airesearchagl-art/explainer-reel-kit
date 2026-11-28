@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "explainer-reel-kit"
-version = "0.2.2"
+version = "0.3.0"
 description = "台本からナレーション付きの説明動画（MP4）を作るキット"
 readme = "README.md"
 license = "MIT"
@@ -31,10 +31,10 @@ erkit = "explainer_reel_kit.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-explainer_reel_kit = ["data/schema/*.json", "data/templates/*.md", "export/*.ps1"]
+explainer_reel_kit = ["data/schema/*.json", "data/templates/*.md", "export/*.ps1", "interactive/fonts/*", "interactive/README.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # importlib mode lets tests/conftest.py and tests/narration/conftest.py coexist without __init__.py.
-pythonpath = ["tests", "tests/deck", "tests/narration"]
+pythonpath = ["tests", "tests/deck", "tests/narration", "tests/interactive"]
 addopts = "--import-mode=importlib"

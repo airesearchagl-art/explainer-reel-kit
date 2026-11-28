@@ -1,0 +1,57 @@
+# window-condensation の場面の指定（interactive のテスト用の例。一般的な題材）。Python の場面コードを書かずに、型・中身・きっかけで描く。
+# 書き方: src/explainer_reel_kit/interactive/README.md。形の正本: src/explainer_reel_kit/data/schema/scenes.schema.json
+# 文言・数値は台本の画面の文字（on_screen_text）とナレーションにあるものだけ。
+# きっかけ: sentence は場面の何番目の文か（1 から）、at はナレーションの語句（読まれ始める秒）。
+# 動きの名前（motion・emphasis）はモーション見本帳の見本の id。書かなければ型の既定（見出しは fade-in、カードは stagger と roomhighlight）。
+# Python の場面コード（tests/fixtures/interactive/window-condensation-python/ の s02.py・s03.py）と同じ置き場・同じ文字にしてある。
+version: 1
+scenes:
+  s02:                                  # しくみをつかむ: 4 枚のカードを読み上げの順に出し、読んでいるカードだけを明るく
+    parts:
+      - type: header
+        title: しくみをつかむ
+      - type: cards
+        box: [96, 250, 1728, 220]
+        arrows: true
+        items:
+          - {title: ① 暖かい空気, body: 目に見えない水蒸気を含む。暖かいほど多く含める, sentence: 1}
+          - {title: ② 窓で冷える, body: 冷たい窓ガラスに触れて、空気が冷やされる, sentence: 3}
+          - {title: ③ 露点, body: 水蒸気を抱えきれなくなり、水滴ができ始める温度, sentence: 4}
+          - {title: ④ 結露, body: ガラスの表面が露点より冷えると、水滴がつく, sentence: 7}
+      - type: callout                   # 下の要点（数値は台本の画面の文字のまま）
+        box: [96, 560, 1728, 120]
+        text: 室温 20℃・湿度 60％なら露点は約 12℃
+        sentence: 6
+        at: 露点は
+  s03:                                  # ガラスの表面温度を比べる: 表の行を読み上げの順に出して強調
+    parts:
+      - type: header
+        title: ガラスの表面温度を比べる
+      - type: heading
+        box: [96, 214, 1728, 44]
+        text: 外 0℃・室内 20℃・湿度 60％のとき（ガラスメーカーの計算例）
+        size: 30
+        bold: false
+        color: text3
+      - type: table                     # 行・列は見出しの文字で指定する
+        box: [96, 300, 1728, 380]
+        columns: [ガラス, 室内側の表面, 露点（約 12℃）と比べて]
+        widths: [560, 480, 688]
+        size: 34
+        dim: 0                          # 読んでいない行は沈めない（読んでいる行に注目枠だけ）
+        rows:
+          - name: 1 枚のガラス
+            sentence: 3
+            cells:
+              室内側の表面: {text: 約 6℃, sentence: 3, at: およそ六度, size: 44, color: blue}
+              露点（約 12℃）と比べて: {text: 低い → 結露する, sentence: 4, color: coral}
+          - name: Low-E 複層ガラス
+            sentence: 5
+            cells:
+              室内側の表面: {text: 約 15.5℃, sentence: 5, at: およそ十五点五度, size: 44, color: blue}
+              露点（約 12℃）と比べて: {text: 高い → この条件では結露しない, sentence: 6, color: green}
+      - type: callout                   # 露点の基準（s03 の最初の段落で読む）
+        box: [96, 700, 1728, 96]
+        text: 露点 約 12℃ より表面が低いと結露する
+        size: 40
+        sentence: 2

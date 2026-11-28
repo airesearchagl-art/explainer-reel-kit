@@ -24,7 +24,7 @@ def test_template_passes():
 
 def test_schema_is_packaged_data():
     schema = sb.load_schema()
-    assert schema["$defs"]["reel"]["properties"]["schema_version"]["enum"] == ["1.0.0", "1.1.0", "kit-1.0.0", "kit-1.1.0"]
+    assert schema["$defs"]["reel"]["properties"]["schema_version"]["enum"] == ["1.0.0", "1.1.0", "kit-1.0.0", "kit-1.1.0", "kit-1.2.0"]
     assert "sketchup" not in schema["$defs"]["image"]["properties"]["source"]["enum"]
     assert "capture_sketchup" not in schema["$defs"]
     assert sb.recipe_names() == ["fade_sequence", "highlight_box", "arrow_move", "morph_transition", "text_build"]

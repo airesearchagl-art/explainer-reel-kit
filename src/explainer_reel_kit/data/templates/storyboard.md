@@ -2,10 +2,11 @@
 # ===== reel（動画全体の情報）=====
 id: my-tool-intro              # 英小文字・数字・- ・_
 title: ○○ツールの紹介          # intro スライドの大見出しにもなる
-schema_version: kit-1.1.0
+schema_version: kit-1.2.0
 audience: B                    # A: 初めての人 / B: よく使う人・詳しい人 / C: 専門家・作る人
 kind: tool_intro               # tool_intro（ツールの紹介）/ work_manual（作業の手順）。一般の解説は explainer.storyboard.md
 confidentiality: confidential  # 社外秘の区分。分からなければ confidential のまま。公開済みの情報・一般的な知識だけなら general
+# render_mode: interactive     # 映像の作り方（任意）。省略は slides（PowerPoint で書き出す）。interactive は PowerPoint を使わず描く
 aspect: "16:9"                 # 必ず引用符で囲む（いまは 16:9 のみ）
 output_name: my_tool_intro     # .pptx / .mp4 のファイル名（拡張子なし）
 voice:                         # 任意。省略すると既定の声
@@ -21,6 +22,8 @@ voice:                         # 任意。省略すると既定の声
 - 本編は「## <シーンID>: <行動の見出し>」で 1 シーン＝1 スライド＝主画像 1 枚。5〜8 シーンを推奨。
 - 見出しは行動で終える（例: 条件を入力する／結果を確かめる）。
 - ナレーション原稿は段落ごとに空行で区切る。段落内の改行は詰めて読まれる。HTML コメントの中は無視される。
+- 字幕だけ別の表記にしたい段落は、その段落のすぐ後に「subtitle:」で始まる HTML コメントを書く（例は docs/design/storyboard.md）。読み上げには使わない。
+- slot_sec: 秒 を yaml ブロックに書くと、その場面の長さを固定する（任意）。
 - image.source: web（Web 画面の撮影）/ manual（人が用意する画像）/ generated（説明図など）
   image.label : 実キャプチャ / 途中成果 / 説明用再構成図（画像の来歴。画面を捏造しない）
   image.ref   : この台本ファイルからの相対パス。manual は実在必須、他は撮影・説明図の段が書き出す予定パス
