@@ -299,10 +299,14 @@ def test_layout_matches_the_main_repository_values():
     assert (isc.HEAD_X, isc.HEAD_CENTER_Y) == (72, 104)
     assert isc.HEAD_BOX[1] + isc.HEAD_BOX[3] / 2 == 104
     assert isc.HEAD_SIZES[0] == 56 and isc.HEAD_SIZES[-1] == 36
-    assert isc.IMAGE_BOX == (72, 180, 1776, 724)
-    assert (isc.LABEL_RIGHT, isc.LABEL_TOP, isc.LABEL_SIZE) == (1848, 912, 20)
+    assert isc.IMAGE_BOX == (72, 180, 1776, 720)
+    assert (isc.LABEL_RIGHT, isc.LABEL_TOP, isc.LABEL_SIZE) == (1848, 908, 24)
+    assert isc.LABEL_COLOR == "#a9bccf"   # TEXT2（本家 PR #217 の Human 判断）
+    assert isc.LABEL_TOP == isc.IMAGE_BOX[1] + isc.IMAGE_BOX[3] + isc.LABEL_GAP   # 枠の下端から 8px
+    assert isc.LABEL_TOP + isc.LABEL_SIZE + isc.BAND_GAP == 940                    # 字幕の帯まで 8px
     assert isc.BOX_LINE == 9 and (isc.ARROW_LEN, isc.ARROW_H) == (130, 65)
     assert (isc.BOX_FADE, isc.BOX_EXIT, isc.BLINK, isc.ARROW_FADE) == (0.4, 0.3, 0.6, 0.3)
     assert isc._blink(10.1, 10.0) == 0.0 and isc._blink(10.4, 10.0) == 1.0   # 点滅の前半は隠れる
     assert not hasattr(isc, "IMAGE_BOX_TEXT") and not hasattr(isc, "TEXT_BOX")  # 画面テキストは出さない
-    assert pimg.LABEL_ROW == 30
+    assert pimg.LABEL_ROW == isc.LABEL_ROW == 34
+    assert (pimg.LABEL_SIZE, pimg.LABEL_GAP, pimg.LABEL_COLOR) == (isc.LABEL_SIZE, isc.LABEL_GAP, isc.LABEL_COLOR)

@@ -114,9 +114,9 @@ def test_missing_scenes_dir_means_default_scenes(tmp_path):
 
 
 def test_default_scene_fits_image_above_subtitle_band():
-    # 画像枠 (72, 180, 1776, 724) に縦横比を保って収める（本家の interactive と同じ値）
-    assert fit_box(2420, 1000) == (84, 180, 1752, 724)
-    assert fit_box(1000, 1000) == (598, 180, 724, 724)
+    # 画像枠 (72, 180, 1776, 720) に縦横比を保って収める（本家の interactive と同じ値）
+    assert fit_box(2420, 1000) == (89, 180, 1742, 720)
+    assert fit_box(1000, 1000) == (600, 180, 720, 720)
 
 
 def test_renderer_layers_and_credit_on_last_scene(tmp_path):

@@ -29,7 +29,7 @@ from typing import Callable
 
 from . import engine
 from . import spec as specmod
-from .engine import (ACCENT, LINE, PANEL, PANEL2, TEAL, TEXT, TEXT2, TEXT3, W, Frame, LayoutError, asset_size, ramp,
+from .engine import (SUB_TOP, ACCENT, LINE, PANEL, PANEL2, TEAL, TEXT, TEXT2, TEXT3, W, Frame, LayoutError, asset_size, ramp,
                      wrap_text)
 
 SceneFn = Callable[[Frame, float, object], None]
@@ -184,9 +184,14 @@ def load_scenes(scenes_dir: Path | None, scene_ids: list[str], *, extra_asset_di
 
 HEAD_X, HEAD_CENTER_Y = 72, 104          # 見出し: x 72、縦の中心 104（slides の HEAD_BOX）
 HEAD_BOX = (HEAD_X, HEAD_CENTER_Y - 44, 1776, 88)
-IMAGE_BOX = (72, 180, 1776, 724)         # 画像: 縦横比を保って収める（slides の IMAGE_BOX。区分の表示の行を残す）
-LABEL_RIGHT, LABEL_TOP = 1848, 912       # 区分の表示: 右端 1848・上端 912、右寄せ（slides の LABEL_BOX）
-LABEL_SIZE = 20
+LABEL_SIZE = 24                          # 区分の表示: 24px（slides の 10pt より大きく。画面共有・スマートフォンでも読める）
+LABEL_COLOR = TEXT2                      # 明るい灰色（#a9bccf）。slides は MUTED
+LABEL_GAP = 8                            # 画像の枠の下端から区分の表示の文字の上端まで
+BAND_GAP = 8                             # 区分の表示の文字の下端から字幕の帯（y 940）まで
+LABEL_ROW = LABEL_GAP + LABEL_SIZE + 2   # 部品が画像の下に取っておく行の高さ（34px）
+IMAGE_BOX = (72, 180, 1776, SUB_TOP - BAND_GAP - LABEL_SIZE - LABEL_GAP - 180)   # (72, 180, 1776, 720)
+LABEL_RIGHT = 1848                       # 区分の表示: 右端 1848・上端 908、右寄せ（slides の LABEL_BOX）
+LABEL_TOP = IMAGE_BOX[1] + IMAGE_BOX[3] + LABEL_GAP   # 908
 HEAD_SIZES = (56, 52, 48, 44, 40, 36)    # 56px・太字。入らなければ 36px まで縮める
 BOX_LINE = 9                             # 赤枠の線（slides の 4.5pt ＝ 9px。線は縁の中心）
 ARROW_LEN, ARROW_H = 130, 65             # 矢印（slides の 0.9 × 0.45 インチ）
@@ -230,8 +235,8 @@ def _heading(f: Frame, text: str, a: float, box=HEAD_BOX) -> None:
 
 
 def draw_label(f: Frame, label: str, right: float = LABEL_RIGHT, top: float = LABEL_TOP) -> None:
-    """区分の表示（slides の Provenance Label: 20px、控えめな色、右寄せ）。消す設定は無い。"""
-    f.text(label, right, top, size=LABEL_SIZE, color=TEXT3, anchor="r")
+    """区分の表示（slides の Provenance Label: 24px・明るい灰色・右寄せ）。消す設定は無い。"""
+    f.text(label, right, top, size=LABEL_SIZE, color=LABEL_COLOR, anchor="r")
 
 
 def _view_at(t: float, sc: dict) -> dict | None:

@@ -17,13 +17,16 @@ import hashlib
 from pathlib import Path
 
 from .. import motion as mo
-from ..engine import (AMBER, LINE, PANEL, PAPER, TEXT, TEXT2, TEXT3, Frame, LayoutError, asset_path, asset_size, tw,
+from ..engine import (AMBER, LINE, PANEL, PAPER, TEXT, TEXT2, Frame, LayoutError, asset_path, asset_size, tw,
                       with_alpha)
 from .base import COLOR, DIM, ITEM_CUE, KEEP, LINES, SHOW, Part, check_icon, color
 
 LABELS = ["実キャプチャ", "途中成果", "説明用再構成図"]   # 台本の image.label と同じ
 DEFAULT_LABEL = "説明用再構成図"
-LABEL_ROW = 30          # 画像の下に空ける区分の表示の行（px。表示は 20px）
+# 区分の表示の行（既定の場面と同じ: interactive/scenes.py の LABEL_SIZE・LABEL_GAP・LABEL_ROW）
+LABEL_SIZE, LABEL_GAP = 24, 8
+LABEL_COLOR = TEXT2                      # #a9bccf
+LABEL_ROW = LABEL_GAP + LABEL_SIZE + 2   # 34px
 
 
 @functools.lru_cache(maxsize=256)
@@ -66,9 +69,8 @@ def image_label(ctx, item: dict, where: str) -> str:
 
 def draw_label(f: Frame, label: str, right: float, top: float, a: float = 1.0) -> None:
     """来歴ラベル（既定の場面と同じ見た目: 小さく、控えめな色、右寄せ）。"""
-    from ..scenes import LABEL_SIZE
 
-    f.text(label, right, top, size=LABEL_SIZE, color=TEXT3, a=a, anchor="r")
+    f.text(label, right, top, size=LABEL_SIZE, color=LABEL_COLOR, a=a, anchor="r")
 
 IMG_PROPS = {
     "src": {"type": "string", "minLength": 1, "description": "静止画（scenes\\assets\\ などから探す）"},
@@ -215,7 +217,7 @@ class Image_(Part):
             self._img(f, t, i, a)
             cell = self.cells[i]
             x, y, w, h, _, _ = self.places[i]
-            draw_label(f, self.labels[i], x + w, y + h + 6, a=a)   # 来歴ラベル（消せない）
+            draw_label(f, self.labels[i], x + w, y + h + LABEL_GAP, a=a)   # 来歴ラベル（消せない）
             if it.get("caption"):
                 f.text(it["caption"], cell[0], cell[1] + cell[3] + LABEL_ROW + 12, size=26, color=TEXT2, a=a,
                        maxw=cell[2])
@@ -319,7 +321,7 @@ class Compare(Part):
             if img.get("paper"):
                 f.rr(x + 32, yy, w - 64, ih, r=8, fill=PAPER, a=a)
             f.img(img["src"], ix, iy, int(iw), int(ihh), crop=tuple(crop) if crop else None, mode=img.get("mode", "auto"), a=a)
-            draw_label(f, self.labels["left" if i == 0 else "right"], ix + iw, iy + ihh + 6, a=a)
+            draw_label(f, self.labels["left" if i == 0 else "right"], ix + iw, iy + ihh + LABEL_GAP, a=a)
             yy += ih + 20 + LABEL_ROW
         if side.get("body"):
             rows = self.lines(f, side["body"], x + 32, yy, w - 64, max(30, y + h - yy - 24), size=30, color_=TEXT2,
@@ -381,8 +383,8 @@ class Compare(Part):
         # 来歴ラベル: 左の画像は左下、右の画像は右下（同じなら右下に 1 つ）
         ll, rl = self.labels["left"], self.labels["right"]
         if ll != rl:
-            f.text(ll, ix, iy + ih + 6, size=24, color=TEXT3, a=a)
-        draw_label(f, rl, ix + iw, iy + ih + 6, a=a)
+            f.text(ll, ix, iy + ih + LABEL_GAP, size=LABEL_SIZE, color=LABEL_COLOR, a=a)
+        draw_label(f, rl, ix + iw, iy + ih + LABEL_GAP, a=a)
         f.rr(split - 2, iy, 4, ih, r=2, fill="#ffffff", a=a)
         f.circ(split, iy + ih / 2, 44, fill="#ffffff", outline=LINE, ow=2, a=a)
         for side, ax in ((sp["left"], ix + 24), (sp["right"], ix + iw - 24)):
